@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://bmpa6fhxv1qlw"]
+
+[node name="Stairs" type="Area2D"]
+disable_mode = 1
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-10, 10, 10, -10, 10, 10)

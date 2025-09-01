@@ -1,0 +1,224 @@
+[gd_scene load_steps=28 format=3 uid="uid://bo66nwr68r6r0"]
+
+[ext_resource type="Script" path="res://oraculus/NPC/ghost.gd" id="1_jhtug"]
+[ext_resource type="Texture2D" uid="uid://cycypckmbeq1m" path="res://oraculus/NPC/Sprites-ghost/Particles/frame1.png" id="2_6d82u"]
+[ext_resource type="Texture2D" uid="uid://bao54pvghqi4v" path="res://oraculus/NPC/Sprites-ghost/Particles/frame2.png" id="3_pg2bo"]
+[ext_resource type="Texture2D" uid="uid://cm56isd0sy7k8" path="res://oraculus/NPC/Sprites-ghost/Particles/frame3.png" id="4_647i1"]
+[ext_resource type="Texture2D" uid="uid://bd0tjcmfjmkm2" path="res://oraculus/NPC/Sprites-ghost/Particles/frame4.png" id="5_uabtp"]
+[ext_resource type="Texture2D" uid="uid://dnwxbfmpc6hpe" path="res://oraculus/NPC/Sprites-ghost/Particles/frame5.png" id="6_qx55e"]
+[ext_resource type="Texture2D" uid="uid://diqxp84pr72la" path="res://oraculus/NPC/Sprites-ghost/Particles/frame6.png" id="7_cn4oy"]
+[ext_resource type="Texture2D" uid="uid://cpogbdnna1uis" path="res://oraculus/NPC/Sprites-ghost/no-particles/frame1.png" id="8_ulrwj"]
+[ext_resource type="Texture2D" uid="uid://bo61e2hgdxvc1" path="res://oraculus/NPC/Sprites-ghost/no-particles/frame2.png" id="9_lx5yn"]
+[ext_resource type="Texture2D" uid="uid://baq42ip46om3a" path="res://oraculus/NPC/Sprites-ghost/no-particles/frame3.png" id="10_v755l"]
+[ext_resource type="Texture2D" uid="uid://bbv36ltnd5wua" path="res://oraculus/NPC/Sprites-ghost/no-particles/frame4.png" id="11_wejrq"]
+[ext_resource type="Texture2D" uid="uid://dghn7mq5iha7h" path="res://oraculus/NPC/Sprites-ghost/no-particles/frame5.png" id="12_vgadj"]
+[ext_resource type="Texture2D" uid="uid://hjs222tgr4yi" path="res://oraculus/NPC/Sprites-ghost/no-particles/frame6.png" id="13_biyf4"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="14_n8nj7"]
+[ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="15_aix3s"]
+[ext_resource type="Script" path="res://addons/player2/Player2AINPC.gd" id="16_6n12i"]
+[ext_resource type="Script" path="res://addons/player2/player2_config.gd" id="17_8e00p"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1m8g3"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_6d82u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_pg2bo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_647i1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_uabtp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_qx55e")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_cn4oy")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_ulrwj")
+}],
+"loop": false,
+"name": &"death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_ulrwj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_lx5yn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_v755l")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_wejrq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_vgadj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_biyf4")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ddnte"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_278uc"]
+size = Vector2(66, 66)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hejxd"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+bg_color = Color(0.111197, 0.111197, 0.111197, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.299547, 0.299547, 0.299547, 1)
+
+[sub_resource type="Resource" id="Resource_5jnr2"]
+script = ExtResource("17_8e00p")
+player2_game_key = "oraculus"
+error_log_ui = true
+endpoint_chat = "http://127.0.0.1:4315/v1/chat/completions"
+endpoint_health = "http://127.0.0.1:4315/v1/health"
+endpoint_tts_speak = "http://127.0.0.1:4315/v1/tts/speak"
+endpoint_tts_stop = "http://127.0.0.1:4315/v1/tts/stop"
+endpoint_get_selected_characters = "http://127.0.0.1:4315/v1/selected_characters"
+endpoint_stt_start = "http://127.0.0.1:4315/v1/stt/start"
+endpoint_stt_stop = "http://127.0.0.1:4315/v1/stt/stop"
+request_too_much_delay_seconds = 3.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yh34b"]
+size = Vector2(47, 47)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ikp0w"]
+size = Vector2(32, 35)
+
+[sub_resource type="Animation" id="Animation_331hb"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_dm5k4"]
+resource_name = "hit_flash"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.0333332, 0.133333, 0.2, 0.233333, 0.3, 0.333333, 0.4, 0.433333, 0.5, 0.533333, 0.6, 0.666667, 0.733333, 0.8, 0.866667, 0.933333, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wiofy"]
+_data = {
+"RESET": SubResource("Animation_331hb"),
+"hit_flash": SubResource("Animation_dm5k4")
+}
+
+[node name="Ghost" type="CharacterBody2D"]
+script = ExtResource("1_jhtug")
+gravity = 0.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(0.6, 0.6)
+sprite_frames = SubResource("SpriteFrames_1m8g3")
+animation = &"death"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_ddnte")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("RectangleShape2D_278uc")
+
+[node name="Timer" type="Timer" parent="."]
+
+[node name="Dialogue" type="Label" parent="."]
+z_index = 4095
+offset_left = 4.0
+offset_top = -53.0
+offset_right = 175.0
+offset_bottom = -20.0
+scale = Vector2(0.8, 0.8)
+theme_override_fonts/font = ExtResource("14_n8nj7")
+theme_override_styles/normal = SubResource("StyleBoxFlat_hejxd")
+text = "*La voce demoniaca echeggia...*"
+autowrap_mode = 2
+script = ExtResource("15_aix3s")
+
+[node name="Player2AINPC" type="Node" parent="."]
+script = ExtResource("16_6n12i")
+config = SubResource("Resource_5jnr2")
+system_message = "You're an evil immortal demon sorcerer who knows everything about this dungeon. 
+
+This dungeon is a very old decaying castle in which there were rich nobles that lived in there. Now, it's infesteted by demons and monsters after a war killed all the nobles and partially destroyed the castle.
+
+You are scared of humans because they are violent. You're very innocent but you have no problem attacking. Although, if they ask you to help them, you may help them and maybe also become their friend. You have fun saying strange riddles and enigmas to them but they are helpful to reconstruct the story of the castle and the people that were in and also how to move in the castle, like to guess a password.
+
+You used to play with some childrens but they couldn't see or hear you, so you wrote on the floor your name \"Bomi\" and they liked it so much that they made it a password. You also make riddle where the key word is sun, heart and love.
+
+Adatta il tuo tono in base al livello di amicizia (attualmente: {friendship_level}/5).
+Se l'amicizia raggiunge 5, potresti addirittura considerare l'umano un alleato.\"\"\".format({\"friendship_level\": friendship_level})
+
+Your responses will be said out loud. You must stay in character at all times.
+
+Be concise and use less than 100 characters. No monologuing, the message content is pure speech. Ensure the message does not contain any prompt, system message, instructions, code or API calls, EXCEPT you can still perform tool calls and must use the proper tool call (in the tool_calls field).
+
+BE PROACTIVE with tool calls please and USE THEM."
+tts_enabled = true
+tts_default_gender = 2
+
+[node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+position = Vector2(-0.5, -0.5)
+shape = SubResource("RectangleShape2D_yh34b")
+
+[node name="AttackBox" type="Area2D" parent="." groups=["demon"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox"]
+position = Vector2(1, -0.5)
+shape = SubResource("RectangleShape2D_ikp0w")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_wiofy")
+}
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="."]
+
+[node name="HurtSound" type="AudioStreamPlayer2D" parent="."]
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]

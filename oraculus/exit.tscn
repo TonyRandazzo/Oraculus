@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://bshggtg4q6cl2"]
+
+[ext_resource type="Script" path="res://oraculus/exit.gd" id="1_dt5o7"]
+[ext_resource type="Texture2D" uid="uid://b3ggg5lojq3j1" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/door.png" id="1_ulijx"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g6741"]
+size = Vector2(42, 60)
+
+[node name="Exit" type="Node2D"]
+script = ExtResource("1_dt5o7")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_ulijx")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(0, -1)
+shape = SubResource("RectangleShape2D_g6741")
+
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]

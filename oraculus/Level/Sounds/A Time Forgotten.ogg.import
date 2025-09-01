@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://c3hjdx65m5ye8"
+path="res://.godot/imported/A Time Forgotten.ogg-218d17534b925be6bbc616a6fec87f05.oggvorbisstr"
+
+[deps]
+
+source_file="res://oraculus/Level/Sounds/A Time Forgotten.ogg"
+dest_files=["res://.godot/imported/A Time Forgotten.ogg-218d17534b925be6bbc616a6fec87f05.oggvorbisstr"]
+
+[params]
+
+loop=true
+loop_offset=0.0
+bpm=0.0
+beat_count=0
+bar_beats=4

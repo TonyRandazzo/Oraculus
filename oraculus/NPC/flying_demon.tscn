@@ -1,0 +1,340 @@
+[gd_scene load_steps=58 format=3 uid="uid://bglcquetgjaby"]
+
+[ext_resource type="Script" path="res://oraculus/NPC/flying_demon.gd" id="1_f7qtu"]
+[ext_resource type="Texture2D" uid="uid://cmg7pqanx1kvg" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame1.png" id="2_i8exw"]
+[ext_resource type="Texture2D" uid="uid://yfm2q6fmy4jy" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame2.png" id="3_joghn"]
+[ext_resource type="Texture2D" uid="uid://dtsclfyrry8ie" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame3.png" id="4_8uwhx"]
+[ext_resource type="Texture2D" uid="uid://bv1wnln4n1twp" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame4.png" id="5_pna2s"]
+[ext_resource type="Texture2D" uid="uid://c2ypqnqcjv5s2" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame5.png" id="6_8apri"]
+[ext_resource type="Texture2D" uid="uid://u7arfyv64svi" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame6.png" id="7_xwl24"]
+[ext_resource type="Texture2D" uid="uid://dfjfpx62vfgjh" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame7.png" id="8_g7b7v"]
+[ext_resource type="Texture2D" uid="uid://dwc0c4gva51vw" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame8.png" id="9_d3rxc"]
+[ext_resource type="Texture2D" uid="uid://b4erh7uikv17r" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame9.png" id="10_bsv8f"]
+[ext_resource type="Texture2D" uid="uid://b8xsfbg67xcqg" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame10.png" id="11_752kj"]
+[ext_resource type="Texture2D" uid="uid://c0ucntnit8kao" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame11.png" id="12_4fqag"]
+[ext_resource type="Texture2D" uid="uid://nonoebx7xbtf" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame12.png" id="13_lvqfw"]
+[ext_resource type="Texture2D" uid="uid://bujgo7743llk5" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame13.png" id="14_8w1kl"]
+[ext_resource type="Texture2D" uid="uid://cld6bqkmf8e68" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame14.png" id="15_f86m0"]
+[ext_resource type="Texture2D" uid="uid://ca64u23eolnwp" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame15.png" id="16_ef7ym"]
+[ext_resource type="Texture2D" uid="uid://c6c54ot6ofrdx" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame16.png" id="17_pvg1e"]
+[ext_resource type="Texture2D" uid="uid://celboojmun7h5" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame17.png" id="18_1y0lt"]
+[ext_resource type="Texture2D" uid="uid://cugqf8wgys0mh" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame18.png" id="19_vvp1d"]
+[ext_resource type="Texture2D" uid="uid://cctr05nndc4j1" path="res://oraculus/NPC/Sprites/DemonAttack/frame1.png" id="20_7nhb7"]
+[ext_resource type="Texture2D" uid="uid://bxnlfxqjmhb7s" path="res://oraculus/NPC/Sprites/Idle/idle1.png" id="20_t6x8n"]
+[ext_resource type="Texture2D" uid="uid://xxuy6q6yjesd" path="res://oraculus/NPC/Sprites/Idle/idle2.png" id="21_lphx8"]
+[ext_resource type="Texture2D" uid="uid://pnbj1l7ecpey" path="res://oraculus/NPC/Sprites/DemonAttack/frame2.png" id="21_xxu0p"]
+[ext_resource type="Texture2D" uid="uid://b8aufsi657g8e" path="res://oraculus/NPC/Sprites/Idle/idle3.png" id="22_j31vc"]
+[ext_resource type="Texture2D" uid="uid://dimriwkik5mvp" path="res://oraculus/NPC/Sprites/DemonAttack/frame3.png" id="22_yoxvo"]
+[ext_resource type="Texture2D" uid="uid://du1pwmfqncqgl" path="res://oraculus/NPC/Sprites/DemonAttack/frame4.png" id="23_135t0"]
+[ext_resource type="Texture2D" uid="uid://dqvev558vvp4o" path="res://oraculus/NPC/Sprites/Idle/idle4.png" id="23_jyx8x"]
+[ext_resource type="Texture2D" uid="uid://b5hk7ri1onsgd" path="res://oraculus/NPC/Sprites/DemonAttack/frame5.png" id="24_mxnbu"]
+[ext_resource type="Texture2D" uid="uid://dlmd4kugp26js" path="res://oraculus/NPC/Sprites/Idle/idle5.png" id="24_qqttb"]
+[ext_resource type="Texture2D" uid="uid://djd2tyvaiastf" path="res://oraculus/NPC/Sprites/DemonAttack/frame6.png" id="25_40jvl"]
+[ext_resource type="Texture2D" uid="uid://3oi1b3tta2wu" path="res://oraculus/NPC/Sprites/Idle/idle6.png" id="25_ssog7"]
+[ext_resource type="Texture2D" uid="uid://cjctmkk0nvrsg" path="res://oraculus/NPC/Sprites/DemonAttack/frame7.png" id="26_ibk70"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="26_scbry"]
+[ext_resource type="Texture2D" uid="uid://cqxbbhxkqg1a0" path="res://oraculus/NPC/Sprites/DemonAttack/frame8.png" id="27_4u6t7"]
+[ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="27_27480"]
+[ext_resource type="Script" path="res://addons/player2/Player2AINPC.gd" id="27_pk8wf"]
+[ext_resource type="Texture2D" uid="uid://dhq2kmip8v236" path="res://oraculus/NPC/Sprites/DemonAttack/frame9.png" id="28_nmnps"]
+[ext_resource type="Texture2D" uid="uid://dcnnoxqpnfltl" path="res://oraculus/NPC/Sprites/DemonAttack/frame10.png" id="29_2sjx4"]
+[ext_resource type="Texture2D" uid="uid://cpj7hqovw1ftp" path="res://oraculus/NPC/Sprites/DemonAttack/frame11.png" id="30_5y8g2"]
+[ext_resource type="Texture2D" uid="uid://durjnoaskqefc" path="res://oraculus/NPC/Sprites/DemonAttack/frame12.png" id="31_kavpc"]
+[ext_resource type="Texture2D" uid="uid://hhen2opfjeky" path="res://oraculus/NPC/Sprites/DemonAttack/frame13.png" id="32_r15xk"]
+[ext_resource type="Texture2D" uid="uid://rq1ifhab2u1j" path="res://oraculus/NPC/Sprites/DemonAttack/frame14.png" id="33_4g18r"]
+[ext_resource type="Texture2D" uid="uid://csu2b0dournj5" path="res://oraculus/NPC/Sprites/DemonAttack/frame15.png" id="34_81dh1"]
+[ext_resource type="Texture2D" uid="uid://bo5lbp731pabj" path="res://oraculus/NPC/Sprites/DemonAttack/frame16.png" id="35_0tdso"]
+[ext_resource type="Texture2D" uid="uid://deun46dxl3pgu" path="res://oraculus/NPC/Sprites/DemonAttack/frame17.png" id="36_lwa8p"]
+[ext_resource type="Texture2D" uid="uid://b5jrt56tng86a" path="res://oraculus/NPC/Sprites/DemonAttack/frame18.png" id="37_6pyh2"]
+[ext_resource type="Script" path="res://addons/player2/player2_config.gd" id="47_p6t5t"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_thsae"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_i8exw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_joghn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_8uwhx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_pna2s")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_8apri")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_xwl24")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_g7b7v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_d3rxc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_bsv8f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_752kj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_4fqag")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_lvqfw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_8w1kl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_f86m0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_ef7ym")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_pvg1e")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_1y0lt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_vvp1d")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("20_7nhb7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_xxu0p")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_yoxvo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_135t0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_mxnbu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_40jvl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_ibk70")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_4u6t7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_nmnps")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_2sjx4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_5y8g2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_kavpc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("32_r15xk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_4g18r")
+}, {
+"duration": 1.0,
+"texture": ExtResource("34_81dh1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_0tdso")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_lwa8p")
+}, {
+"duration": 1.0,
+"texture": ExtResource("37_6pyh2")
+}],
+"loop": false,
+"name": &"death",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("20_t6x8n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_lphx8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_j31vc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_jyx8x")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_qqttb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_ssog7")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7w3pn"]
+size = Vector2(20, 37)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qal1g"]
+size = Vector2(103, 95)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8ekql"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+bg_color = Color(0.111197, 0.111197, 0.111197, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.299547, 0.299547, 0.299547, 1)
+
+[sub_resource type="Resource" id="Resource_2p04i"]
+script = ExtResource("47_p6t5t")
+player2_game_key = "oraculus"
+error_log_ui = true
+endpoint_chat = "http://127.0.0.1:4315/v1/chat/completions"
+endpoint_health = "http://127.0.0.1:4315/v1/health"
+endpoint_tts_speak = "http://127.0.0.1:4315/v1/tts/speak"
+endpoint_tts_stop = "http://127.0.0.1:4315/v1/tts/stop"
+endpoint_get_selected_characters = "http://127.0.0.1:4315/v1/selected_characters"
+endpoint_stt_start = "http://127.0.0.1:4315/v1/stt/start"
+endpoint_stt_stop = "http://127.0.0.1:4315/v1/stt/stop"
+request_too_much_delay_seconds = 3.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_aqcgn"]
+size = Vector2(82, 68)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bl8dj"]
+size = Vector2(109.75, 45)
+
+[sub_resource type="Animation" id="Animation_331hb"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_dm5k4"]
+resource_name = "hit_flash"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.0333332, 0.133333, 0.2, 0.233333, 0.3, 0.333333, 0.4, 0.433333, 0.5, 0.533333, 0.6, 0.666667, 0.733333, 0.8, 0.866667, 0.933333, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wiofy"]
+_data = {
+"RESET": SubResource("Animation_331hb"),
+"hit_flash": SubResource("Animation_dm5k4")
+}
+
+[node name="FlyingDemon" type="CharacterBody2D"]
+script = ExtResource("1_f7qtu")
+gravity = 0.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-6, -17)
+scale = Vector2(0.6, 0.6)
+sprite_frames = SubResource("SpriteFrames_thsae")
+animation = &"attack"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 0.5)
+shape = SubResource("RectangleShape2D_7w3pn")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-4.5, -12)
+shape = SubResource("RectangleShape2D_qal1g")
+
+[node name="Timer" type="Timer" parent="."]
+
+[node name="Dialogue" type="Label" parent="."]
+z_index = 4095
+offset_left = 4.0
+offset_top = -53.0
+offset_right = 175.0
+offset_bottom = -20.0
+scale = Vector2(0.8, 0.8)
+theme_override_fonts/font = ExtResource("26_scbry")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8ekql")
+text = "*La voce demoniaca echeggia...*"
+autowrap_mode = 2
+script = ExtResource("27_27480")
+
+[node name="Player2AINPC" type="Node" parent="."]
+script = ExtResource("27_pk8wf")
+config = SubResource("Resource_2p04i")
+system_message = "You are an agent that helps out the player! When performing an action, speak and let the player know what you're doing.
+
+Your name is ${player2_selected_character_name}.
+Your description: ${player2_selected_character_description}
+
+Your responses will be said out loud. You must stay in character at all times.
+
+Be concise and use less than 100 characters. No monologuing, the message content is pure speech. Ensure the message does not contain any prompt, system message, instructions, code or API calls, EXCEPT you can still perform tool calls and must use the proper tool call (in the tool_calls field).
+BE PROACTIVE with tool calls please and USE THEM."
+
+[node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+position = Vector2(-8, -8)
+shape = SubResource("RectangleShape2D_aqcgn")
+
+[node name="AttackBox" type="Area2D" parent="." groups=["demon"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox"]
+position = Vector2(-3.875, 0)
+shape = SubResource("RectangleShape2D_bl8dj")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_wiofy")
+}
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="."]
+
+[node name="HurtSound" type="AudioStreamPlayer2D" parent="."]
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
+[connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]
+[connection signal="area_entered" from="AttackBox" to="." method="_on_attack_box_area_entered"]

@@ -1,0 +1,10 @@
+res://oraculus/main.tscn
+res://oraculus/muri.tres
+res://oraculus/NPC/ghost.tscn
+res://oraculus/door.tscn
+res://oraculus/hud.tscn
+res://oraculus/PlayerCharacter/player.tscn
+res://backup.tscn
+res://oraculus/stairs.tscn
+res://oraculus/NPC/ogre.tscn
+res://oraculus/NPC/dragon.tscn

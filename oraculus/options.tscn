@@ -1,0 +1,114 @@
+[gd_scene load_steps=5 format=3 uid="uid://hii6shqpmp10"]
+
+[ext_resource type="Script" path="res://options.gd" id="1_qevvq"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="2_alc1y"]
+[ext_resource type="Texture2D" uid="uid://cthx7chspsytg" path="res://oraculus/HUD/Button_52x14.png" id="3_opqmg"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k2dk0"]
+bg_color = Color(0.823529, 0.788235, 0.647059, 1)
+border_width_left = 30
+border_width_top = 30
+border_width_right = 30
+border_width_bottom = 30
+border_color = Color(0.729412, 0.568627, 0.345098, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="Options" type="Control"]
+z_index = 4096
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_qevvq")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 49.0
+offset_top = 116.0
+offset_right = 1124.0
+offset_bottom = 615.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_k2dk0")
+
+[node name="ProgressBar" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 198.0
+offset_top = 286.0
+offset_right = 974.0
+offset_bottom = 313.0
+value = 50.0
+show_percentage = false
+
+[node name="Dialogue" type="Label" parent="."]
+z_index = 4096
+layout_mode = 0
+offset_left = 387.0
+offset_top = 234.0
+offset_right = 778.0
+offset_bottom = 273.0
+theme_override_fonts/font = ExtResource("2_alc1y")
+theme_override_font_sizes/font_size = 50
+text = "Music"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+uppercase = true
+
+[node name="ProgressBar2" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 198.0
+offset_top = 390.0
+offset_right = 974.0
+offset_bottom = 417.0
+value = 50.0
+show_percentage = false
+
+[node name="Dialogue2" type="Label" parent="."]
+z_index = 4096
+layout_mode = 0
+offset_left = 387.0
+offset_top = 338.0
+offset_right = 778.0
+offset_bottom = 377.0
+theme_override_fonts/font = ExtResource("2_alc1y")
+theme_override_font_sizes/font_size = 50
+text = "SFX"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+uppercase = true
+
+[node name="TextureButton" type="TextureButton" parent="."]
+process_mode = 3
+layout_mode = 0
+offset_left = 477.0
+offset_top = 503.0
+offset_right = 690.0
+offset_bottom = 558.0
+texture_normal = ExtResource("3_opqmg")
+texture_pressed = ExtResource("3_opqmg")
+texture_hover = ExtResource("3_opqmg")
+texture_disabled = ExtResource("3_opqmg")
+texture_focused = ExtResource("3_opqmg")
+stretch_mode = 0
+
+[node name="Dialogue3" type="Label" parent="."]
+z_index = 4096
+layout_mode = 0
+offset_left = 388.0
+offset_top = 508.0
+offset_right = 779.0
+offset_bottom = 547.0
+theme_override_fonts/font = ExtResource("2_alc1y")
+theme_override_font_sizes/font_size = 50
+text = "Exit"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+uppercase = true
+
+[connection signal="pressed" from="TextureButton" to="." method="_on_texture_button_pressed"]

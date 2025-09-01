@@ -1,0 +1,353 @@
+[gd_scene load_steps=60 format=3 uid="uid://cf67gkg04ayra"]
+
+[ext_resource type="Texture2D" uid="uid://dqv11xtytfj82" path="res://oraculus/PlayerCharacter/Attack/0.png" id="1_0m1v8"]
+[ext_resource type="Script" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
+[ext_resource type="Texture2D" uid="uid://j8ocyxs8l46a" path="res://oraculus/PlayerCharacter/Attack/1.png" id="2_h1lhp"]
+[ext_resource type="Texture2D" uid="uid://8ju7yomptfs7" path="res://oraculus/PlayerCharacter/Attack/2.png" id="3_at42d"]
+[ext_resource type="Texture2D" uid="uid://cog2uku46ogb3" path="res://oraculus/PlayerCharacter/Attack/3.png" id="4_pgs84"]
+[ext_resource type="Texture2D" uid="uid://han86xqliim8" path="res://oraculus/PlayerCharacter/Fall Jump/0.png" id="5_yb7hh"]
+[ext_resource type="Texture2D" uid="uid://7lbq1epmi5hv" path="res://oraculus/PlayerCharacter/Fall Jump/1.png" id="6_qrao2"]
+[ext_resource type="Texture2D" uid="uid://cy0uivkknhvl" path="res://oraculus/PlayerCharacter/Attack/4.png" id="6_wcde8"]
+[ext_resource type="Texture2D" uid="uid://bq73l7ndh4eyg" path="res://oraculus/PlayerCharacter/Idle/0.png" id="7_h4f4y"]
+[ext_resource type="Texture2D" uid="uid://b1828nlf6c7vj" path="res://oraculus/PlayerCharacter/Attack/5.png" id="7_l3w1g"]
+[ext_resource type="Texture2D" uid="uid://r6vgephvk2um" path="res://oraculus/PlayerCharacter/Crouch/0.png" id="8_7fp77"]
+[ext_resource type="Texture2D" uid="uid://ctltjob10b8a5" path="res://oraculus/PlayerCharacter/Death/0.png" id="8_bbawc"]
+[ext_resource type="Texture2D" uid="uid://rwhuv6fo50gp" path="res://oraculus/PlayerCharacter/Idle/1.png" id="8_gcajl"]
+[ext_resource type="Texture2D" uid="uid://dklewtfe5jh52" path="res://oraculus/PlayerCharacter/Crouch/1.png" id="9_mfl2f"]
+[ext_resource type="Texture2D" uid="uid://bbcxx5d1yj0j3" path="res://oraculus/PlayerCharacter/Death/1.png" id="9_uuqyu"]
+[ext_resource type="Texture2D" uid="uid://cek0xkh6rgub8" path="res://oraculus/PlayerCharacter/Idle/2.png" id="9_y6tmm"]
+[ext_resource type="Texture2D" uid="uid://1pa0drlou3t0" path="res://oraculus/PlayerCharacter/Idle/3.png" id="10_jkl4o"]
+[ext_resource type="Texture2D" uid="uid://1ryvmmkwnc7f" path="res://oraculus/PlayerCharacter/Crouch/2.png" id="10_n8uw8"]
+[ext_resource type="Texture2D" uid="uid://bc3fcen5eao2l" path="res://oraculus/PlayerCharacter/Death/2.png" id="10_xrhqr"]
+[ext_resource type="Texture2D" uid="uid://bap2x5a1046u7" path="res://oraculus/PlayerCharacter/Crouch/3.png" id="11_fhfjg"]
+[ext_resource type="Texture2D" uid="uid://bl5xmhsfie2a8" path="res://oraculus/PlayerCharacter/Death/3.png" id="11_fht2m"]
+[ext_resource type="Texture2D" uid="uid://dqcdlfslt1qxf" path="res://oraculus/PlayerCharacter/Jump/0.png" id="11_vb6av"]
+[ext_resource type="Texture2D" uid="uid://mlrc3ou7xavb" path="res://oraculus/PlayerCharacter/Death/4.png" id="12_3lwn0"]
+[ext_resource type="Texture2D" uid="uid://cyhn5f5t5d8ld" path="res://oraculus/PlayerCharacter/Crouch/4.png" id="12_35q3d"]
+[ext_resource type="Texture2D" uid="uid://bagisfnu51km0" path="res://oraculus/PlayerCharacter/Jump/1.png" id="12_jbqh7"]
+[ext_resource type="Texture2D" uid="uid://dhd5j3dih1yjh" path="res://oraculus/PlayerCharacter/Crouch/5.png" id="13_lxxka"]
+[ext_resource type="Texture2D" uid="uid://c1iauuerjxmxk" path="res://oraculus/PlayerCharacter/Death/5.png" id="13_ucl2t"]
+[ext_resource type="Texture2D" uid="uid://c1lnpdx47li00" path="res://oraculus/PlayerCharacter/Jump/2.png" id="13_un4ov"]
+[ext_resource type="Texture2D" uid="uid://c7x6qc7v6t7og" path="res://oraculus/PlayerCharacter/Run/0.png" id="14_3rf7u"]
+[ext_resource type="Texture2D" uid="uid://cdhcc2sms4btl" path="res://oraculus/PlayerCharacter/Crouch/6.png" id="14_aress"]
+[ext_resource type="Texture2D" uid="uid://7hmc4bj8nvvt" path="res://oraculus/PlayerCharacter/Death/6.png" id="14_h6jdn"]
+[ext_resource type="Texture2D" uid="uid://yetgyg83ep4t" path="res://oraculus/PlayerCharacter/Death/7.png" id="15_ehpdq"]
+[ext_resource type="Texture2D" uid="uid://b3qkd58llbfg0" path="res://oraculus/PlayerCharacter/Crouch/7.png" id="15_hx7te"]
+[ext_resource type="Texture2D" uid="uid://2r7872ukrtsj" path="res://oraculus/PlayerCharacter/Run/1.png" id="15_yxc2u"]
+[ext_resource type="Texture2D" uid="uid://b27yjhs4vrd1r" path="res://oraculus/PlayerCharacter/Death/8.png" id="16_d8j6u"]
+[ext_resource type="Texture2D" uid="uid://dg52l42rvbieb" path="res://oraculus/PlayerCharacter/Run/2.png" id="16_yugw4"]
+[ext_resource type="Texture2D" uid="uid://b7xm03qrn3yj8" path="res://oraculus/PlayerCharacter/Run/3.png" id="17_6k0dv"]
+[ext_resource type="Texture2D" uid="uid://btc0j207iptgd" path="res://oraculus/PlayerCharacter/Death/9.png" id="17_s5ke7"]
+[ext_resource type="Texture2D" uid="uid://bk0m5ce0h061q" path="res://oraculus/PlayerCharacter/Run/4.png" id="18_v44op"]
+[ext_resource type="Texture2D" uid="uid://d072gk353ank" path="res://oraculus/PlayerCharacter/Run/5.png" id="19_8v6t0"]
+[ext_resource type="Texture2D" uid="uid://nklktpp5yx3a" path="res://oraculus/PlayerCharacter/Run/6.png" id="20_3ocfg"]
+[ext_resource type="Texture2D" uid="uid://ckm6mtm5yxtfs" path="res://oraculus/PlayerCharacter/Run/7.png" id="21_stbob"]
+[ext_resource type="Texture2D" uid="uid://b87qusuac7tqr" path="res://oraculus/PlayerCharacter/Run/8.png" id="22_oaswr"]
+[ext_resource type="Texture2D" uid="uid://b8r4rtwor6l61" path="res://oraculus/PlayerCharacter/Run/9.png" id="23_fdfas"]
+[ext_resource type="AudioStream" uid="uid://btgj3s2h7mp7r" path="res://oraculus/Level/Sounds/Stone Walk 4.wav" id="27_xrc8i"]
+[ext_resource type="AudioStream" uid="uid://cicsj6ic06vcc" path="res://oraculus/Level/Sounds/Stone Jump.wav" id="28_4g16k"]
+[ext_resource type="AudioStream" uid="uid://b8a1uo8oo875w" path="res://oraculus/Level/Sounds/Sword Attack 1.wav" id="29_8ebmy"]
+[ext_resource type="Texture2D" uid="uid://bj4l6yr656la7" path="res://oraculus/PlayerCharacter/Slide/0.png" id="45_btd6f"]
+[ext_resource type="Texture2D" uid="uid://tyu3ywp8evat" path="res://oraculus/PlayerCharacter/Slide/1.png" id="46_om0sx"]
+[ext_resource type="Texture2D" uid="uid://orfgv3io7vqh" path="res://oraculus/PlayerCharacter/Slide/2.png" id="47_0fmn1"]
+[ext_resource type="Texture2D" uid="uid://d21jo1hgdjoaf" path="res://oraculus/PlayerCharacter/Slide/3.png" id="48_aevuw"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_npq8g"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_0m1v8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_h1lhp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_at42d")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_pgs84")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_wcde8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_l3w1g")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_7fp77")
+}],
+"loop": true,
+"name": &"crouch",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_7fp77")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_mfl2f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_n8uw8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_fhfjg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_35q3d")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_lxxka")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_aress")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_hx7te")
+}],
+"loop": true,
+"name": &"crouch_walk",
+"speed": 12.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_bbawc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_uuqyu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_xrhqr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_fht2m")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_3lwn0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_ucl2t")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_h6jdn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_ehpdq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_d8j6u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_s5ke7")
+}],
+"loop": false,
+"name": &"death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_yb7hh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_qrao2")
+}],
+"loop": true,
+"name": &"fall",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_h4f4y")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_gcajl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_y6tmm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_jkl4o")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_gcajl")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("11_vb6av")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_jbqh7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_un4ov")
+}],
+"loop": true,
+"name": &"jump",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("14_3rf7u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_yxc2u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_yugw4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_6k0dv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_v44op")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_8v6t0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_3ocfg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_stbob")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_oaswr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_fdfas")
+}],
+"loop": true,
+"name": &"run",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("45_btd6f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("46_om0sx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("47_0fmn1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_aevuw")
+}],
+"loop": true,
+"name": &"slide",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_bl8he"]
+height = 32.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_me4x8"]
+size = Vector2(43, 34)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3pift"]
+size = Vector2(18, 34)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kyg1f"]
+size = Vector2(61, 49)
+
+[sub_resource type="Animation" id="Animation_5kxj8"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_3ufcn"]
+resource_name = "hit_flash"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.166667, 0.2, 0.266667, 0.3, 0.366667, 0.4, 0.466667, 0.5, 0.533333, 0.566667, 0.633333, 0.7, 0.733333, 0.8, 0.833333, 0.9, 0.933333, 1, 1.03333, 1.1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_s4uui"]
+_data = {
+"RESET": SubResource("Animation_5kxj8"),
+"hit_flash": SubResource("Animation_3ufcn")
+}
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1_rsi7j")
+
+[node name="Player" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_npq8g")
+animation = &"crouch"
+frame_progress = 0.266929
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_bl8he")
+
+[node name="Walk" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("27_xrc8i")
+volume_db = -5.0
+pitch_scale = 1.2
+bus = &"SFX"
+
+[node name="Jump" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("28_4g16k")
+volume_db = -5.0
+bus = &"SFX"
+
+[node name="Area2D" type="Area2D" parent="." groups=["music_player"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(9.5, 0)
+shape = SubResource("RectangleShape2D_me4x8")
+
+[node name="Attack" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("29_8ebmy")
+
+[node name="HitBox" type="Area2D" parent="." groups=["hit_player"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+position = Vector2(8, 0)
+shape = SubResource("RectangleShape2D_3pift")
+
+[node name="AttackBox" type="Area2D" parent="." groups=["player"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox"]
+position = Vector2(18.5, -7.5)
+shape = SubResource("RectangleShape2D_kyg1f")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_s4uui")
+}
+
+[node name="Hurt" type="AudioStreamPlayer2D" parent="."]
+bus = &"SFX"
+
+[node name="Death" type="AudioStreamPlayer2D" parent="."]
+bus = &"SFX"
+
+[connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]
+[connection signal="area_entered" from="AttackBox" to="." method="_on_attack_box_area_entered"]

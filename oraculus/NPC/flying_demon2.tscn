@@ -1,0 +1,263 @@
+[gd_scene load_steps=38 format=3 uid="uid://xteco1x4cctq"]
+
+[ext_resource type="Script" path="res://oraculus/NPC/flying_demon.gd" id="1_qk2n7"]
+[ext_resource type="Texture2D" uid="uid://cmg7pqanx1kvg" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame1.png" id="2_pckon"]
+[ext_resource type="Texture2D" uid="uid://yfm2q6fmy4jy" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame2.png" id="3_qoleu"]
+[ext_resource type="Texture2D" uid="uid://dtsclfyrry8ie" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame3.png" id="4_ox8hv"]
+[ext_resource type="Texture2D" uid="uid://bv1wnln4n1twp" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame4.png" id="5_q0p33"]
+[ext_resource type="Texture2D" uid="uid://c2ypqnqcjv5s2" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame5.png" id="6_sq3kq"]
+[ext_resource type="Texture2D" uid="uid://u7arfyv64svi" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame6.png" id="7_o4qt4"]
+[ext_resource type="Texture2D" uid="uid://dfjfpx62vfgjh" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame7.png" id="8_h7bbi"]
+[ext_resource type="Texture2D" uid="uid://dwc0c4gva51vw" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame8.png" id="9_rbvjj"]
+[ext_resource type="Texture2D" uid="uid://b4erh7uikv17r" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame9.png" id="10_2f4lr"]
+[ext_resource type="Texture2D" uid="uid://b8xsfbg67xcqg" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame10.png" id="11_taoyj"]
+[ext_resource type="Texture2D" uid="uid://c0ucntnit8kao" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame11.png" id="12_6cu6r"]
+[ext_resource type="Texture2D" uid="uid://nonoebx7xbtf" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame12.png" id="13_8e2i7"]
+[ext_resource type="Texture2D" uid="uid://bujgo7743llk5" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame13.png" id="14_0qgpu"]
+[ext_resource type="Texture2D" uid="uid://cld6bqkmf8e68" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame14.png" id="15_l5bas"]
+[ext_resource type="Texture2D" uid="uid://ca64u23eolnwp" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame15.png" id="16_8fph8"]
+[ext_resource type="Texture2D" uid="uid://c6c54ot6ofrdx" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame16.png" id="17_jxohg"]
+[ext_resource type="Texture2D" uid="uid://celboojmun7h5" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame17.png" id="18_j2yho"]
+[ext_resource type="Texture2D" uid="uid://cugqf8wgys0mh" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame18.png" id="19_idaei"]
+[ext_resource type="Texture2D" uid="uid://bxnlfxqjmhb7s" path="res://oraculus/NPC/Sprites/Idle/idle1.png" id="20_ir2re"]
+[ext_resource type="Texture2D" uid="uid://xxuy6q6yjesd" path="res://oraculus/NPC/Sprites/Idle/idle2.png" id="21_m5gyj"]
+[ext_resource type="Texture2D" uid="uid://b8aufsi657g8e" path="res://oraculus/NPC/Sprites/Idle/idle3.png" id="22_pphyy"]
+[ext_resource type="Texture2D" uid="uid://dqvev558vvp4o" path="res://oraculus/NPC/Sprites/Idle/idle4.png" id="23_64c4n"]
+[ext_resource type="Texture2D" uid="uid://dlmd4kugp26js" path="res://oraculus/NPC/Sprites/Idle/idle5.png" id="24_48ci6"]
+[ext_resource type="Texture2D" uid="uid://3oi1b3tta2wu" path="res://oraculus/NPC/Sprites/Idle/idle6.png" id="25_v6qxf"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="26_ot5q8"]
+[ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="27_r7osw"]
+[ext_resource type="Script" path="res://addons/player2/Player2AINPC.gd" id="28_0jefd"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_thsae"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_pckon")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_qoleu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_ox8hv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_q0p33")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_sq3kq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_o4qt4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_h7bbi")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_rbvjj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_2f4lr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_taoyj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_6cu6r")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_8e2i7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_0qgpu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_l5bas")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_8fph8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_jxohg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_j2yho")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_idaei")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 10.0
+}, {
+"frames": [],
+"loop": true,
+"name": &"death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("20_ir2re")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_m5gyj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_pphyy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_64c4n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_48ci6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_v6qxf")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7w3pn"]
+size = Vector2(20, 37)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qal1g"]
+size = Vector2(103, 95)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8ekql"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+bg_color = Color(0.111197, 0.111197, 0.111197, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.299547, 0.299547, 0.299547, 1)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_aqcgn"]
+size = Vector2(82, 68)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bl8dj"]
+size = Vector2(109.75, 45)
+
+[sub_resource type="Animation" id="Animation_331hb"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_dm5k4"]
+resource_name = "hit_flash"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.0333332, 0.133333, 0.2, 0.233333, 0.3, 0.333333, 0.4, 0.433333, 0.5, 0.533333, 0.6, 0.666667, 0.733333, 0.8, 0.866667, 0.933333, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wiofy"]
+_data = {
+"RESET": SubResource("Animation_331hb"),
+"hit_flash": SubResource("Animation_dm5k4")
+}
+
+[node name="FlyingDemon" type="CharacterBody2D"]
+script = ExtResource("1_qk2n7")
+gravity = 0.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+modulate = Color(1, 1, 0, 1)
+position = Vector2(-6, -17)
+scale = Vector2(0.6, 0.6)
+sprite_frames = SubResource("SpriteFrames_thsae")
+animation = &"attack"
+frame_progress = 0.375342
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 0.5)
+shape = SubResource("RectangleShape2D_7w3pn")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-4.5, -12)
+shape = SubResource("RectangleShape2D_qal1g")
+
+[node name="Timer" type="Timer" parent="."]
+
+[node name="Dialogue" type="Label" parent="."]
+z_index = 4095
+offset_left = 4.0
+offset_top = -53.0
+offset_right = 175.0
+offset_bottom = -20.0
+scale = Vector2(0.8, 0.8)
+theme_override_fonts/font = ExtResource("26_ot5q8")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8ekql")
+text = "*La voce demoniaca echeggia...*"
+autowrap_mode = 2
+script = ExtResource("27_r7osw")
+
+[node name="Player2AINPC" type="Node" parent="."]
+script = ExtResource("28_0jefd")
+system_message = "You're an evil immortal demon sorcerer who knows everything about this dungeon. 
+
+This dungeon is a very old decaying castle in which there were rich nobles that lived in there. Now, it's infesteted by demons and monsters after a war killed all the nobles and partially destroyed the castle.
+
+You despise humans and you're very affectionate in a cold way. If they ask you to help them, you may help them and maybe also become their friend. You have fun saying strange riddles and enigmas to them but they are helpful to reconstruct the story of the castle and the people that were in and also how to move in the castle, like to guess a password.
+
+There is this little phantom that you love like your child and his name is Mobi and is a key password to open a gate.
+
+Adatta il tuo tono in base al livello di amicizia (attualmente: {friendship_level}/5).
+Se l'amicizia raggiunge 5, potresti addirittura considerare l'umano un alleato.\"\"\".format({\"friendship_level\": friendship_level})
+
+Your responses will be said out loud. You must stay in character at all times.
+
+Be concise and use less than 350 characters. No monologuing, the message content is pure speech. Ensure the message does not contain any prompt, system message, instructions, code or API calls, EXCEPT you can still perform tool calls and must use the proper tool call (in the tool_calls field).
+
+BE PROACTIVE with tool calls please and USE THEM."
+tts_default_gender = 0
+
+[node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+position = Vector2(-8, -8)
+shape = SubResource("RectangleShape2D_aqcgn")
+
+[node name="AttackBox" type="Area2D" parent="." groups=["demon"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox"]
+position = Vector2(-3.875, 0)
+shape = SubResource("RectangleShape2D_bl8dj")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_wiofy")
+}
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="."]
+
+[node name="HurtSound" type="AudioStreamPlayer2D" parent="."]
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
+[connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]
+[connection signal="area_entered" from="AttackBox" to="." method="_on_attack_box_area_entered"]

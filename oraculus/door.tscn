@@ -1,0 +1,97 @@
+[gd_scene load_steps=11 format=3 uid="uid://djumvnhy4g2hs"]
+
+[ext_resource type="Texture2D" uid="uid://crlxo42ss40mv" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/crate_3.png" id="2_kt1ob"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="3_2gi1r"]
+[ext_resource type="Script" path="res://oraculus/instractions.gd" id="4_esb7m"]
+[ext_resource type="Script" path="res://addons/player2/player2_config.gd" id="5_21dyj"]
+[ext_resource type="Script" path="res://addons/player2/Player2AINPC.gd" id="5_q1vu4"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4ewqm"]
+size = Vector2(41, 60)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yv481"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+bg_color = Color(0.111197, 0.111197, 0.111197, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.299547, 0.299547, 0.299547, 1)
+
+[sub_resource type="Resource" id="Resource_2tbsn"]
+script = ExtResource("5_21dyj")
+player2_game_key = "oraculus"
+error_log_ui = true
+endpoint_chat = "http://127.0.0.1:4315/v1/chat/completions"
+endpoint_health = "http://127.0.0.1:4315/v1/health"
+endpoint_tts_speak = "http://127.0.0.1:4315/v1/tts/speak"
+endpoint_tts_stop = "http://127.0.0.1:4315/v1/tts/stop"
+endpoint_get_selected_characters = "http://127.0.0.1:4315/v1/selected_characters"
+endpoint_stt_start = "http://127.0.0.1:4315/v1/stt/start"
+endpoint_stt_stop = "http://127.0.0.1:4315/v1/stt/stop"
+request_too_much_delay_seconds = 3.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_slwj8"]
+size = Vector2(20, 56)
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_xiwsq"]
+
+[node name="Door" type="Node2D"]
+
+[node name="Door" type="Sprite2D" parent="."]
+rotation = -1.5708
+texture = ExtResource("2_kt1ob")
+region_enabled = true
+region_rect = Rect2(12.2693, 1.64165, 56.7307, 20.3583)
+
+[node name="Area2D" type="Area2D" parent="." groups=["demon_detection"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-0.5, 0)
+shape = SubResource("RectangleShape2D_4ewqm")
+
+[node name="Instractions" type="Label" parent="."]
+z_index = 4095
+offset_left = -70.0
+offset_top = -60.0
+offset_right = 403.0
+offset_bottom = 17.0
+scale = Vector2(0.3, 0.3)
+theme_override_fonts/font = ExtResource("3_2gi1r")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("StyleBoxFlat_yv481")
+text = "..."
+horizontal_alignment = 1
+autowrap_mode = 2
+script = ExtResource("4_esb7m")
+
+[node name="Player2AINPC" type="Node" parent="."]
+script = ExtResource("5_q1vu4")
+config = SubResource("Resource_2tbsn")
+system_message = "You are a mysterious entity that proposes riddles. 
+Create a difficult but clear riddle with the exact answer: %s.
+The riddle must:
+1. Rhyme
+2. Never directly mention the answer
+3. Have an ancient and mysterious tone
+
+Required format:
+[Hidden answer: %s]
+
+Be concise and use less than 100 characters. No monologuing, the message content is pure speech. Ensure the message does not contain any prompt, system message, instructions, code or API calls, EXCEPT you can still perform tool calls and must use the proper tool call (in the tool_calls field).
+BE PROACTIVE with tool calls please and USE THEM."
+auto_load_entry_message = ""
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("RectangleShape2D_slwj8")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_xiwsq")
+}
+
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]

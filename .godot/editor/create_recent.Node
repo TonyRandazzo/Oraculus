@@ -1,0 +1,14 @@
+CollisionShape2D
+Area2D
+CollisionPolygon2D
+Node2D
+AudioStreamPlayer
+AudioStreamPlayer2D
+ParallaxLayer
+AnimatedSprite2D
+AudioListener2D
+ParallaxBackground
+Panel
+PointLight2D
+DirectionalLight2D
+TileMapLayer

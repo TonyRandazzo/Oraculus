@@ -1,4 +1,4 @@
-[gd_scene load_steps=318 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=319 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -167,6 +167,7 @@
 [ext_resource type="Texture2D" uid="uid://br42wso4dcdnh" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/candle_1/candle_1_4.png" id="140_jqmsq"]
 [ext_resource type="Texture2D" uid="uid://dxdc78y4876o5" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/candle_1/candle_1_5.png" id="141_pcnl7"]
 [ext_resource type="Texture2D" uid="uid://c4pxns0x33vkx" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/candle_1/candle_1_6.png" id="142_s8qh3"]
+[ext_resource type="Texture2D" uid="uid://dyoobssarqmc4" path="res://oraculus/Level/o luce mirando le stelle al sol d'argenteo, calibra mente calibra corpo, spirto saggia 'l gaudio dei pré d'april.png" id="151_g8v1p"]
 [ext_resource type="Texture2D" uid="uid://bblfvve5xvt32" path="res://oraculus/Level/photo-1528818955841-a7f1425131b5.jpg" id="157_1qksc"]
 [ext_resource type="Texture2D" uid="uid://bmh4ru5ne5h81" path="res://oraculus/Level/props2.png" id="157_kqg5m"]
 [ext_resource type="Texture2D" uid="uid://ck6jwkpk8qkbs" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/crate_2_damaged.png" id="159_6fjq2"]
@@ -3360,8 +3361,8 @@ scale = Vector2(0.0599286, 0.144033)
 energy = 1.76
 blend_mode = 2
 shadow_enabled = true
-texture = ExtResource("37_i70gk")
-texture_scale = 1.26
+texture = ExtResource("151_g8v1p")
+texture_scale = 0.15
 
 [node name="Torch4" type="Node2D" parent="Torch"]
 position = Vector2(1126, -217)
@@ -3876,6 +3877,8 @@ autoplay = true
 [node name="Music2" type="AudioStreamPlayer" parent="Music"]
 stream = ExtResource("173_nfyyl")
 volume_db = -10.0
+
+[node name="stanza 4" type="Node2D" parent="."]
 
 [connection signal="area_entered" from="PrimaStanza/Area2D" to="PrimaStanza/ParallaxBackground/ParallaxLayer8/Dragon" method="_on_area_2d_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D2" to="Music" method="_on_area_2d_2_area_entered"]

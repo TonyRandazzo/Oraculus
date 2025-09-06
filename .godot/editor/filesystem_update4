@@ -8,3 +8,5 @@ res://backup.tscn
 res://oraculus/stairs.tscn
 res://oraculus/NPC/ogre.tscn
 res://oraculus/NPC/dragon.tscn
+res://oraculus/camera_distance.gd
+res://oraculus/parallax_background.gd

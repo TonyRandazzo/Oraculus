@@ -1,4 +1,4 @@
-[gd_scene load_steps=433 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=435 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -211,6 +211,7 @@
 [ext_resource type="Texture2D" uid="uid://r3hmv7cq6q18" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Cattivone teschio enigma/Lich Shadows animations/Lich_shadow14.png" id="136_vuuni"]
 [ext_resource type="Texture2D" uid="uid://c0xbrywqgjpa7" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/candle_blue_3/candle_blue_3_6.png" id="136_xqsq5"]
 [ext_resource type="Texture2D" uid="uid://efsetdy8bvev" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/candle_1/candle_1_1.png" id="137_frq38"]
+[ext_resource type="Script" path="res://oraculus/camera_distance.gd" id="137_hqc5q"]
 [ext_resource type="Texture2D" uid="uid://6to2ptg7vy1m" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/candle_1/candle_1_2.png" id="138_pve24"]
 [ext_resource type="Texture2D" uid="uid://0spo1g78ut07" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Tiles/brick_10.png" id="139_4eifs"]
 [ext_resource type="Texture2D" uid="uid://cm1q4hmnsafb" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/candle_1/candle_1_3.png" id="139_t62us"]
@@ -484,6 +485,8 @@ sources/20 = SubResource("TileSetAtlasSource_yoeqk")
 sources/21 = SubResource("TileSetAtlasSource_i3j7c")
 sources/22 = SubResource("TileSetAtlasSource_m6ljs")
 sources/23 = SubResource("TileSetAtlasSource_as7hv")
+
+[sub_resource type="TileSet" id="TileSet_s22t8"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nba5x"]
 animations = [{
@@ -993,6 +996,9 @@ animations = [{
 "name": &"default",
 "speed": 4.0
 }]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rkd14"]
+size = Vector2(22, 95)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y7pyj"]
 texture = ExtResource("1_ex65i")
@@ -2266,9 +2272,6 @@ sources/98 = SubResource("TileSetAtlasSource_g3kfa")
 sources/99 = SubResource("TileSetAtlasSource_pdjts")
 sources/100 = SubResource("TileSetAtlasSource_kg5ni")
 sources/101 = SubResource("TileSetAtlasSource_i2ms0")
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_qhmvp"]
-size = Vector2(40.3155, 217.401)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lefvx"]
 bg_color = Color(0, 0, 0, 0.658824)
@@ -3669,6 +3672,22 @@ texture = ExtResource("52_87xgm")
 
 [node name="Fogne" type="Node2D" parent="."]
 
+[node name="Prova" type="Node2D" parent="Fogne"]
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="Fogne/Prova"]
+layer = 3
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="Fogne/Prova/ParallaxBackground"]
+position = Vector2(830, 1208)
+motion_scale = Vector2(1.1, 1)
+
+[node name="Sondo" type="TileMapLayer" parent="Fogne/Prova/ParallaxBackground/ParallaxLayer"]
+modulate = Color(0.262252, 0.236295, 0.442283, 1)
+light_mask = 0
+position = Vector2(-187, -186)
+scale = Vector2(0.7, 0.7)
+tile_set = SubResource("TileSet_s22t8")
+
 [node name="Brush" type="Sprite2D" parent="Fogne"]
 modulate = Color(0.319998, 0.67781, 0.97499, 1)
 position = Vector2(288, 1188)
@@ -3770,6 +3789,22 @@ position = Vector2(-19, 234)
 scale = Vector2(0.35, 0.298)
 texture = ExtResource("61_jn1ne")
 
+[node name="ParallaxLayer3" type="ParallaxLayer" parent="Fogne/ParallaxBackground"]
+position = Vector2(1634, 976)
+motion_scale = Vector2(0.9, 1)
+metadata/_edit_group_ = true
+
+[node name="Wall-2833964960720" type="Sprite2D" parent="Fogne/ParallaxBackground/ParallaxLayer3"]
+position = Vector2(76, 245.9)
+scale = Vector2(0.6, 0.51)
+texture = ExtResource("59_x1pdi")
+
+[node name="Wall-2833964960721" type="Sprite2D" parent="Fogne/ParallaxBackground/ParallaxLayer3"]
+position = Vector2(62, 85.4)
+scale = Vector2(0.6, 0.51)
+texture = ExtResource("59_x1pdi")
+flip_h = true
+
 [node name="Waterfall" type="Node2D" parent="Fogne"]
 position = Vector2(2057, 1245)
 
@@ -3820,8 +3855,14 @@ position = Vector2(1911, 1185)
 scale = Vector2(1.22266, 1.21094)
 sprite_frames = SubResource("SpriteFrames_fj2gn")
 autoplay = "default"
-frame = 5
-frame_progress = 0.0364368
+frame_progress = 0.734436
+
+[node name="CameraDistance" type="Area2D" parent="Fogne"]
+script = ExtResource("137_hqc5q")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fogne/CameraDistance"]
+position = Vector2(1677, 1230.5)
+shape = SubResource("RectangleShape2D_rkd14")
 
 [node name="Dungeon" type="TileMapLayer" parent="."]
 position = Vector2(4, 0)
@@ -3832,12 +3873,7 @@ tile_set = SubResource("TileSet_hpvxc")
 position = Vector2(1858, 1275)
 rotation = -0.279253
 
-[node name="Area2D" type="Area2D" parent="Ammasso di cranio"]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Ammasso di cranio/Area2D"]
-position = Vector2(44.6141, 29.4376)
-rotation = 1.8326
-shape = SubResource("RectangleShape2D_qhmvp")
+[node name="Area2D" type="StaticBody2D" parent="Ammasso di cranio"]
 
 [node name="skull33" type="Sprite2D" parent="Ammasso di cranio/Area2D"]
 position = Vector2(25.6924, -6.15662)
@@ -3857,11 +3893,13 @@ texture = ExtResource("192_lcl6s")
 [node name="skull15" type="Sprite2D" parent="Ammasso di cranio/Area2D"]
 position = Vector2(-18.6738, -7.43518)
 rotation = -0.296706
+scale = Vector2(1, 1)
 texture = ExtResource("192_lcl6s")
 
 [node name="skull14" type="Sprite2D" parent="Ammasso di cranio/Area2D"]
 position = Vector2(105.611, 19.881)
 rotation = -0.296706
+scale = Vector2(1, 1)
 texture = ExtResource("192_lcl6s")
 
 [node name="skull13" type="Sprite2D" parent="Ammasso di cranio/Area2D"]
@@ -3958,6 +3996,7 @@ texture = ExtResource("192_lcl6s")
 [node name="skull20" type="Sprite2D" parent="Ammasso di cranio/Area2D"]
 position = Vector2(27.6688, 20.5555)
 rotation = -0.296706
+scale = Vector2(1, 1)
 texture = ExtResource("192_lcl6s")
 
 [node name="skull21" type="Sprite2D" parent="Ammasso di cranio/Area2D"]
@@ -3974,6 +4013,7 @@ texture = ExtResource("192_lcl6s")
 [node name="skull23" type="Sprite2D" parent="Ammasso di cranio/Area2D"]
 position = Vector2(16.1362, 27.6521)
 rotation = -0.296706
+scale = Vector2(1, 1)
 texture = ExtResource("192_lcl6s")
 
 [node name="skull24" type="Sprite2D" parent="Ammasso di cranio/Area2D"]
@@ -4021,6 +4061,9 @@ texture = ExtResource("192_lcl6s")
 position = Vector2(9.47156, 6.87732)
 rotation = -0.0174533
 texture = ExtResource("192_lcl6s")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Ammasso di cranio/Area2D"]
+polygon = PackedVector2Array(-59.3295, -10.7706, 9.48523, -7.68311, 46.2958, -5.4502, 69.9034, 13.8029, 84.7324, 20.1355, 101.901, 21.9376, 112.482, 17.6893, 130.463, 31.168, 146.119, 34.6168, 153.936, 47.2615, 156.679, 52.2091)
 
 [node name="Rocks" type="Sprite2D" parent="."]
 modulate = Color(0.654232, 0.654232, 0.654232, 1)
@@ -4654,7 +4697,7 @@ texture = ExtResource("86_gillt")
 
 [node name="Player" parent="." instance=ExtResource("2_ttcsd")]
 z_index = 1
-position = Vector2(1535, 1265)
+position = Vector2(-416, -60)
 scale = Vector2(0.8, 0.8)
 jump_force = 250.0
 gravity = 900.0
@@ -4856,6 +4899,7 @@ volume_db = -10.0
 [connection signal="area_entered" from="PrimaStanza/Area2D" to="PrimaStanza/ParallaxBackground/ParallaxLayer8/Dragon" method="_on_area_2d_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D2" to="Music" method="_on_area_2d_2_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D3" to="Music" method="_on_area_2d_2_area_entered"]
+[connection signal="area_entered" from="Fogne/CameraDistance" to="Fogne/CameraDistance" method="_on_area_entered"]
 [connection signal="pressed" from="Player/Camera2D/Pause" to="Player/Camera2D/Options" method="_on_pause_pressed"]
 [connection signal="pressed" from="Player/Camera2D/Win/Button" to="Player" method="_on_button_pressed"]
 [connection signal="pressed" from="Player/Camera2D/Loose/Button" to="Player" method="_on_button_pressed"]

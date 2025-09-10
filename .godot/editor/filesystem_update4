@@ -1,5 +1,6 @@
 res://oraculus/main.tscn
 res://oraculus/muri.tres
+res://oraculus/camera_distance.gd
 res://oraculus/NPC/ghost.tscn
 res://oraculus/door.tscn
 res://oraculus/hud.tscn
@@ -8,3 +9,8 @@ res://backup.tscn
 res://oraculus/stairs.tscn
 res://oraculus/NPC/ogre.tscn
 res://oraculus/NPC/dragon.tscn
+res://oraculus/PlayerCharacter/player.gd
+res://oraculus/camera_distance2.gd
+res://oraculus/camera_2d.gd
+res://oraculus/options.tscn
+res://oraculus/NPC/dragon.gd

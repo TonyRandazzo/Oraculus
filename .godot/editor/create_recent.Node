@@ -1,3 +1,4 @@
+CanvasLayer
 TileMapLayer
 ParallaxLayer
 ParallaxBackground
@@ -11,4 +12,3 @@ StaticBody2D
 AnimatedSprite2D
 Panel
 TileMap
-AudioStreamPlayer

@@ -745,13 +745,11 @@ grow_vertical = 2
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
-offset_left = -620.0
-offset_top = 178.0
-offset_right = 1244.0
-offset_bottom = 1133.0
+offset_right = 1864.0
+offset_bottom = 955.0
 
 [node name="HP" type="Node2D" parent="."]
-position = Vector2(-49, 188)
+position = Vector2(0, 5)
 metadata/_edit_group_ = true
 
 [node name="HP" type="TextureProgressBar" parent="HP"]
@@ -770,22 +768,23 @@ texture = ExtResource("3_jink4")
 stretch_mode = 2
 
 [node name="Interact" type="Node2D" parent="."]
+position = Vector2(0, 5)
 scale = Vector2(0.7, 0.7)
 
 [node name="MenusBox34x34" type="Sprite2D" parent="Interact"]
-position = Vector2(-47.2857, 311.286)
+position = Vector2(19.8571, 51.2858)
 texture = ExtResource("5_vuj28")
 
 [node name="MenusIcons34x34" type="Sprite2D" parent="Interact"]
-position = Vector2(-47.2857, 309.286)
+position = Vector2(19.8571, 51.2858)
 texture = ExtResource("5_1k8hq")
 
 [node name="Answer2" type="Label" parent="Interact"]
 z_index = 4096
-offset_left = -57.1429
-offset_top = 297.143
-offset_right = 865.857
-offset_bottom = 378.143
+offset_left = 11.4286
+offset_top = 30.0
+offset_right = 934.428
+offset_bottom = 111.0
 scale = Vector2(0.5, 0.5)
 theme_override_fonts/font = SubResource("FontFile_cv5wx")
 theme_override_font_sizes/font_size = 50
@@ -797,10 +796,10 @@ autowrap_mode = 2
 [node name="Label" type="TextEdit" parent="."]
 visible = false
 layout_mode = 0
-offset_left = -50.0
-offset_top = 205.0
-offset_right = 566.0
-offset_bottom = 267.0
+offset_left = 1.0
+offset_top = 16.0
+offset_right = 617.0
+offset_bottom = 78.0
 theme_override_colors/font_placeholder_color = Color(0.513233, 0.513233, 0.513233, 1)
 theme_override_colors/font_color = Color(0.255659, 0.255659, 0.255659, 1)
 theme_override_fonts/font = ExtResource("4_vkw1k")

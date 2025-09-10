@@ -28,28 +28,27 @@ script = ExtResource("1_qevvq")
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
-offset_left = 49.0
-offset_top = 116.0
-offset_right = 1124.0
-offset_bottom = 615.0
+offset_left = -2.0
+offset_right = 1073.0
+offset_bottom = 499.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_k2dk0")
 
 [node name="ProgressBar" type="ProgressBar" parent="."]
 layout_mode = 0
-offset_left = 198.0
-offset_top = 286.0
-offset_right = 974.0
-offset_bottom = 313.0
+offset_left = 147.0
+offset_top = 170.0
+offset_right = 923.0
+offset_bottom = 197.0
 value = 50.0
 show_percentage = false
 
 [node name="Dialogue" type="Label" parent="."]
 z_index = 4096
 layout_mode = 0
-offset_left = 387.0
-offset_top = 234.0
-offset_right = 778.0
-offset_bottom = 273.0
+offset_left = 336.0
+offset_top = 118.0
+offset_right = 727.0
+offset_bottom = 157.0
 theme_override_fonts/font = ExtResource("2_alc1y")
 theme_override_font_sizes/font_size = 50
 text = "Music"
@@ -60,20 +59,20 @@ uppercase = true
 
 [node name="ProgressBar2" type="ProgressBar" parent="."]
 layout_mode = 0
-offset_left = 198.0
-offset_top = 390.0
-offset_right = 974.0
-offset_bottom = 417.0
+offset_left = 147.0
+offset_top = 274.0
+offset_right = 923.0
+offset_bottom = 301.0
 value = 50.0
 show_percentage = false
 
 [node name="Dialogue2" type="Label" parent="."]
 z_index = 4096
 layout_mode = 0
-offset_left = 387.0
-offset_top = 338.0
-offset_right = 778.0
-offset_bottom = 377.0
+offset_left = 336.0
+offset_top = 222.0
+offset_right = 727.0
+offset_bottom = 261.0
 theme_override_fonts/font = ExtResource("2_alc1y")
 theme_override_font_sizes/font_size = 50
 text = "SFX"
@@ -85,10 +84,10 @@ uppercase = true
 [node name="TextureButton" type="TextureButton" parent="."]
 process_mode = 3
 layout_mode = 0
-offset_left = 477.0
-offset_top = 503.0
-offset_right = 690.0
-offset_bottom = 558.0
+offset_left = 426.0
+offset_top = 387.0
+offset_right = 639.0
+offset_bottom = 442.0
 texture_normal = ExtResource("3_opqmg")
 texture_pressed = ExtResource("3_opqmg")
 texture_hover = ExtResource("3_opqmg")
@@ -99,10 +98,10 @@ stretch_mode = 0
 [node name="Dialogue3" type="Label" parent="."]
 z_index = 4096
 layout_mode = 0
-offset_left = 388.0
-offset_top = 508.0
-offset_right = 779.0
-offset_bottom = 547.0
+offset_left = 337.0
+offset_top = 392.0
+offset_right = 728.0
+offset_bottom = 431.0
 theme_override_fonts/font = ExtResource("2_alc1y")
 theme_override_font_sizes/font_size = 50
 text = "Exit"

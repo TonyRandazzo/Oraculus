@@ -41,7 +41,7 @@ func _on_area_2d_area_entered(area: Area2D) -> void:
 		position.x = 500
 		position.y = -100
 		direction = false
-
+		$"../../../Area2D".queue_free()
 
 func _on_flip_timer_timeout() -> void:
 	high *= -1

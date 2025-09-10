@@ -1,4 +1,4 @@
-[gd_scene load_steps=457 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=459 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -205,6 +205,7 @@
 [ext_resource type="Texture2D" uid="uid://ntuoowgvgo1p" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Tiles/stairs_wood_carpet_4.png" id="136_sw6jl"]
 [ext_resource type="Texture2D" uid="uid://r3hmv7cq6q18" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Cattivone teschio enigma/Lich Shadows animations/Lich_shadow14.png" id="136_vuuni"]
 [ext_resource type="Script" path="res://oraculus/camera_distance.gd" id="137_hqc5q"]
+[ext_resource type="Script" path="res://oraculus/camera_distance2.gd" id="139_2gq08"]
 [ext_resource type="Texture2D" uid="uid://0spo1g78ut07" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Tiles/brick_10.png" id="139_4eifs"]
 [ext_resource type="Texture2D" uid="uid://dyoobssarqmc4" path="res://oraculus/Level/o luce mirando le stelle al sol d'argenteo, calibra mente calibra corpo, spirto saggia 'l gaudio dei pré d'april.png" id="151_g8v1p"]
 [ext_resource type="Texture2D" uid="uid://bblfvve5xvt32" path="res://oraculus/Level/photo-1528818955841-a7f1425131b5.jpg" id="157_1qksc"]
@@ -576,6 +577,9 @@ sources/23 = SubResource("TileSetAtlasSource_as7hv")
 bg_color = Color(0.290196, 0, 1, 0.0980392)
 corner_radius_top_left = 100
 anti_aliasing_size = 10.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2k2oe"]
+size = Vector2(998.237, 369)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hrjbn"]
 texture = ExtResource("24_56c8i")
@@ -2042,8 +2046,8 @@ animations = [{
 "speed": 4.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rkd14"]
-size = Vector2(22, 95)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rbhsn"]
+size = Vector2(603, 370)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y7pyj"]
 texture = ExtResource("1_ex65i")
@@ -4597,6 +4601,18 @@ texture = ExtResource("47_gnhnh")
 position = Vector2(1539, -284)
 texture = ExtResource("48_bwgln")
 
+[node name="CameraDistance2" type="Area2D" parent="SecondaStanza"]
+position = Vector2(1799, -331)
+rotation = -0.0874227
+script = ExtResource("137_hqc5q")
+camera_path = NodePath("../../Player/Camera2D")
+player_path = NodePath("../../Player")
+metadata/_edit_group_ = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SecondaStanza/CameraDistance2"]
+position = Vector2(-41.8751, -71.7849)
+shape = SubResource("RectangleShape2D_2k2oe")
+
 [node name="Fogne" type="Node2D" parent="."]
 
 [node name="parallasse muro davanti" type="Node2D" parent="Fogne"]
@@ -4791,11 +4807,15 @@ autoplay = "default"
 frame_progress = 0.734436
 
 [node name="CameraDistance" type="Area2D" parent="Fogne"]
-script = ExtResource("137_hqc5q")
+position = Vector2(1905, 1208)
+script = ExtResource("139_2gq08")
+camera_path = NodePath("../../Player/Camera2D")
+player_path = NodePath("../../Player")
+metadata/_edit_group_ = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fogne/CameraDistance"]
-position = Vector2(1677, 1230.5)
-shape = SubResource("RectangleShape2D_rkd14")
+position = Vector2(5, -88)
+shape = SubResource("RectangleShape2D_rbhsn")
 
 [node name="parallasse pavimento e colli d\'ossa" type="Node2D" parent="Fogne"]
 z_index = 3
@@ -18244,7 +18264,7 @@ texture = ExtResource("86_gillt")
 
 [node name="Player" parent="." instance=ExtResource("2_ttcsd")]
 z_index = 1
-position = Vector2(-437, -15)
+position = Vector2(-434, -19)
 scale = Vector2(0.8, 0.8)
 jump_force = 250.0
 gravity = 900.0
@@ -18252,57 +18272,59 @@ max_jumps = 1000000
 slide_speed = 700.0
 metadata/_edit_group_ = true
 
-[node name="Camera2D" type="Camera2D" parent="Player"]
-position = Vector2(50, -43.5)
-zoom = Vector2(3.5, 3.5)
+[node name="CanvasLayer" type="CanvasLayer" parent="Player"]
+layer = 100
 
-[node name="HUD" parent="Player/Camera2D" instance=ExtResource("21_m6muq")]
-anchors_preset = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = -172.5
-offset_top = -30.25
-offset_right = 508.5
-offset_bottom = 346.75
-grow_horizontal = 1
-grow_vertical = 1
-scale = Vector2(0.6, 0.6)
+[node name="HUD" parent="Player/CanvasLayer" instance=ExtResource("21_m6muq")]
+anchors_preset = 12
+anchor_top = 1.0
+offset_top = -127.0
+offset_bottom = -17.0
+grow_vertical = 0
+scale = Vector2(1.5, 1.5)
 
-[node name="Options" parent="Player/Camera2D" instance=ExtResource("58_d854c")]
+[node name="Options" parent="Player/CanvasLayer" instance=ExtResource("58_d854c")]
 visible = false
-offset_left = -120.0
-offset_top = -48.0
-offset_right = -120.0
-offset_bottom = -48.0
-scale = Vector2(0.2, 0.2)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -301.0
+offset_top = -116.0
+offset_right = -301.0
+offset_bottom = -116.0
+scale = Vector2(0.5, 0.5)
 
-[node name="Pause" type="TouchScreenButton" parent="Player/Camera2D"]
+[node name="Pause" type="TouchScreenButton" parent="Player/CanvasLayer"]
 z_index = 4096
-position = Vector2(172, -107)
-scale = Vector2(0.7, 0.7)
+position = Vector2(1078, 5)
+scale = Vector2(2, 2)
 texture_normal = ExtResource("59_x7mso")
 texture_pressed = ExtResource("59_x7mso")
 metadata/_edit_group_ = true
 
-[node name="Sprite2D" type="Sprite2D" parent="Player/Camera2D/Pause"]
+[node name="Sprite2D" type="Sprite2D" parent="Player/CanvasLayer/Pause"]
 position = Vector2(17.1428, 17.1429)
 texture = ExtResource("60_hvd8m")
 
-[node name="Win" type="Panel" parent="Player/Camera2D"]
+[node name="Win" type="Panel" parent="Player/CanvasLayer"]
 visible = false
 z_index = 4096
-offset_left = -193.0
-offset_top = -80.0
-offset_right = 198.0
-offset_bottom = 144.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Answer" type="Label" parent="Player/Camera2D/Win"]
+[node name="Answer" type="Label" parent="Player/CanvasLayer/Win"]
 z_index = 4096
 layout_mode = 0
-offset_left = 136.0
-offset_top = 46.0
-offset_right = 223.0
-offset_bottom = 157.0
+offset_left = 424.0
+offset_top = 116.0
+offset_right = 511.0
+offset_bottom = 227.0
+scale = Vector2(3, 3)
 theme_override_fonts/font = SubResource("FontFile_1ijjn")
 theme_override_font_sizes/font_size = 50
 text = "WIN"
@@ -18310,15 +18332,16 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="Button" type="Button" parent="Player/Camera2D/Win"]
+[node name="Button" type="Button" parent="Player/CanvasLayer/Win"]
 z_index = 4096
 layout_mode = 0
-offset_left = 146.0
-offset_top = 135.0
-offset_right = 210.0
-offset_bottom = 170.0
+offset_left = 447.0
+offset_top = 355.0
+offset_right = 511.0
+offset_bottom = 390.0
+scale = Vector2(3, 3)
 
-[node name="Answer2" type="Label" parent="Player/Camera2D/Win/Button"]
+[node name="Answer2" type="Label" parent="Player/CanvasLayer/Win/Button"]
 z_index = 4096
 layout_mode = 0
 offset_left = 12.0
@@ -18333,37 +18356,40 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="Loose" type="Panel" parent="Player/Camera2D"]
+[node name="Loose" type="Panel" parent="Player/CanvasLayer"]
 visible = false
 z_index = 4096
-offset_left = -193.0
-offset_top = -80.0
-offset_right = 198.0
-offset_bottom = 144.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Answer" type="Label" parent="Player/Camera2D/Loose"]
+[node name="Answer" type="Label" parent="Player/CanvasLayer/Loose"]
 z_index = 4096
 layout_mode = 0
-offset_left = 136.0
-offset_top = 46.0
-offset_right = 223.0
-offset_bottom = 157.0
+offset_left = 424.0
+offset_top = 116.0
+offset_right = 511.0
+offset_bottom = 227.0
+scale = Vector2(3, 3)
 theme_override_fonts/font = SubResource("FontFile_1ijjn")
 theme_override_font_sizes/font_size = 50
-text = "Loose"
+text = "LOOSE"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="Button" type="Button" parent="Player/Camera2D/Loose"]
+[node name="Button" type="Button" parent="Player/CanvasLayer/Loose"]
 z_index = 4096
 layout_mode = 0
-offset_left = 146.0
-offset_top = 135.0
-offset_right = 210.0
-offset_bottom = 170.0
+offset_left = 447.0
+offset_top = 355.0
+offset_right = 511.0
+offset_bottom = 390.0
+scale = Vector2(3, 3)
 
-[node name="Answer2" type="Label" parent="Player/Camera2D/Loose/Button"]
+[node name="Answer2" type="Label" parent="Player/CanvasLayer/Loose/Button"]
 z_index = 4096
 layout_mode = 0
 offset_left = 12.0
@@ -18377,6 +18403,10 @@ text = "Retry"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+position = Vector2(50, -43.5)
+zoom = Vector2(3.5, 3.5)
 
 [node name="Studio2" type="TileMapLayer" parent="."]
 z_index = 2
@@ -18445,10 +18475,9 @@ volume_db = -10.0
 [connection signal="area_entered" from="PrimaStanza/Area2D" to="PrimaStanza/ParallaxBackground/ParallaxLayer8/Dragon" method="_on_area_2d_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D2" to="Music" method="_on_area_2d_2_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D3" to="Music" method="_on_area_2d_2_area_entered"]
-[connection signal="area_entered" from="Fogne/CameraDistance" to="Fogne/CameraDistance" method="_on_area_entered"]
-[connection signal="pressed" from="Player/Camera2D/Pause" to="Player/Camera2D/Options" method="_on_pause_pressed"]
-[connection signal="pressed" from="Player/Camera2D/Win/Button" to="Player" method="_on_button_pressed"]
-[connection signal="pressed" from="Player/Camera2D/Loose/Button" to="Player" method="_on_button_pressed"]
+[connection signal="pressed" from="Player/CanvasLayer/Pause" to="Player/CanvasLayer/Options" method="_on_pause_pressed"]
+[connection signal="pressed" from="Player/CanvasLayer/Win/Button" to="Player" method="_on_button_pressed"]
+[connection signal="pressed" from="Player/CanvasLayer/Loose/Button" to="Player" method="_on_button_pressed"]
 [connection signal="area_entered" from="Stairs/Stair1/StairSpeed" to="Player" method="_on_stair_speed_area_entered"]
 [connection signal="area_exited" from="Stairs/Stair1/StairSpeed" to="Player" method="_on_stair_speed_area_exited"]
 [connection signal="area_entered" from="Stairs/Stair2/StairSpeed" to="Player" method="_on_stair_speed_area_entered"]

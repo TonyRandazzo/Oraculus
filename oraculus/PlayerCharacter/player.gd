@@ -32,16 +32,17 @@ var current_demon: Node2D = null
 @onready var attack_sound = $Attack
 @onready var hurt_sound = $Hurt
 @onready var death_sound = $Death
-@onready var hud_label: TextEdit = $Camera2D/HUD/Label
-@onready var hud = $Camera2D/HUD/Label
-@onready var health_bar = $Camera2D/HUD/HP/HP
+@onready var hud_label: TextEdit = $CanvasLayer/HUD/Label
+@onready var hud = $CanvasLayer/HUD/Label
+@onready var health_bar = $CanvasLayer/HUD/HP/HP
 @onready var hit_box = $HitBox/CollisionShape2D
 @onready var attack_box = $AttackBox/CollisionShape2D
 @onready var animation_player = $AnimationPlayer
-@onready var interact_banner = $Camera2D/HUD/Interact
+@onready var interact_banner = $CanvasLayer/HUD/Interact
 
 
 func _ready() -> void:
+	speed= 120
 	normal_speed = speed
 	jumps_left = max_jumps
 	current_health = max_health
@@ -67,10 +68,10 @@ func _ready() -> void:
 	invincibility_timer.timeout.connect(_on_invincibility_timeout)
 
 func _physics_process(delta: float) -> void:
-	if $Camera2D/Options.visible == true:
-		$Camera2D/Pause.visible = false
+	if $CanvasLayer/Options.visible == true:
+		$CanvasLayer/Pause.visible = false
 	else:
-		$Camera2D/Pause.visible = true
+		$CanvasLayer/Pause.visible = true
 	# Blocca i controlli se il giocatore sta scrivendo
 	if hud_label.has_focus():
 		velocity.x = 0

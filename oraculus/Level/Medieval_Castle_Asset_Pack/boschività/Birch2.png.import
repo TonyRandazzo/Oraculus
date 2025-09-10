@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://by5encafep7u4"
-path="res://.godot/imported/Bones_shadow2_3.png-3eb0654d3311628eaff6df20939a0dfc.ctex"
+uid="uid://c8ik3le04q3kc"
+path="res://.godot/imported/Birch2.png-0540b8b7d59115edfb2219f586f3d8fb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/Bones_shadow2_3.png"
-dest_files=["res://.godot/imported/Bones_shadow2_3.png-3eb0654d3311628eaff6df20939a0dfc.ctex"]
+source_file="res://oraculus/Level/Medieval_Castle_Asset_Pack/boschività/Birch2.png"
+dest_files=["res://.godot/imported/Birch2.png-0540b8b7d59115edfb2219f586f3d8fb.ctex"]
 
 [params]
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=459 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=465 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -225,6 +225,7 @@
 [ext_resource type="Script" path="res://oraculus/music.gd" id="172_6cf41"]
 [ext_resource type="AudioStream" uid="uid://bm30ft0e4gq" path="res://oraculus/Level/Sounds/Labyrinth Of Lost Dreams MP3.mp3" id="173_nfyyl"]
 [ext_resource type="Texture2D" uid="uid://by5encafep7u4" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Cattivone teschio enigma/Bones_shadow2_3.png" id="192_lcl6s"]
+[ext_resource type="Script" path="res://oraculus/stair.gd" id="223_l5xqp"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_tlipm"]
 animations = [{
@@ -4090,6 +4091,54 @@ cache/0/20/0/glyphs/5/offset = Vector2(-1, -10)
 cache/0/20/0/glyphs/5/size = Vector2(6, 5)
 cache/0/20/0/glyphs/5/uv_rect = Rect2(223, 14, 6, 5)
 cache/0/20/0/glyphs/5/texture_idx = 0
+
+[sub_resource type="Curve2D" id="Curve2D_xc0qw"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 6, -36, 0, 0, 0, 0, 17.9459, -47.5714, 0, 0, 0, 0, 31.6545, -62.3361)
+}
+point_count = 3
+
+[sub_resource type="GDScript" id="GDScript_6jone"]
+script/source = "extends Node2D
+
+@export var climb_speed: float = 100.0
+@export var use_path_direction: bool = true
+var direction: Vector2 = Vector2(1, -1).normalized()
+
+func _ready():
+	if use_path_direction and $Path2D.curve.get_point_count() >= 2:
+		var start = $Path2D.to_global($Path2D.curve.get_point_position(0))
+		var end = $Path2D.to_global($Path2D.curve.get_point_position(1))
+		direction = (end - start).normalized()
+		direction = (end - start).normalized()
+"
+
+[sub_resource type="Curve2D" id="Curve2D_4yw2m"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 6, -36, 0, 0, 0, 0, 17.9459, -47.5714, 0, 0, 0, 0, 30.5475, -62.1001)
+}
+point_count = 3
+
+[sub_resource type="GDScript" id="GDScript_vqjkd"]
+script/source = "extends Node2D
+
+@export var climb_speed: float = 100.0
+@export var use_path_direction: bool = true
+var direction: Vector2 = Vector2(1, -1).normalized()
+
+func _ready():
+	if use_path_direction and $Path2D.curve.get_point_count() >= 2:
+		var start = $Path2D.to_global($Path2D.curve.get_point_position(0))
+		var end = $Path2D.to_global($Path2D.curve.get_point_position(1))
+		direction = (end - start).normalized()
+		direction = (end - start).normalized()
+"
+
+[sub_resource type="Curve2D" id="Curve2D_jk2xe"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 6.46143, -36.5162, 0, 0, 0, 0, 18.1763, -48.467, 0, 0, 0, 0, 29.8911, -61.0817, 0, 0, 0, 0, 42.295, -74.3603)
+}
+point_count = 4
 
 [node name="Main" type="Node2D"]
 
@@ -17747,43 +17796,6 @@ texture = ExtResource("192_lcl6s")
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Ammasso di cranio/Area2D"]
 polygon = PackedVector2Array(-59.3295, -10.7706, 9.48523, -7.68311, 46.2958, -5.4502, 69.9034, 13.8029, 84.7324, 20.1355, 101.901, 21.9376, 112.482, 17.6893, 130.463, 31.168, 146.119, 34.6168, 153.936, 47.2615, 156.679, 52.2091)
 
-[node name="Rocks" type="Sprite2D" parent="."]
-modulate = Color(0.654232, 0.654232, 0.654232, 1)
-position = Vector2(1328.25, -192.75)
-scale = Vector2(0.337838, 0.369565)
-texture = ExtResource("1_45hhv")
-region_enabled = true
-region_rect = Rect2(4.65177, 21.7334, 37.5053, 23.8451)
-
-[node name="Rocks2" type="Sprite2D" parent="."]
-modulate = Color(0.654232, 0.654232, 0.654232, 1)
-position = Vector2(1322.25, -193.75)
-rotation = -0.388953
-scale = Vector2(0.337838, 0.369565)
-texture = ExtResource("1_45hhv")
-region_enabled = true
-region_rect = Rect2(4.65177, 21.7334, 37.5053, 23.8451)
-
-[node name="Rocks3" type="Sprite2D" parent="."]
-modulate = Color(0.654232, 0.654232, 0.654232, 1)
-position = Vector2(1338.25, -200.75)
-rotation = -0.279556
-scale = Vector2(0.337838, 0.369565)
-texture = ExtResource("1_45hhv")
-flip_h = true
-region_enabled = true
-region_rect = Rect2(4.65177, 21.7334, 37.5053, 23.8451)
-
-[node name="Rocks4" type="Sprite2D" parent="."]
-modulate = Color(0.654232, 0.654232, 0.654232, 1)
-position = Vector2(1331, -200)
-rotation = -0.668509
-scale = Vector2(0.337838, 0.369565)
-texture = ExtResource("1_45hhv")
-flip_h = true
-region_enabled = true
-region_rect = Rect2(4.65177, 21.7334, 37.5053, 23.8451)
-
 [node name="Panel2" type="Panel" parent="."]
 z_index = 2
 offset_left = 80.0
@@ -18414,49 +18426,56 @@ tile_set = SubResource("TileSet_ow1mx")
 
 [node name="Stairs" type="Node2D" parent="."]
 
-[node name="Stair1" type="StaticBody2D" parent="Stairs"]
+[node name="Stair" type="Node2D" parent="Stairs" groups=["stairs"]]
+position = Vector2(14, -38)
+script = ExtResource("223_l5xqp")
 
-[node name="StairSpeed" type="Area2D" parent="Stairs/Stair1"]
+[node name="Area2D" type="Area2D" parent="Stairs/Stair"]
+position = Vector2(0, -1)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Stairs/Stair1/StairSpeed"]
-position = Vector2(0, -30)
-polygon = PackedVector2Array(-13, 0, 21, -41, 53, -35, -1, 3)
+[node name="CollisionShape2D" type="CollisionPolygon2D" parent="Stairs/Stair/Area2D"]
+position = Vector2(1, -8)
+scale = Vector2(1.06865, 1)
+polygon = PackedVector2Array(-28.0729, 29, 15.908, -16, 26.2013, 29)
 
-[node name="CollisionPolygon2D3" type="CollisionPolygon2D" parent="Stairs/Stair1"]
-position = Vector2(-11, -15)
-scale = Vector2(1.4, 1.4)
-polygon = PackedVector2Array(-1.42857, -7.85714, 32.8571, -35, 60.2042, -34.6939, 25, -1.42857)
+[node name="Path2D" type="Path2D" parent="Stairs/Stair"]
+position = Vector2(-32.355, 70.8894)
+scale = Vector2(1.55918, 1.50618)
+curve = SubResource("Curve2D_xc0qw")
 
-[node name="Stair2" type="StaticBody2D" parent="Stairs"]
-position = Vector2(1310, -153)
-scale = Vector2(0.7, 0.7)
+[node name="Stair2" type="Node2D" parent="Stairs" groups=["stairs"]]
+position = Vector2(1283, -166)
+script = SubResource("GDScript_6jone")
 
-[node name="CollisionPolygon2D4" type="CollisionPolygon2D" parent="Stairs/Stair2"]
-position = Vector2(12.8574, -50.39)
-scale = Vector2(1.4, 1.4)
-polygon = PackedVector2Array(-11, -2, 34, -36, 65, -36, -7, 8)
+[node name="Area2D" type="Area2D" parent="Stairs/Stair2"]
+position = Vector2(0, -1)
 
-[node name="CollisionPolygon2D5" type="CollisionPolygon2D" parent="Stairs/Stair2"]
-position = Vector2(60.0004, -85.977)
-scale = Vector2(1.4, 1.4)
-polygon = PackedVector2Array(-11, -2, 34, -36, 65, -36, -7, 8)
+[node name="CollisionShape2D" type="CollisionPolygon2D" parent="Stairs/Stair2/Area2D"]
+position = Vector2(9.15, -23)
+scale = Vector2(1.06865, 1)
+polygon = PackedVector2Array(-28.2133, 32, 2.66687, -1, 27.5, 37)
 
-[node name="CollisionPolygon2D6" type="CollisionPolygon2D" parent="Stairs/Stair2"]
-position = Vector2(74.2854, -96.7272)
-scale = Vector2(1.4, 1.4)
-polygon = PackedVector2Array(-11, -2, 34, -36, 65, -36, -7, 8)
+[node name="Path2D" type="Path2D" parent="Stairs/Stair2"]
+position = Vector2(-16.355, 44)
+scale = Vector2(1.05917, 1.11111)
+curve = SubResource("Curve2D_4yw2m")
 
-[node name="CollisionPolygon2D3" type="CollisionPolygon2D" parent="Stairs/Stair2"]
-position = Vector2(-57.1431, -7.14287)
-scale = Vector2(1.4, 1.4)
-polygon = PackedVector2Array(-15.3059, -1.0204, 30.6124, -34.6939, 60.2042, -34.6939, -7, 8)
+[node name="Stair3" type="Node2D" parent="Stairs" groups=["stairs"]]
+position = Vector2(1349, -198)
+script = SubResource("GDScript_vqjkd")
 
-[node name="StairSpeed" type="Area2D" parent="Stairs/Stair2"]
+[node name="Area2D" type="Area2D" parent="Stairs/Stair3"]
+position = Vector2(0, -1)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Stairs/Stair2/StairSpeed"]
-position = Vector2(-92.343, 12.0071)
-scale = Vector2(0.625073, 0.625175)
-polygon = PackedVector2Array(28.8884, -71.7627, 328.282, -265.994, 412.844, -254.569, 11, -10)
+[node name="CollisionShape2D" type="CollisionPolygon2D" parent="Stairs/Stair3/Area2D"]
+position = Vector2(9.15, -23)
+scale = Vector2(1.06865, 1)
+polygon = PackedVector2Array(-23.5344, 31, 32.6113, -32, 27.5, 37)
+
+[node name="Path2D" type="Path2D" parent="Stairs/Stair3"]
+position = Vector2(-15.3765, 56)
+scale = Vector2(1.45115, 1.50618)
+curve = SubResource("Curve2D_jk2xe")
 
 [node name="Music" type="Node2D" parent="."]
 script = ExtResource("172_6cf41")
@@ -18478,7 +18497,3 @@ volume_db = -10.0
 [connection signal="pressed" from="Player/CanvasLayer/Pause" to="Player/CanvasLayer/Options" method="_on_pause_pressed"]
 [connection signal="pressed" from="Player/CanvasLayer/Win/Button" to="Player" method="_on_button_pressed"]
 [connection signal="pressed" from="Player/CanvasLayer/Loose/Button" to="Player" method="_on_button_pressed"]
-[connection signal="area_entered" from="Stairs/Stair1/StairSpeed" to="Player" method="_on_stair_speed_area_entered"]
-[connection signal="area_exited" from="Stairs/Stair1/StairSpeed" to="Player" method="_on_stair_speed_area_exited"]
-[connection signal="area_entered" from="Stairs/Stair2/StairSpeed" to="Player" method="_on_stair_speed_area_entered"]
-[connection signal="area_exited" from="Stairs/Stair2/StairSpeed" to="Player" method="_on_stair_speed_area_exited"]

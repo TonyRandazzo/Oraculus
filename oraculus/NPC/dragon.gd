@@ -37,7 +37,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_area_2d_area_entered(area: Area2D) -> void:
-	if area.is_in_group("music_player"):
+	if area.is_in_group("overlap_player"):
 		position.x = 500
 		position.y = -100
 		direction = false

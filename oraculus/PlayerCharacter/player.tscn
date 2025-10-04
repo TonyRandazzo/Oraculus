@@ -1,4 +1,4 @@
-[gd_scene load_steps=60 format=3 uid="uid://cf67gkg04ayra"]
+[gd_scene load_steps=65 format=3 uid="uid://cf67gkg04ayra"]
 
 [ext_resource type="Texture2D" uid="uid://dqv11xtytfj82" path="res://oraculus/PlayerCharacter/Attack/0.png" id="1_0m1v8"]
 [ext_resource type="Script" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
@@ -10,17 +10,21 @@
 [ext_resource type="Texture2D" uid="uid://cy0uivkknhvl" path="res://oraculus/PlayerCharacter/Attack/4.png" id="6_wcde8"]
 [ext_resource type="Texture2D" uid="uid://bq73l7ndh4eyg" path="res://oraculus/PlayerCharacter/Idle/0.png" id="7_h4f4y"]
 [ext_resource type="Texture2D" uid="uid://b1828nlf6c7vj" path="res://oraculus/PlayerCharacter/Attack/5.png" id="7_l3w1g"]
+[ext_resource type="Texture2D" uid="uid://da6nf00he8mu1" path="res://oraculus/PlayerCharacter/Attack1/0.png" id="8_1jala"]
 [ext_resource type="Texture2D" uid="uid://r6vgephvk2um" path="res://oraculus/PlayerCharacter/Crouch/0.png" id="8_7fp77"]
 [ext_resource type="Texture2D" uid="uid://ctltjob10b8a5" path="res://oraculus/PlayerCharacter/Death/0.png" id="8_bbawc"]
 [ext_resource type="Texture2D" uid="uid://rwhuv6fo50gp" path="res://oraculus/PlayerCharacter/Idle/1.png" id="8_gcajl"]
 [ext_resource type="Texture2D" uid="uid://dklewtfe5jh52" path="res://oraculus/PlayerCharacter/Crouch/1.png" id="9_mfl2f"]
+[ext_resource type="Texture2D" uid="uid://bp77jy6p1rssp" path="res://oraculus/PlayerCharacter/Attack1/1.png" id="9_pic84"]
 [ext_resource type="Texture2D" uid="uid://bbcxx5d1yj0j3" path="res://oraculus/PlayerCharacter/Death/1.png" id="9_uuqyu"]
 [ext_resource type="Texture2D" uid="uid://cek0xkh6rgub8" path="res://oraculus/PlayerCharacter/Idle/2.png" id="9_y6tmm"]
 [ext_resource type="Texture2D" uid="uid://1pa0drlou3t0" path="res://oraculus/PlayerCharacter/Idle/3.png" id="10_jkl4o"]
+[ext_resource type="Texture2D" uid="uid://w1eyauilqy5p" path="res://oraculus/PlayerCharacter/Attack1/2.png" id="10_le5r5"]
 [ext_resource type="Texture2D" uid="uid://1ryvmmkwnc7f" path="res://oraculus/PlayerCharacter/Crouch/2.png" id="10_n8uw8"]
 [ext_resource type="Texture2D" uid="uid://bc3fcen5eao2l" path="res://oraculus/PlayerCharacter/Death/2.png" id="10_xrhqr"]
 [ext_resource type="Texture2D" uid="uid://bap2x5a1046u7" path="res://oraculus/PlayerCharacter/Crouch/3.png" id="11_fhfjg"]
 [ext_resource type="Texture2D" uid="uid://bl5xmhsfie2a8" path="res://oraculus/PlayerCharacter/Death/3.png" id="11_fht2m"]
+[ext_resource type="Texture2D" uid="uid://lfdpan2ngepr" path="res://oraculus/PlayerCharacter/Attack1/3.png" id="11_rufiy"]
 [ext_resource type="Texture2D" uid="uid://dqcdlfslt1qxf" path="res://oraculus/PlayerCharacter/Jump/0.png" id="11_vb6av"]
 [ext_resource type="Texture2D" uid="uid://mlrc3ou7xavb" path="res://oraculus/PlayerCharacter/Death/4.png" id="12_3lwn0"]
 [ext_resource type="Texture2D" uid="uid://cyhn5f5t5d8ld" path="res://oraculus/PlayerCharacter/Crouch/4.png" id="12_35q3d"]
@@ -75,6 +79,23 @@ animations = [{
 }],
 "loop": false,
 "name": &"attack",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_1jala")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_pic84")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_le5r5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_rufiy")
+}],
+"loop": false,
+"name": &"attack1",
 "speed": 16.0
 }, {
 "frames": [{
@@ -251,7 +272,10 @@ animations = [{
 height = 32.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_me4x8"]
-size = Vector2(43, 34)
+size = Vector2(46, 34)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_eedij"]
+size = Vector2(24, 16)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3pift"]
 size = Vector2(18, 34)
@@ -300,8 +324,7 @@ script = ExtResource("1_rsi7j")
 
 [node name="Player" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_npq8g")
-animation = &"crouch"
-frame_progress = 0.266929
+animation = &"attack1"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_bl8he")
@@ -317,11 +340,17 @@ stream = ExtResource("28_4g16k")
 volume_db = -5.0
 bus = &"SFX"
 
-[node name="Area2D" type="Area2D" parent="." groups=["music_player"]]
+[node name="Area2D" type="Area2D" parent="." groups=["overlap_player"]]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-position = Vector2(9.5, 0)
+position = Vector2(11, 0)
 shape = SubResource("RectangleShape2D_me4x8")
+
+[node name="StairDetector" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StairDetector"]
+position = Vector2(0, 9)
+shape = SubResource("RectangleShape2D_eedij")
 
 [node name="Attack" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("29_8ebmy")

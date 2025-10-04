@@ -36,7 +36,8 @@ player=""
 hit_demon=""
 hit_player=""
 demon_detection=""
-music_player=""
+stairs=""
+overlap_player=""
 
 [input]
 

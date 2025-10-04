@@ -25,8 +25,10 @@ var can_take_damage: bool = true
 var invincibility_timer: Timer
 var can_interact: bool = false
 var current_demon: Node2D = null
+var climbing: bool = false
+var current_stairs: Node = null
+@export var climb_speed: float = 100.0
 
-# Nodi AudioStreamPlayer
 @onready var walk_sound = $Walk
 @onready var jump_sound = $Jump
 @onready var attack_sound = $Attack
@@ -39,7 +41,6 @@ var current_demon: Node2D = null
 @onready var attack_box = $AttackBox/CollisionShape2D
 @onready var animation_player = $AnimationPlayer
 @onready var interact_banner = $CanvasLayer/HUD/Interact
-
 
 func _ready() -> void:
 	speed= 120
@@ -61,7 +62,6 @@ func _ready() -> void:
 	slide_timer.one_shot = true
 	add_child(slide_timer)
 	slide_timer.timeout.connect(_on_slide_timeout)
-	# Configura timer invincibilità
 	invincibility_timer = Timer.new()
 	add_child(invincibility_timer)
 	invincibility_timer.one_shot = true
@@ -72,13 +72,11 @@ func _physics_process(delta: float) -> void:
 		$CanvasLayer/Pause.visible = false
 	else:
 		$CanvasLayer/Pause.visible = true
-	# Blocca i controlli se il giocatore sta scrivendo
 	if hud_label.has_focus():
 		velocity.x = 0
 		sprite.play("idle")
 		move_and_slide()
 		return
-	# Se sto sliddando → ignoro altri input e scivolo
 	if sliding:
 		$CollisionShape2D.disabled = true
 		move_and_slide()
@@ -86,7 +84,12 @@ func _physics_process(delta: float) -> void:
 	else:
 		$CollisionShape2D.disabled = false
 
-	# Gestione crouch toggle
+	detect_stairs()
+
+	if climbing:
+		handle_stairs_movement(delta)
+		return
+
 	if is_on_floor():
 		if Input.is_action_just_pressed("crouch"):
 			crouching = not crouching
@@ -96,7 +99,6 @@ func _physics_process(delta: float) -> void:
 		sprite.position.y = 5
 	else:
 		sprite.position.y = 0
-	# Se sono crouching, imposto le animazioni e movimenti ridotti
 	if crouching:
 		if is_on_floor():
 			if Input.is_action_pressed("move_left") or Input.is_action_pressed("move_right"):
@@ -109,13 +111,13 @@ func _physics_process(delta: float) -> void:
 			direction -= 1
 		if Input.is_action_pressed("move_right"):
 			direction += 1
-		velocity.x = direction * (speed * 0.5) # metà della speed
+		velocity.x = direction * (speed * 0.5)
 		if direction != 0:
 			sprite.flip_h = direction < 0
 
 		move_and_slide()
 		return
-	# Gestione input interazione
+		
 	if Input.is_action_just_pressed("interact") and can_interact and current_demon:
 		hud_label.editable = true
 		hud.show()
@@ -139,7 +141,7 @@ func _physics_process(delta: float) -> void:
 		if now - last_input_time[action] <= double_tap_time:
 			start_slide(action)
 		last_input_time[action] = now
-	# Movimento sinistra/destra
+
 	if Input.is_action_pressed("move_left"):
 		direction -= 1
 		moving = true
@@ -149,7 +151,6 @@ func _physics_process(delta: float) -> void:
 
 	velocity.x = direction * speed
 
-	# Suono camminata
 	if is_on_floor() and moving and not walk_sound.playing:
 		walk_sound.play()
 	elif (not is_on_floor() or not moving) and walk_sound.playing:
@@ -161,21 +162,20 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0
 		jumps_left = max_jumps
 
-	# Rileva atterraggio
 	if not was_on_floor and is_on_floor():
 		walk_sound.play()
 	was_on_floor = is_on_floor()
 
-	# Salto
 	if Input.is_action_just_pressed("jump") and jumps_left > 0:
 		velocity.y = -jump_force
 		jumps_left -= 1
 		jump_sound.play()
 
-	# Attacco
 	if Input.is_action_just_pressed("attack") and not attacking:
 		attacking = true
-		sprite.play("attack")
+		var attack_animations = ["attack", "attack1"]
+		var random_attack = attack_animations[randi() % attack_animations.size()]
+		sprite.play(random_attack)
 		attack_sound.play()
 		velocity.x = 0
 		attack_box.disabled = false
@@ -185,7 +185,6 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	# Animazioni
 	if sliding:
 		sprite.play("slide")
 	elif not is_on_floor():
@@ -202,6 +201,7 @@ func _physics_process(delta: float) -> void:
 		sprite.flip_h = direction < 0
 	
 	health_bar.value += 2*delta
+
 func _disable_attack_box():
 	attack_box.disabled = true
 
@@ -218,10 +218,44 @@ func _on_slide_timeout() -> void:
 	velocity.x = 0
 	sprite.position.y = 0
 
+func detect_stairs():
+	var areas = $StairDetector.get_overlapping_areas()
+	var stairs_found = false
 
+	for area in areas:
+		if area.get_parent().is_in_group("stairs"):
+			current_stairs = area.get_parent()
+			stairs_found = true
+			break
+
+	if stairs_found:
+		if not climbing:
+			climbing = true
+			gravity = 0  
+	else:
+		if climbing:
+			climbing = false
+			current_stairs = null
+			gravity = 1000.0 
+
+func handle_stairs_movement(delta):
+	var input_dir = Input.get_axis("move_left", "move_right")
+
+	if input_dir == 0:
+		velocity = Vector2.ZERO
+	else:
+		velocity = current_stairs.direction * input_dir * current_stairs.climb_speed
+
+	move_and_slide()
+
+	if input_dir == 0:
+		sprite.play("idle")
+	else:
+		sprite.play("run")
+		sprite.flip_h = input_dir < 0
 
 func _on_animation_finished() -> void:
-	if sprite.animation == "attack":
+	if sprite.animation == "attack" or sprite.animation == "attack1":
 		attacking = false
 
 func _on_hit_box_area_entered(area: Area2D) -> void:
@@ -229,7 +263,6 @@ func _on_hit_box_area_entered(area: Area2D) -> void:
 		var damage_amount = 10
 		var damage_source = area.get_parent()
 		
-		# Prova diversi metodi per ottenere il danno
 		if damage_source.has_method("get_damage"):
 			damage_amount = damage_source.get_damage()
 		elif "attack_damage" in damage_source:
@@ -253,7 +286,6 @@ func take_damage(amount: float) -> void:
 	hurt_sound.play()
 	update_health()
 	
-	# Attiva l'invincibilità
 	can_take_damage = false
 	invincibility_timer.start(invincibility_time)
 	animation_player.play("hit_flash")
@@ -271,7 +303,6 @@ func update_health() -> void:
 	health_bar.max_value = max_health
 
 func die() -> void:
-	# Disabilita tutte le interazioni
 	set_process(false)
 	set_physics_process(false)
 	set_process_input(false)
@@ -280,12 +311,11 @@ func die() -> void:
 	sprite.play("death")
 	await sprite.animation_finished
 	
-	# Crea una transizione
 	var transition = get_tree().create_timer(0.5)
 	await transition.timeout
 	
-	# Ricarica in modo sicuro
 	$Camera2D/Loose.visible = true
+
 func _input(event):
 	if event is InputEventKey and event.keycode == KEY_ENTER and event.pressed:
 		if hud_label.has_focus():
@@ -309,17 +339,8 @@ func _on_interaction_area_exited(area):
 		hud.hide()
 		hud_label.release_focus()
 
-
 func _on_interact_pressed() -> void:
 	can_interact = true
 
-
 func _on_button_pressed() -> void:
 	get_tree().reload_current_scene()
-
-
-func _on_stair_speed_area_entered(area: Area2D) -> void:
-	speed = 70
-
-func _on_stair_speed_area_exited(area: Area2D) -> void:
-	speed = normal_speed

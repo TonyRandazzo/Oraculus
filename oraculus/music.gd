@@ -39,7 +39,7 @@ func _process(delta: float) -> void:
 			fade_in_player.volume_db = lerp(-80.0, fade_in_target, t)
 
 func _on_area_2d_2_area_entered(area: Area2D) -> void:
-	if area.is_in_group("music_player") and not fading:
+	if area.is_in_group("overlap_player") and not fading:
 		if stanza2 == false:
 			fade_out_player = $Music
 			fade_in_player = $Music2

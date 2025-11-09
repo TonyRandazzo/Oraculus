@@ -1,6 +1,5 @@
 extends CharacterBody2D
 
-# Export parameters
 @export var speed: float = 50.0
 @export var gravity: float = 900.0
 @export var jump_velocity: float = -250.0
@@ -23,13 +22,11 @@ extends CharacterBody2D
 	"loyalty": 0.2
 }
 
-# Attack variables
 var is_attacking: bool = false
 var attack_frame_start: int = 6
 var attack_frame_end: int = 16
 var attack_hit_frame: int = 10
 
-# State variables
 var player: Node2D = null
 var state: String = "idle"
 var attack_timer: float = 0.0
@@ -51,7 +48,6 @@ var dialogue_cooldown_timer: float = 1000.0
 var can_initiate_dialogue: bool = true
 var current_aggression: float = base_aggression
 
-# Advanced AI system
 var conversation_history: Array = []
 var personality_state: Dictionary = {}
 var current_mood: String = "neutral"
@@ -59,7 +55,6 @@ var mood_intensity: float = 0.5
 var environmental_factors: Dictionary = {}
 var ai_decision_weights: Dictionary = {}
 
-# Node references
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var detection_area: Area2D = $Area2D
 @onready var timer: Timer = $Timer
@@ -72,7 +67,6 @@ var ai_decision_weights: Dictionary = {}
 @onready var attack_sound = $AttackSound
 @onready var death_sound = $DeathSound
 
-# Response database
 var fallback_responses = [
 	"*Chuckling* I challenge you with a riddle!",
 	"*Roaring* Too difficult for you!",
@@ -112,7 +106,6 @@ func _ready() -> void:
 	add_to_group("demons")
 	detection_area.add_to_group("demon_detection")
 	
-	# Signal connections
 	detection_area.connect("body_entered", _on_body_entered)
 	timer.connect("timeout", _on_timeout)
 	$HitBox.connect("area_entered", _on_hit_box_area_entered)
@@ -131,7 +124,6 @@ func _ready() -> void:
 	say_launch_message()
 	attack_box.disabled = true
 	
-	# Initialize advanced AI system
 	initialize_personality()
 	_update_ai_state()
 
@@ -168,24 +160,19 @@ func initialize_personality():
 	}
 
 func _physics_process(delta: float) -> void:
-	# Apply gravity
 	velocity.y += gravity * delta
 	
-	# If player disappeared, return to idle
 	if player and not is_instance_valid(player):
 		player = null
 		state = "idle"
 	
-	# Update timer
 	attack_timer -= delta
 	
-	# Attack handling
 	if is_attacking and sprite.animation == "attack":
 		if sprite.frame >= attack_frame_start and sprite.frame <= attack_frame_end:
 			if sprite.frame == attack_hit_frame and attack_box.disabled:
 				attack_sound.play()
 				attack_box.disabled = false
-				# Choose random attack phrase
 				if attack_phrases.size() > 0:
 					dialogue_box.show_text(attack_phrases[randi() % attack_phrases.size()])
 			elif sprite.frame != attack_hit_frame:
@@ -193,7 +180,6 @@ func _physics_process(delta: float) -> void:
 		else:
 			attack_box.disabled = true
 	
-	# Invincibility handling
 	if is_invincible:
 		invincibility_timer -= delta
 		if invincibility_timer <= 0:
@@ -201,22 +187,12 @@ func _physics_process(delta: float) -> void:
 			animation_player.stop()
 			sprite.modulate = Color(1, 1, 1, 1)
 	
-	# "Thinking" animation
-	if is_waiting_for_response:
-		thinking_timer -= delta
-		if thinking_timer <= 0:
-			dot_count += 1
-			thinking_timer = thinking_dot_delay
-			update_thinking_dots()
-	
-	# Dialogue cooldown handling
 	if not can_initiate_dialogue:
 		dialogue_cooldown_timer -= delta
 		if dialogue_cooldown_timer <= 0:
 			can_initiate_dialogue = true
 			dialogue_cooldown_timer = 5.0
 	
-	# AI update
 	last_ai_update += delta
 	if player and state in ["idle", "ready", "conversing"] and not is_waiting_for_response and can_initiate_dialogue:
 		if last_ai_update > ai_update_interval:
@@ -226,7 +202,6 @@ func _physics_process(delta: float) -> void:
 	if state != "attacking" or abs(velocity.y) < 10:
 		velocity.y += gravity * delta
 
-	# Main state machine
 	match state:
 		"idle", "ready", "riddle", "waiting", "conversing":
 			handle_peaceful_states()
@@ -257,31 +232,25 @@ func handle_ally_behavior():
 
 func handle_attack_behavior(delta: float):
 	if player and is_instance_valid(player):
-		# Calculate direction on both X and Y axes
 		var direction_x = sign(player.global_position.x - global_position.x)
 		var direction_y = sign(player.global_position.y - global_position.y)
 		var y_distance = abs(player.global_position.y - global_position.y)
 		
-		# X-axis movement
 		velocity.x = direction_x * speed * (1.0 + current_aggression)
 		sprite.flip_h = direction_x > 0
 		
-		# Y-axis movement only if player is significantly above/below
 		if y_distance > 20:
 			var target_velocity_y = direction_y * speed * 0.7
 			velocity.y = lerp(velocity.y, target_velocity_y, 0.1)
 			
-		# Attack logic
 		var distance = global_position.distance_to(player.global_position)
 		if distance < attack_range and can_attack:
 			start_attack()
 		elif distance < attack_range * 1.5:
-			# Tactical behavior: approaches while maintaining distance
 			var approach_dir = sign(player.global_position.x - global_position.x)
 			velocity.x = approach_dir * speed * (0.8 + current_aggression * 0.2)
 			sprite.play("walk")
 		else:
-			# Aggressive pursuit
 			sprite.play("walk")
 
 func handle_hurt_behavior():
@@ -355,7 +324,6 @@ func take_damage(amount: int):
 	if is_invincible or state == "ally":
 		return
 		
-	# Increase aggression when hit
 	current_aggression = min(current_aggression + aggression_increase_on_hit, 1.0)
 	personality_traits["aggressiveness"] = current_aggression
 	personality_state["aggressiveness"] = current_aggression
@@ -367,12 +335,11 @@ func take_damage(amount: int):
 	is_invincible = true
 	invincibility_timer = invincibility_duration
 	
-	# Aggressive reaction when hit
 	if friendship_level < 3:
 		state = "attacking"
 		can_attack = true
 		attack_timer = 0.0
-		start_attack()  # Force immediate attack
+		start_attack()
 		dialogue_box.show_text(aggressive_hit_responses[randi() % aggressive_hit_responses.size()])
 	
 	sprite.play("hurt")
@@ -390,7 +357,6 @@ func die():
 	await sprite.animation_finished
 	queue_free()
 
-# Advanced AI system
 func _update_ai_state():
 	update_environmental_factors()
 	update_mood()
@@ -496,7 +462,6 @@ func execute_ai_decision(decision: String):
 				dialogue_box.show_text("*Panting voice* This... isn't... over...")
 				can_initiate_dialogue = false
 
-# Dialogue system
 func say_launch_message():
 	var request_data = {
 		"action": "launch",
@@ -555,7 +520,6 @@ func send_structured_request(data: Dictionary):
 	current_timeout = response_timeout
 	is_interacting = true
 	is_waiting_for_response = true
-	start_thinking_animation()
 	
 	if npc_ai:
 		timer.stop()
@@ -602,7 +566,6 @@ func _on_ai_chat_received(message: String):
 	timer.stop()
 	is_waiting_for_response = false
 	is_interacting = false
-	stop_thinking_animation()
 	
 	var sentiment = analyze_sentiment(message)
 	var interaction = {
@@ -661,26 +624,11 @@ func _on_ai_chat_failed(error_code: int):
 	timer.stop()
 	is_waiting_for_response = false
 	is_interacting = false
-	stop_thinking_animation()
 	
 	if friendship_level > 2:
 		_use_fallback_response("*Calm voice* My magical energies are weak...")
 	else:
 		_use_fallback_response("*Stifled laughter*")
-
-func start_thinking_animation():
-	dot_count = 0
-	thinking_timer = thinking_dot_delay
-	update_thinking_dots()
-
-func update_thinking_dots():
-	if dialogue_box:
-		var dots = ".".repeat(dot_count % 4)
-		dialogue_box.show_text("Thinking" + dots)
-
-func stop_thinking_animation():
-	thinking_timer = 0.0
-	dot_count = 0
 
 func _on_body_entered(body: Node2D):
 	if body.name == "Player" and (state == "idle" or state == "ready"):
@@ -700,7 +648,6 @@ func _handle_ai_timeout():
 	timer.stop()
 	is_waiting_for_response = false
 	is_interacting = false
-	stop_thinking_animation()
 	
 	if friendship_level > 3:
 		_use_fallback_response("*Yawning* You're boring me, human...")
@@ -713,7 +660,6 @@ func _use_fallback_response(text: String):
 	is_interacting = false
 	is_waiting_for_response = false
 
-# Utility functions
 func get_ai_state_description() -> String:
 	return """
 	Demon AI State:

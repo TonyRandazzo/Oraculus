@@ -238,6 +238,32 @@ func detect_stairs():
 			current_stairs = null
 			gravity = 1000.0 
 
+func camera_shake(intensity: float, duration: float) -> void:
+	var cam = $Camera2D
+	if not cam:
+		return
+		
+	var tween = create_tween()
+	for i in range(int(duration * 60)):  
+		var offset = Vector2(
+			randf_range(-intensity, intensity),
+			randf_range(-intensity, intensity)
+		)
+		tween.tween_property(cam, "offset", offset, 0.016)
+	tween.tween_property(cam, "offset", Vector2.ZERO, 0.05)
+
+
+
+func shake_on_hit_enemy():
+	camera_shake(1.5, 0.05)  
+
+func shake_on_take_damage():
+	camera_shake(3.0, 0.3)   
+
+
+
+
+
 func handle_stairs_movement(delta):
 	var input_dir = Input.get_axis("move_left", "move_right")
 
@@ -277,6 +303,7 @@ func _on_attack_box_area_entered(area: Area2D) -> void:
 		var demon = area.get_parent()
 		if demon.has_method("take_damage"):
 			demon.take_damage(attack_damage)
+			shake_on_hit_enemy()
 
 func take_damage(amount: float) -> void:
 	if not can_take_damage:
@@ -285,7 +312,7 @@ func take_damage(amount: float) -> void:
 	current_health -= amount
 	hurt_sound.play()
 	update_health()
-	
+	shake_on_take_damage()
 	can_take_damage = false
 	invincibility_timer.start(invincibility_time)
 	animation_player.play("hit_flash")
@@ -314,7 +341,7 @@ func die() -> void:
 	var transition = get_tree().create_timer(0.5)
 	await transition.timeout
 	
-	$Camera2D/Loose.visible = true
+	$CanvasLayer/Loose.visible = true
 
 func _input(event):
 	if event is InputEventKey and event.keycode == KEY_ENTER and event.pressed:

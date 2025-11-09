@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bbcrnk8m4htsn"
+path="res://.godot/imported/Death Sound Effects.mp3-271b8ba591d19156aec4330266df1b05.mp3str"
+
+[deps]
+
+source_file="res://oraculus/Level/Sounds/Death Sound Effects.mp3"
+dest_files=["res://.godot/imported/Death Sound Effects.mp3-271b8ba591d19156aec4330266df1b05.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

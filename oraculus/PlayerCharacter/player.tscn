@@ -1,4 +1,4 @@
-[gd_scene load_steps=65 format=3 uid="uid://cf67gkg04ayra"]
+[gd_scene load_steps=66 format=3 uid="uid://cf67gkg04ayra"]
 
 [ext_resource type="Texture2D" uid="uid://dqv11xtytfj82" path="res://oraculus/PlayerCharacter/Attack/0.png" id="1_0m1v8"]
 [ext_resource type="Script" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
@@ -55,6 +55,7 @@
 [ext_resource type="Texture2D" uid="uid://tyu3ywp8evat" path="res://oraculus/PlayerCharacter/Slide/1.png" id="46_om0sx"]
 [ext_resource type="Texture2D" uid="uid://orfgv3io7vqh" path="res://oraculus/PlayerCharacter/Slide/2.png" id="47_0fmn1"]
 [ext_resource type="Texture2D" uid="uid://d21jo1hgdjoaf" path="res://oraculus/PlayerCharacter/Slide/3.png" id="48_aevuw"]
+[ext_resource type="AudioStream" uid="uid://b8i703wqtbcwn" path="res://oraculus/Level/Sounds/Man Hit Or Drowning With Pain Sound Effect - Free Download & No Copyright.mp3" id="56_s18ex"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_npq8g"]
 animations = [{
@@ -376,6 +377,7 @@ libraries = {
 bus = &"SFX"
 
 [node name="Death" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("56_s18ex")
 bus = &"SFX"
 
 [connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]

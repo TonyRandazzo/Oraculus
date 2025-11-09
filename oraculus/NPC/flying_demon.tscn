@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=3 uid="uid://bglcquetgjaby"]
+[gd_scene load_steps=60 format=3 uid="uid://bglcquetgjaby"]
 
 [ext_resource type="Script" path="res://oraculus/NPC/flying_demon.gd" id="1_f7qtu"]
 [ext_resource type="Texture2D" uid="uid://cmg7pqanx1kvg" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame1.png" id="2_i8exw"]
@@ -47,6 +47,8 @@
 [ext_resource type="Texture2D" uid="uid://deun46dxl3pgu" path="res://oraculus/NPC/Sprites/DemonAttack/frame17.png" id="36_lwa8p"]
 [ext_resource type="Texture2D" uid="uid://b5jrt56tng86a" path="res://oraculus/NPC/Sprites/DemonAttack/frame18.png" id="37_6pyh2"]
 [ext_resource type="Script" path="res://addons/player2/player2_config.gd" id="47_p6t5t"]
+[ext_resource type="AudioStream" uid="uid://ddlpkxfqlagnf" path="res://oraculus/Level/Sounds/Cinematic Whoosh Fireball - Sound Effect [HD].mp3" id="48_25n1h"]
+[ext_resource type="AudioStream" uid="uid://bbcrnk8m4htsn" path="res://oraculus/Level/Sounds/Death Sound Effects.mp3" id="49_60dhj"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_thsae"]
 animations = [{
@@ -330,10 +332,12 @@ libraries = {
 }
 
 [node name="AttackSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("48_25n1h")
 
 [node name="HurtSound" type="AudioStreamPlayer2D" parent="."]
 
 [node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("49_60dhj")
 
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
 [connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]

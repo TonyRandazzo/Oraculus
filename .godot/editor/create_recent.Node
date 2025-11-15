@@ -1,3 +1,4 @@
+Sprite2D
 Node2D
 CollisionPolygon2D
 Area2D
@@ -8,7 +9,6 @@ TileMapLayer
 ParallaxLayer
 ParallaxBackground
 PointLight2D
-Sprite2D
 StaticBody2D
 AnimatedSprite2D
 Panel

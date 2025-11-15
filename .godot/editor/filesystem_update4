@@ -1,13 +1,11 @@
-res://oraculus/main.tscn
+res://oraculus/PlayerCharacter/player.tscn
 res://oraculus/muri.tres
+res://oraculus/main.tscn
 res://oraculus/NPC/ghost.tscn
 res://oraculus/door.tscn
 res://oraculus/hud.tscn
-res://oraculus/PlayerCharacter/player.tscn
 res://backup.tscn
 res://oraculus/NPC/ogre.tscn
 res://oraculus/NPC/dragon.tscn
 res://oraculus/options.tscn
-res://oraculus/PlayerCharacter/player.gd
-res://oraculus/NPC/flying_demon.gd
 res://oraculus/NPC/flying_demon.tscn

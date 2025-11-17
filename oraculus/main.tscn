@@ -1,4 +1,4 @@
-[gd_scene load_steps=468 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=466 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -227,8 +227,6 @@
 [ext_resource type="Texture2D" uid="uid://by5encafep7u4" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Cattivone teschio enigma/Bones_shadow2_3.png" id="192_lcl6s"]
 [ext_resource type="Script" path="res://oraculus/stair.gd" id="223_l5xqp"]
 [ext_resource type="PackedScene" uid="uid://bglcquetgjaby" path="res://oraculus/NPC/flying_demon.tscn" id="223_s8sn3"]
-[ext_resource type="Texture2D" uid="uid://ckl2xr8ctp1c6" path="res://oraculus/Level/back-animated1.png" id="228_kgyge"]
-[ext_resource type="Texture2D" uid="uid://c0r3j2xvg7i4o" path="res://oraculus/Level/back-animated2.png" id="229_vby65"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_tlipm"]
 animations = [{
@@ -18281,10 +18279,7 @@ texture = ExtResource("86_gillt")
 z_index = 1
 position = Vector2(-434, -19)
 scale = Vector2(0.8, 0.8)
-jump_force = 250.0
-gravity = 900.0
-max_jumps = 1000000
-slide_speed = 700.0
+jump_force = 300.0
 metadata/_edit_group_ = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="Player"]
@@ -18498,14 +18493,6 @@ stream = ExtResource("173_nfyyl")
 volume_db = -10.0
 
 [node name="stanza 4" type="Node2D" parent="."]
-
-[node name="Back-animated1" type="Sprite2D" parent="."]
-position = Vector2(-70, 14)
-texture = ExtResource("228_kgyge")
-
-[node name="Back-animated2" type="Sprite2D" parent="."]
-position = Vector2(-297, 168)
-texture = ExtResource("229_vby65")
 
 [connection signal="area_entered" from="PrimaStanza/Area2D" to="PrimaStanza/ParallaxBackground/ParallaxLayer8/Dragon" method="_on_area_2d_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D2" to="Music" method="_on_area_2d_2_area_entered"]

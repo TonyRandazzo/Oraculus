@@ -28,6 +28,8 @@ var current_demon: Node2D = null
 var climbing: bool = false
 var current_stairs: Node = null
 @export var climb_speed: float = 100.0
+@export var knockback_force: float = 300.0
+var knockback_active: bool = false
 
 @onready var walk_sound = $Walk
 @onready var jump_sound = $Jump
@@ -77,6 +79,12 @@ func _physics_process(delta: float) -> void:
 		sprite.play("idle")
 		move_and_slide()
 		return
+	
+	if knockback_active:
+		velocity.y += gravity * delta
+		move_and_slide()
+		return
+	
 	if sliding:
 		$CollisionShape2D.disabled = true
 		move_and_slide()
@@ -130,7 +138,6 @@ func _physics_process(delta: float) -> void:
 		interact_banner.visible = false
 		
 	if attacking:
-		move_and_slide()
 		return
 
 	var direction = 0
@@ -252,17 +259,11 @@ func camera_shake(intensity: float, duration: float) -> void:
 		tween.tween_property(cam, "offset", offset, 0.016)
 	tween.tween_property(cam, "offset", Vector2.ZERO, 0.05)
 
-
-
 func shake_on_hit_enemy():
 	camera_shake(1.5, 0.05)  
 
 func shake_on_take_damage():
 	camera_shake(3.0, 0.3)   
-
-
-
-
 
 func handle_stairs_movement(delta):
 	var input_dir = Input.get_axis("move_left", "move_right")
@@ -313,12 +314,23 @@ func take_damage(amount: float) -> void:
 	hurt_sound.play()
 	update_health()
 	shake_on_take_damage()
+	
+	var knockback_direction = 1 if sprite.flip_h else -1
+	velocity.x = knockback_direction * knockback_force
+	velocity.y = -knockback_force * 0.5
+	knockback_active = true
+	
 	can_take_damage = false
 	invincibility_timer.start(invincibility_time)
 	animation_player.play("hit_flash")
 	
+	get_tree().create_timer(0.3).timeout.connect(_end_knockback)
+	
 	if current_health <= 0:
 		die()
+
+func _end_knockback():
+	knockback_active = false
 
 func _on_invincibility_timeout():
 	can_take_damage = true

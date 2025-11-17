@@ -1541,10 +1541,6 @@ position = Vector2(1095, -29)
 z_index = 1
 position = Vector2(-434, -19)
 scale = Vector2(0.8, 0.8)
-jump_force = 250.0
-gravity = 900.0
-max_jumps = 1000000
-slide_speed = 700.0
 metadata/_edit_group_ = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="Player"]

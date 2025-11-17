@@ -14,6 +14,8 @@ extends CharacterBody2D
 @export var memory_capacity: int = 5
 @export var aggression_increase_on_hit: float = 0.2
 @export var base_aggression: float = 0.7
+@export var knockback_force: float = 300.0
+@export var lateral_offset_range: Vector2 = Vector2(50.0, 150.0)
 
 @export var personality_traits: Dictionary = {
 	"aggressiveness": 0.7,
@@ -47,6 +49,7 @@ var last_ai_update: float = 0.0
 var dialogue_cooldown_timer: float = 1000.0
 var can_initiate_dialogue: bool = true
 var current_aggression: float = base_aggression
+var current_lateral_offset: float = 0.0
 
 var conversation_history: Array = []
 var personality_state: Dictionary = {}
@@ -126,6 +129,7 @@ func _ready() -> void:
 	
 	initialize_personality()
 	_update_ai_state()
+	_update_lateral_offset()
 
 func setup_ai_profile():
 	npc_ai._selected_character = {
@@ -145,6 +149,11 @@ func face_player():
 	if player and is_instance_valid(player):
 		var direction = sign(player.global_position.x - global_position.x)
 		sprite.flip_h = direction > 0
+
+func _update_lateral_offset():
+	current_lateral_offset = randf_range(lateral_offset_range.x, lateral_offset_range.y)
+	if randf() > 0.5:
+		current_lateral_offset = -current_lateral_offset
 
 func initialize_personality():
 	personality_state = personality_traits.duplicate()
@@ -226,15 +235,17 @@ func handle_ally_behavior():
 	if player and is_instance_valid(player):
 		var distance = global_position.distance_to(player.global_position)
 		if distance > 150:
-			var dir = sign(player.global_position.x - global_position.x)
+			var target_position = player.global_position + Vector2(current_lateral_offset, 0)
+			var dir = sign(target_position.x - global_position.x)
 			velocity.x = dir * speed
 			sprite.flip_h = dir > 0
 
 func handle_attack_behavior(delta: float):
 	if player and is_instance_valid(player):
-		var direction_x = sign(player.global_position.x - global_position.x)
-		var direction_y = sign(player.global_position.y - global_position.y)
-		var y_distance = abs(player.global_position.y - global_position.y)
+		var target_position = player.global_position + Vector2(current_lateral_offset, 0)
+		var direction_x = sign(target_position.x - global_position.x)
+		var direction_y = sign(target_position.y - global_position.y)
+		var y_distance = abs(target_position.y - global_position.y)
 		
 		velocity.x = direction_x * speed * (1.0 + current_aggression)
 		sprite.flip_h = direction_x > 0
@@ -243,22 +254,22 @@ func handle_attack_behavior(delta: float):
 			var target_velocity_y = direction_y * speed * 0.7
 			velocity.y = lerp(velocity.y, target_velocity_y, 0.1)
 			
-		var distance = global_position.distance_to(player.global_position)
+		var distance = global_position.distance_to(target_position)
 		if distance < attack_range and can_attack:
 			start_attack()
 		elif distance < attack_range * 1.5:
-			var approach_dir = sign(player.global_position.x - global_position.x)
+			var approach_dir = sign(target_position.x - global_position.x)
 			velocity.x = approach_dir * speed * (0.8 + current_aggression * 0.2)
 			sprite.play("walk")
 		else:
 			sprite.play("walk")
+		
+		if randf() < 0.01:
+			_update_lateral_offset()
 
 func handle_hurt_behavior():
-	if player and is_instance_valid(player):
-		velocity.x = -sign(player.global_position.x - global_position.x) * speed * 0.5
-	else:
-		velocity.x = 0
-		velocity.y = 0
+	velocity.x = lerp(velocity.x, 0.0, 0.1)
+	velocity.y = lerp(velocity.y, 0.0, 0.1)
 
 func start_attack():
 	attack_timer = attack_cooldown * (1.5 - current_aggression * 0.5)
@@ -276,6 +287,7 @@ func start_attack():
 		return
 	
 	attack_box.disabled = true
+	_update_lateral_offset()
 
 func _disable_attack_box():
 	attack_box.disabled = true
@@ -334,6 +346,10 @@ func take_damage(amount: int):
 	animation_player.play("hit_flash")
 	is_invincible = true
 	invincibility_timer = invincibility_duration
+	
+	var knockback_direction = -1.0 if not sprite.flip_h else 1.0
+	velocity.x = knockback_direction * knockback_force
+	velocity.y = -knockback_force * 0.5
 	
 	if friendship_level < 3:
 		state = "attacking"
@@ -669,6 +685,7 @@ func get_ai_state_description() -> String:
 	Environment: {environment}
 	Decision Weights: {weights}
 	Aggression: {aggression}
+	Lateral Offset: {offset}
 	""".format({
 		"mood": current_mood,
 		"intensity": mood_intensity,
@@ -676,5 +693,6 @@ func get_ai_state_description() -> String:
 		"friendship": str(friendship_level) + "/" + str(max_friendship),
 		"environment": environmental_factors,
 		"weights": ai_decision_weights,
-		"aggression": current_aggression
+		"aggression": current_aggression,
+		"offset": current_lateral_offset
 	})

@@ -1,4 +1,4 @@
-[gd_scene load_steps=60 format=3 uid="uid://bglcquetgjaby"]
+[gd_scene load_steps=61 format=3 uid="uid://bglcquetgjaby"]
 
 [ext_resource type="Script" path="res://oraculus/NPC/flying_demon.gd" id="1_f7qtu"]
 [ext_resource type="Texture2D" uid="uid://cmg7pqanx1kvg" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame1.png" id="2_i8exw"]
@@ -49,6 +49,7 @@
 [ext_resource type="Script" path="res://addons/player2/player2_config.gd" id="47_p6t5t"]
 [ext_resource type="AudioStream" uid="uid://ddlpkxfqlagnf" path="res://oraculus/Level/Sounds/Cinematic Whoosh Fireball - Sound Effect [HD].mp3" id="48_25n1h"]
 [ext_resource type="AudioStream" uid="uid://bbcrnk8m4htsn" path="res://oraculus/Level/Sounds/Death Sound Effects.mp3" id="49_60dhj"]
+[ext_resource type="AudioStream" uid="uid://qmk514s7ouyv" path="res://oraculus/Level/Sounds/hitHurt.wav" id="49_anenw"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_thsae"]
 animations = [{
@@ -225,7 +226,7 @@ endpoint_stt_stop = "http://127.0.0.1:4315/v1/stt/stop"
 request_too_much_delay_seconds = 3.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_aqcgn"]
-size = Vector2(82, 68)
+size = Vector2(61, 59)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bl8dj"]
 size = Vector2(109.75, 45)
@@ -317,7 +318,7 @@ BE PROACTIVE with tool calls please and USE THEM."
 [node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
-position = Vector2(-8, -8)
+position = Vector2(2.5, -9.5)
 shape = SubResource("RectangleShape2D_aqcgn")
 
 [node name="AttackBox" type="Area2D" parent="." groups=["demon"]]
@@ -335,6 +336,7 @@ libraries = {
 stream = ExtResource("48_25n1h")
 
 [node name="HurtSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("49_anenw")
 
 [node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("49_60dhj")

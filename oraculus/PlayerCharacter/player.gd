@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 @export var speed: float = 120.0
 var normal_speed: float
+@export var run_speed_multiplier: float = 1.8
 @export var jump_force: float = 400.0
 @export var gravity: float = 1000.0
 @export var max_jumps: int = 2
@@ -30,6 +31,20 @@ var current_stairs: Node = null
 @export var climb_speed: float = 100.0
 @export var knockback_force: float = 300.0
 var knockback_active: bool = false
+var running: bool = false
+
+# === WALL JUMP ===
+@export var wall_jump_force_x: float = 280.0
+@export var wall_jump_force_y: float = 380.0
+@export var wall_jump_lock_time: float = 0.18
+var wall_jumping: bool = false
+var wall_jump_lock_timer: Timer
+
+# === PARRY ===
+@export var parry_window: float = 0.15
+var parry_active: bool = false
+var parrying: bool = false
+var parry_timer: Timer
 
 @onready var walk_sound = $Walk
 @onready var jump_sound = $Jump
@@ -45,7 +60,7 @@ var knockback_active: bool = false
 @onready var interact_banner = $CanvasLayer/HUD/Interact
 
 func _ready() -> void:
-	speed= 120
+	speed = 120
 	normal_speed = speed
 	jumps_left = max_jumps
 	current_health = max_health
@@ -60,31 +75,48 @@ func _ready() -> void:
 	hud.hide()
 	attack_box.disabled = true
 	update_health()
+
 	slide_timer = Timer.new()
 	slide_timer.one_shot = true
 	add_child(slide_timer)
 	slide_timer.timeout.connect(_on_slide_timeout)
+
 	invincibility_timer = Timer.new()
 	add_child(invincibility_timer)
 	invincibility_timer.one_shot = true
 	invincibility_timer.timeout.connect(_on_invincibility_timeout)
+
+	parry_timer = Timer.new()
+	parry_timer.one_shot = true
+	add_child(parry_timer)
+	parry_timer.timeout.connect(_on_parry_timeout)
+
+	wall_jump_lock_timer = Timer.new()
+	wall_jump_lock_timer.one_shot = true
+	add_child(wall_jump_lock_timer)
+	wall_jump_lock_timer.timeout.connect(_on_wall_jump_lock_timeout)
 
 func _physics_process(delta: float) -> void:
 	if $CanvasLayer/Options.visible == true:
 		$CanvasLayer/Pause.visible = false
 	else:
 		$CanvasLayer/Pause.visible = true
+
 	if hud_label.has_focus():
 		velocity.x = 0
 		sprite.play("idle")
 		move_and_slide()
 		return
-	
+
 	if knockback_active:
 		velocity.y += gravity * delta
 		move_and_slide()
 		return
-	
+
+	if parrying:
+		move_and_slide()
+		return
+
 	if sliding:
 		$CollisionShape2D.disabled = true
 		move_and_slide()
@@ -98,15 +130,42 @@ func _physics_process(delta: float) -> void:
 		handle_stairs_movement(delta)
 		return
 
+	# === WALL SLIDE: rallenta la caduta a contatto col muro ===
+	if is_on_wall() and not is_on_floor() and velocity.y > 80:
+		velocity.y = 80
+
+	# === WALL JUMP INPUT ===
+	if Input.is_action_just_pressed("jump") and is_on_wall() and not is_on_floor():
+		var wall_normal = get_wall_normal()
+		velocity.x = wall_normal.x * wall_jump_force_x
+		velocity.y = -wall_jump_force_y
+		wall_jumping = true
+		jumps_left = max_jumps - 1
+		jump_sound.play()
+		sprite.play("jump")
+		sprite.flip_h = wall_normal.x < 0
+		wall_jump_lock_timer.start(wall_jump_lock_time)
+		move_and_slide()
+		return
+
+	# Durante il lock del wall jump, non sovrascrivere velocity.x con l'input
+	if wall_jumping:
+		velocity.y += gravity * delta
+		sprite.play("jump")
+		move_and_slide()
+		return
+
 	if is_on_floor():
 		if Input.is_action_just_pressed("crouch"):
 			crouching = not crouching
 	else:
 		crouching = false
+
 	if crouching:
 		sprite.position.y = 5
 	else:
 		sprite.position.y = 0
+
 	if crouching:
 		if is_on_floor():
 			if Input.is_action_pressed("move_left") or Input.is_action_pressed("move_right"):
@@ -114,7 +173,6 @@ func _physics_process(delta: float) -> void:
 			else:
 				sprite.play("crouch")
 		var direction = 0
-
 		if Input.is_action_pressed("move_left"):
 			direction -= 1
 		if Input.is_action_pressed("move_right"):
@@ -122,27 +180,35 @@ func _physics_process(delta: float) -> void:
 		velocity.x = direction * (speed * 0.5)
 		if direction != 0:
 			sprite.flip_h = direction < 0
-
 		move_and_slide()
 		return
-		
+
 	if Input.is_action_just_pressed("interact") and can_interact and current_demon:
 		hud_label.editable = true
 		hud.show()
 		hud_label.grab_focus()
 		return
-		
+
 	if can_interact == true:
 		interact_banner.visible = true
 	else:
 		interact_banner.visible = false
-		
+
+	# === PARRY INPUT ===
+	if Input.is_action_just_pressed("parry") and not attacking and not sliding and not parrying and not parry_active:
+		parry_active = true
+		parry_timer.start(parry_window)
+		sprite.play("parry")
+
 	if attacking:
 		return
 
 	var direction = 0
 	var moving = false
-	if Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right"):
+	running = Input.is_action_pressed("run")
+	var current_speed = speed * run_speed_multiplier if running else speed
+
+	if (Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right")) and is_on_floor():
 		var action = "move_left" if Input.is_action_just_pressed("move_left") else "move_right"
 		var now = Time.get_ticks_msec() / 1000.0
 		if now - last_input_time[action] <= double_tap_time:
@@ -156,7 +222,7 @@ func _physics_process(delta: float) -> void:
 		direction += 1
 		moving = true
 
-	velocity.x = direction * speed
+	velocity.x = direction * current_speed
 
 	if is_on_floor() and moving and not walk_sound.playing:
 		walk_sound.play()
@@ -175,6 +241,9 @@ func _physics_process(delta: float) -> void:
 
 	if Input.is_action_just_pressed("jump") and jumps_left > 0:
 		velocity.y = -jump_force
+		if running and direction != 0:
+			velocity.y = -jump_force
+			velocity.x = direction * current_speed * 1.5
 		jumps_left -= 1
 		jump_sound.play()
 
@@ -201,13 +270,16 @@ func _physics_process(delta: float) -> void:
 			sprite.play("fall")
 	elif direction != 0:
 		sprite.play("run")
-	else:
+	elif not parry_active:
 		sprite.play("idle")
 
 	if direction != 0:
 		sprite.flip_h = direction < 0
-	
-	health_bar.value += 2*delta
+
+	health_bar.value += 2 * delta
+
+func _on_wall_jump_lock_timeout() -> void:
+	wall_jumping = false
 
 func _disable_attack_box():
 	attack_box.disabled = true
@@ -228,30 +300,27 @@ func _on_slide_timeout() -> void:
 func detect_stairs():
 	var areas = $StairDetector.get_overlapping_areas()
 	var stairs_found = false
-
 	for area in areas:
 		if area.get_parent().is_in_group("stairs"):
 			current_stairs = area.get_parent()
 			stairs_found = true
 			break
-
 	if stairs_found:
 		if not climbing:
 			climbing = true
-			gravity = 0  
+			gravity = 0
 	else:
 		if climbing:
 			climbing = false
 			current_stairs = null
-			gravity = 1000.0 
+			gravity = 1000.0
 
 func camera_shake(intensity: float, duration: float) -> void:
 	var cam = $Camera2D
 	if not cam:
 		return
-		
 	var tween = create_tween()
-	for i in range(int(duration * 60)):  
+	for i in range(int(duration * 60)):
 		var offset = Vector2(
 			randf_range(-intensity, intensity),
 			randf_range(-intensity, intensity)
@@ -260,21 +329,18 @@ func camera_shake(intensity: float, duration: float) -> void:
 	tween.tween_property(cam, "offset", Vector2.ZERO, 0.05)
 
 func shake_on_hit_enemy():
-	camera_shake(1.5, 0.05)  
+	camera_shake(1.5, 0.05)
 
 func shake_on_take_damage():
-	camera_shake(3.0, 0.3)   
+	camera_shake(3.0, 0.3)
 
 func handle_stairs_movement(delta):
 	var input_dir = Input.get_axis("move_left", "move_right")
-
 	if input_dir == 0:
 		velocity = Vector2.ZERO
 	else:
 		velocity = current_stairs.direction * input_dir * current_stairs.climb_speed
-
 	move_and_slide()
-
 	if input_dir == 0:
 		sprite.play("idle")
 	else:
@@ -284,19 +350,32 @@ func handle_stairs_movement(delta):
 func _on_animation_finished() -> void:
 	if sprite.animation == "attack" or sprite.animation == "attack1":
 		attacking = false
+	if sprite.animation == "parry":
+		parrying = false
+		parry_active = false
+		can_take_damage = true
 
 func _on_hit_box_area_entered(area: Area2D) -> void:
 	if area.is_in_group("demon") and can_take_damage:
+		# PARRY RIUSCITO
+		if parry_active:
+			parry_active = false
+			parry_timer.stop()
+			parrying = true
+			can_take_damage = false
+			velocity.x = 0
+			sprite.play("parry")
+			$VFX.play("vanishing")
+			return
+
 		var damage_amount = 10
 		var damage_source = area.get_parent()
-		
 		if damage_source.has_method("get_damage"):
 			damage_amount = damage_source.get_damage()
 		elif "attack_damage" in damage_source:
 			damage_amount = damage_source.attack_damage
 		elif "damage" in damage_source:
 			damage_amount = damage_source.damage
-		
 		take_damage(damage_amount)
 
 func _on_attack_box_area_entered(area: Area2D) -> void:
@@ -309,23 +388,18 @@ func _on_attack_box_area_entered(area: Area2D) -> void:
 func take_damage(amount: float) -> void:
 	if not can_take_damage:
 		return
-		
 	current_health -= amount
 	hurt_sound.play()
 	update_health()
 	shake_on_take_damage()
-	
 	var knockback_direction = 1 if sprite.flip_h else -1
 	velocity.x = knockback_direction * knockback_force
 	velocity.y = -knockback_force * 0.5
 	knockback_active = true
-	
 	can_take_damage = false
 	invincibility_timer.start(invincibility_time)
 	animation_player.play("hit_flash")
-	
 	get_tree().create_timer(0.3).timeout.connect(_end_knockback)
-	
 	if current_health <= 0:
 		die()
 
@@ -336,6 +410,11 @@ func _on_invincibility_timeout():
 	can_take_damage = true
 	animation_player.stop()
 	sprite.modulate = Color(1, 1, 1, 1)
+
+func _on_parry_timeout() -> void:
+	parry_active = false
+	if not parrying:
+		sprite.play("idle")
 
 func update_health() -> void:
 	health_bar.value = current_health
@@ -349,10 +428,8 @@ func die() -> void:
 	death_sound.play()
 	sprite.play("death")
 	await sprite.animation_finished
-	
 	var transition = get_tree().create_timer(0.5)
 	await transition.timeout
-	
 	$CanvasLayer/Loose.visible = true
 
 func _input(event):

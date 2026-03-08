@@ -1,4 +1,4 @@
-[gd_scene load_steps=66 format=3 uid="uid://cf67gkg04ayra"]
+[gd_scene load_steps=83 format=3 uid="uid://cf67gkg04ayra"]
 
 [ext_resource type="Texture2D" uid="uid://dqv11xtytfj82" path="res://oraculus/PlayerCharacter/Attack/0.png" id="1_0m1v8"]
 [ext_resource type="Script" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
@@ -51,11 +51,27 @@
 [ext_resource type="AudioStream" uid="uid://btgj3s2h7mp7r" path="res://oraculus/Level/Sounds/Stone Walk 4.wav" id="27_xrc8i"]
 [ext_resource type="AudioStream" uid="uid://cicsj6ic06vcc" path="res://oraculus/Level/Sounds/Stone Jump.wav" id="28_4g16k"]
 [ext_resource type="AudioStream" uid="uid://b8a1uo8oo875w" path="res://oraculus/Level/Sounds/Sword Attack 1.wav" id="29_8ebmy"]
+[ext_resource type="Texture2D" uid="uid://x2pedy51eajj" path="res://oraculus/PlayerCharacter/Roll/0.png" id="39_bfmvr"]
+[ext_resource type="Texture2D" uid="uid://bsf6vh1jcfmx2" path="res://oraculus/PlayerCharacter/Roll/1.png" id="40_s3d1m"]
+[ext_resource type="Texture2D" uid="uid://ldw2iygap0oc" path="res://oraculus/PlayerCharacter/Roll/2.png" id="41_puvca"]
+[ext_resource type="Texture2D" uid="uid://d1eunno5djcby" path="res://oraculus/PlayerCharacter/Roll/3.png" id="42_2ey1w"]
+[ext_resource type="Texture2D" uid="uid://crgwrs0ljffgh" path="res://oraculus/PlayerCharacter/Roll/4.png" id="43_rjgbu"]
+[ext_resource type="Texture2D" uid="uid://b22tpntbwe8f0" path="res://oraculus/PlayerCharacter/Roll/5.png" id="44_mcmir"]
 [ext_resource type="Texture2D" uid="uid://bj4l6yr656la7" path="res://oraculus/PlayerCharacter/Slide/0.png" id="45_btd6f"]
+[ext_resource type="Texture2D" uid="uid://ce2u83ljcemfj" path="res://oraculus/PlayerCharacter/Roll/6.png" id="45_lcto0"]
+[ext_resource type="Texture2D" uid="uid://cm07ja7awv0m4" path="res://oraculus/PlayerCharacter/Roll/7.png" id="46_3j2pe"]
 [ext_resource type="Texture2D" uid="uid://tyu3ywp8evat" path="res://oraculus/PlayerCharacter/Slide/1.png" id="46_om0sx"]
 [ext_resource type="Texture2D" uid="uid://orfgv3io7vqh" path="res://oraculus/PlayerCharacter/Slide/2.png" id="47_0fmn1"]
+[ext_resource type="Texture2D" uid="uid://c8qgi6dq3w3u4" path="res://oraculus/PlayerCharacter/Roll/8.png" id="47_6yw1o"]
+[ext_resource type="Texture2D" uid="uid://bw8mrjm7gfjew" path="res://oraculus/PlayerCharacter/Roll/9.png" id="48_5yoiv"]
 [ext_resource type="Texture2D" uid="uid://d21jo1hgdjoaf" path="res://oraculus/PlayerCharacter/Slide/3.png" id="48_aevuw"]
+[ext_resource type="Texture2D" uid="uid://dm3dv8mi4ec5u" path="res://oraculus/PlayerCharacter/Roll/10.png" id="49_710oo"]
+[ext_resource type="Texture2D" uid="uid://rly7ip82ga8j" path="res://oraculus/PlayerCharacter/Roll/11.png" id="50_sjje6"]
 [ext_resource type="AudioStream" uid="uid://b8i703wqtbcwn" path="res://oraculus/Level/Sounds/Man Hit Or Drowning With Pain Sound Effect - Free Download & No Copyright.mp3" id="56_s18ex"]
+[ext_resource type="Texture2D" uid="uid://c6k2ecfdchowi" path="res://oraculus/VFX/Vanishing/0.png" id="69_hv3xc"]
+[ext_resource type="Texture2D" uid="uid://b88ci5vkqqg8y" path="res://oraculus/VFX/Vanishing/1.png" id="70_r4iyg"]
+[ext_resource type="Texture2D" uid="uid://cv4vy2v6ie3mx" path="res://oraculus/VFX/Vanishing/2.png" id="71_85uej"]
+[ext_resource type="Texture2D" uid="uid://j6mnd52qu5su" path="res://oraculus/VFX/Vanishing/3.png" id="72_gm24a"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_npq8g"]
 animations = [{
@@ -218,6 +234,61 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("4_pgs84")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_pgs84")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_pgs84")
+}],
+"loop": false,
+"name": &"parry",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("39_bfmvr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("40_s3d1m")
+}, {
+"duration": 1.0,
+"texture": ExtResource("41_puvca")
+}, {
+"duration": 1.0,
+"texture": ExtResource("42_2ey1w")
+}, {
+"duration": 1.0,
+"texture": ExtResource("43_rjgbu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("44_mcmir")
+}, {
+"duration": 1.0,
+"texture": ExtResource("45_lcto0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("46_3j2pe")
+}, {
+"duration": 1.0,
+"texture": ExtResource("47_6yw1o")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_5yoiv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("49_710oo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("50_sjje6")
+}],
+"loop": true,
+"name": &"roll",
+"speed": 20.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("14_3rf7u")
 }, {
 "duration": 1.0,
@@ -320,12 +391,42 @@ _data = {
 "hit_flash": SubResource("Animation_3ufcn")
 }
 
+[sub_resource type="SpriteFrames" id="SpriteFrames_rhs7m"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": null
+}, {
+"duration": 1.0,
+"texture": ExtResource("69_hv3xc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("70_r4iyg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("69_hv3xc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("71_85uej")
+}, {
+"duration": 1.0,
+"texture": ExtResource("72_gm24a")
+}, {
+"duration": 1.0,
+"texture": null
+}],
+"loop": false,
+"name": &"vanishing",
+"speed": 16.0
+}]
+
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_rsi7j")
+jump_force = 300.0
 
 [node name="Player" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_npq8g")
-animation = &"attack1"
+animation = &"roll"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_bl8he")
@@ -379,6 +480,13 @@ bus = &"SFX"
 [node name="Death" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("56_s18ex")
 bus = &"SFX"
+
+[node name="VFX" type="AnimatedSprite2D" parent="."]
+modulate = Color(0, 1, 1, 1)
+position = Vector2(14, -3)
+scale = Vector2(1.93529, 1.91305)
+sprite_frames = SubResource("SpriteFrames_rhs7m")
+animation = &"vanishing"
 
 [connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]
 [connection signal="area_entered" from="AttackBox" to="." method="_on_attack_box_area_entered"]

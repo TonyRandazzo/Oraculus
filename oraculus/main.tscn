@@ -1,4 +1,4 @@
-[gd_scene load_steps=466 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=470 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -64,6 +64,7 @@
 [ext_resource type="Texture2D" uid="uid://bekn8lfhvosmm" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Tiles/lion_column_10.png" id="31_wtqth"]
 [ext_resource type="Texture2D" uid="uid://c3n5elmlap3v4" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Tiles/lion_column_11.png" id="32_ah0md"]
 [ext_resource type="Texture2D" uid="uid://51c3ktngbu1q" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Tiles/floor_wood_carpet_4.png" id="32_bak7v"]
+[ext_resource type="PackedScene" uid="uid://bo66nwr68r6r0" path="res://oraculus/NPC/ghost.tscn" id="32_lqlns"]
 [ext_resource type="Texture2D" uid="uid://d4daouco4vxga" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/candelabrum_tall/candelabrum_tall_3.png" id="32_obiff"]
 [ext_resource type="Texture2D" uid="uid://c2phqib5fjeje" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Animated Decorations/candelabrum_tall/candelabrum_tall_4.png" id="33_5tsrl"]
 [ext_resource type="Texture2D" uid="uid://cuuogqkk8p645" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Tiles/lion_column_12.png" id="33_544fl"]
@@ -227,6 +228,9 @@
 [ext_resource type="Texture2D" uid="uid://by5encafep7u4" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Cattivone teschio enigma/Bones_shadow2_3.png" id="192_lcl6s"]
 [ext_resource type="Script" path="res://oraculus/stair.gd" id="223_l5xqp"]
 [ext_resource type="PackedScene" uid="uid://bglcquetgjaby" path="res://oraculus/NPC/flying_demon.tscn" id="223_s8sn3"]
+[ext_resource type="PackedScene" uid="uid://varw07yxqmlf" path="res://oraculus/item.tscn" id="228_1xmu5"]
+[ext_resource type="PackedScene" uid="uid://crtr2grxvjgnb" path="res://oraculus/item_2.tscn" id="229_0elpl"]
+[ext_resource type="PackedScene" uid="uid://bwvlw1cwv1dl0" path="res://oraculus/NPC/ogre.tscn" id="230_jkjru"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_tlipm"]
 animations = [{
@@ -4390,13 +4394,13 @@ layer = 0
 [node name="ParallaxLayer" type="ParallaxLayer" parent="SecondaStanza/Node2D/ParallaxBackground"]
 z_index = 3
 position = Vector2(1473, -494)
-motion_scale = Vector2(1.3, 1)
+motion_scale = Vector2(1.3, 1.1)
 metadata/_edit_group_ = true
 
 [node name="TileMapLayer" type="TileMapLayer" parent="SecondaStanza/Node2D/ParallaxBackground/ParallaxLayer"]
 position = Vector2(-3449, 560)
 scale = Vector2(2.05, 2.05)
-tile_map_data = PackedByteArray("AABtAPf/CgAAAAAAAABtAPj/CgAAAAEAAABuAPf/CgABAAAAAABuAPj/CgABAAEAAABtAPX/CgAAAAAAAABtAPb/CgAAAAEAAABuAPX/CgABAAAAAABuAPb/CgABAAEAAABtAPP/CgAAAAAAAABtAPT/CgAAAAEAAABuAPP/CgABAAAAAABuAPT/CgABAAEAAABtAPH/BwAAAAAAAABtAPL/BwAAAAEAAABuAPH/BwABAAAAAABuAPL/BwABAAEAAABtAO//BAAAAAAAAABtAPD/BAAAAAEAAABuAO//BAABAAAAAABuAPD/BAABAAEAAABtAO3/AQAAAAAAAABtAO7/AQAAAAEAAABuAO3/AQABAAAAAABuAO7/AQABAAEAAABtAOv/CgAAAAAAAABtAOz/CgAAAAEAAABuAOv/CgABAAAAAABuAOz/CgABAAEAAAByAPf/CgAAAAAAAAByAPj/CgAAAAEAAABzAPf/CgABAAAAAABzAPj/CgABAAEAAAByAPX/CgAAAAAAAAByAPb/CgAAAAEAAABzAPX/CgABAAAAAABzAPb/CgABAAEAAAByAPP/CgAAAAAAAAByAPT/CgAAAAEAAABzAPP/CgABAAAAAABzAPT/CgABAAEAAAByAPH/BwAAAAAAAAByAPL/BwAAAAEAAABzAPH/BwABAAAAAABzAPL/BwABAAEAAAByAO//BAAAAAAAAAByAPD/BAAAAAEAAABzAO//BAABAAAAAABzAPD/BAABAAEAAAByAO3/AQAAAAAAAAByAO7/AQAAAAEAAABzAO3/AQABAAAAAABzAO7/AQABAAEAAAByAOv/CgAAAAAAAAByAOz/CgAAAAEAAABzAOv/CgABAAAAAABzAOz/CgABAAEAAAB3APf/CgAAAAAAAAB3APj/CgAAAAEAAAB4APf/CgABAAAAAAB4APj/CgABAAEAAAB3APX/CgAAAAAAAAB3APb/CgAAAAEAAAB4APX/CgABAAAAAAB4APb/CgABAAEAAAB3APP/CgAAAAAAAAB3APT/CgAAAAEAAAB4APP/CgABAAAAAAB4APT/CgABAAEAAAB3AOv/CgAAAAAAAAB3AOz/CgAAAAEAAAB4AOv/CgABAAAAAAB4AOz/CgABAAEAAAB3APH/BwAAAAAAAAB3APL/BwAAAAEAAAB4APH/BwABAAAAAAB4APL/BwABAAEAAAB3AO3/AQAAAAAAAAB3AO7/AQAAAAEAAAB4AO3/AQABAAAAAAB4AO7/AQABAAEAAAB3AO//BAAAAAAAAAB3APD/BAAAAAEAAAB4AO//BAABAAAAAAB4APD/BAABAAEAAAA=")
+tile_map_data = PackedByteArray("AABtAPf/CgAAAAAAAABtAPj/CgAAAAAAAABuAPf/CgABAAAAAABuAPj/CgABAAAAAABtAPX/CgAAAAAAAABtAPb/CgAAAAEAAABuAPX/CgABAAAAAABuAPb/CgABAAEAAABtAPP/CgAAAAAAAABtAPT/CgAAAAEAAABuAPP/CgABAAAAAABuAPT/CgABAAEAAABtAPH/BwAAAAAAAABtAPL/BwAAAAEAAABuAPH/BwABAAAAAABuAPL/BwABAAEAAABtAO//BAAAAAAAAABtAPD/BAAAAAEAAABuAO//BAABAAAAAABuAPD/BAABAAEAAABtAO3/AQAAAAAAAABtAO7/AQAAAAEAAABuAO3/AQABAAAAAABuAO7/AQABAAEAAABtAOv/CgAAAAAAAABtAOz/CgAAAAEAAABuAOv/CgABAAAAAABuAOz/CgABAAEAAAByAPf/CgAAAAAAAAByAPj/CgAAAAAAAABzAPf/CgABAAAAAABzAPj/CgABAAAAAAByAPX/CgAAAAAAAAByAPb/CgAAAAEAAABzAPX/CgABAAAAAABzAPb/CgABAAEAAAByAPP/CgAAAAAAAAByAPT/CgAAAAEAAABzAPP/CgABAAAAAABzAPT/CgABAAEAAAByAPH/BwAAAAAAAAByAPL/BwAAAAEAAABzAPH/BwABAAAAAABzAPL/BwABAAEAAAByAO//BAAAAAAAAAByAPD/BAAAAAEAAABzAO//BAABAAAAAABzAPD/BAABAAEAAAByAO3/AQAAAAAAAAByAO7/AQAAAAEAAABzAO3/AQABAAAAAABzAO7/AQABAAEAAAByAOv/CgAAAAAAAAByAOz/CgAAAAEAAABzAOv/CgABAAAAAABzAOz/CgABAAEAAAB3APf/CgAAAAAAAAB3APj/CgAAAAAAAAB4APf/CgABAAAAAAB4APj/CgABAAAAAAB3APX/CgAAAAAAAAB3APb/CgAAAAEAAAB4APX/CgABAAAAAAB4APb/CgABAAEAAAB3APP/CgAAAAAAAAB3APT/CgAAAAEAAAB4APP/CgABAAAAAAB4APT/CgABAAEAAAB3AOv/CgAAAAAAAAB3AOz/CgAAAAEAAAB4AOv/CgABAAAAAAB4AOz/CgABAAEAAAB3APH/BwAAAAAAAAB3APL/BwAAAAEAAAB4APH/BwABAAAAAAB4APL/BwABAAEAAAB3AO3/AQAAAAAAAAB3AO7/AQAAAAEAAAB4AO3/AQABAAAAAAB4AO7/AQABAAEAAAB3AO//BAAAAAAAAAB3APD/BAAAAAEAAAB4AO//BAABAAAAAAB4APD/BAABAAEAAABtAPn/CgAAAAEAAABuAPn/CgABAAEAAAByAPn/CgAAAAEAAABzAPn/CgABAAEAAAB3APn/CgAAAAEAAAB4APn/CgABAAEAAAA=")
 tile_set = SubResource("TileSet_17rp5")
 
 [node name="rosone" type="Sprite2D" parent="SecondaStanza"]
@@ -4662,6 +4666,15 @@ metadata/_edit_group_ = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SecondaStanza/CameraDistance2"]
 position = Vector2(-41.8751, -71.7849)
 shape = SubResource("RectangleShape2D_2k2oe")
+
+[node name="Ghost" parent="SecondaStanza" instance=ExtResource("32_lqlns")]
+position = Vector2(1913, -317)
+
+[node name="Ghost2" parent="SecondaStanza" instance=ExtResource("32_lqlns")]
+position = Vector2(1558, -361)
+
+[node name="FlyingDemon" parent="SecondaStanza" instance=ExtResource("223_s8sn3")]
+position = Vector2(2093, -301)
 
 [node name="Fogne" type="Node2D" parent="."]
 
@@ -18279,7 +18292,6 @@ texture = ExtResource("86_gillt")
 z_index = 1
 position = Vector2(-434, -19)
 scale = Vector2(0.8, 0.8)
-jump_force = 300.0
 metadata/_edit_group_ = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="Player"]
@@ -18294,6 +18306,7 @@ grow_vertical = 0
 scale = Vector2(1.5, 1.5)
 
 [node name="Options" parent="Player/CanvasLayer" instance=ExtResource("58_d854c")]
+process_mode = 3
 visible = false
 anchors_preset = 8
 anchor_left = 0.5
@@ -18493,6 +18506,24 @@ stream = ExtResource("173_nfyyl")
 volume_db = -10.0
 
 [node name="stanza 4" type="Node2D" parent="."]
+
+[node name="Item" parent="." instance=ExtResource("228_1xmu5")]
+position = Vector2(741, -152)
+
+[node name="Item2" parent="." instance=ExtResource("229_0elpl")]
+position = Vector2(805, -103)
+
+[node name="Ogre" parent="." instance=ExtResource("230_jkjru")]
+position = Vector2(1524, 17)
+
+[node name="Ogre2" parent="." instance=ExtResource("230_jkjru")]
+position = Vector2(1654, 17)
+
+[node name="Ogre3" parent="." instance=ExtResource("230_jkjru")]
+position = Vector2(1958, 17)
+
+[node name="Ogre4" parent="." instance=ExtResource("230_jkjru")]
+position = Vector2(2088, 17)
 
 [connection signal="area_entered" from="PrimaStanza/Area2D" to="PrimaStanza/ParallaxBackground/ParallaxLayer8/Dragon" method="_on_area_2d_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D2" to="Music" method="_on_area_2d_2_area_entered"]

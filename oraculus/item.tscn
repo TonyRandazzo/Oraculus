@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://varw07yxqmlf"]
+
+[ext_resource type="Script" path="res://item.gd" id="1_t2y0j"]
+[ext_resource type="Texture2D" uid="uid://ckj30gmrjqssj" path="res://oraculus/HUD/ItemsIcons_24x24.png" id="2_rbwf6"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ucxro"]
+
+[node name="Item" type="Node2D"]
+script = ExtResource("1_t2y0j")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-2, -1)
+shape = SubResource("RectangleShape2D_ucxro")
+
+[node name="Sprite2D" type="Sprite2D" parent="Area2D"]
+texture = ExtResource("2_rbwf6")
+
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]

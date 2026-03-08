@@ -22,6 +22,14 @@ func _on_sfx_changed(value: float):
 	var volume_db = linear_to_db(value / 100)
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("SFX"), volume_db)
 
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause"):
+		toggle_pause()
+
+func toggle_pause():
+	get_tree().paused = !get_tree().paused
+	visible = !visible
+	$"../Pause".visible = !$"../Pause".visible 
 
 func _on_texture_button_pressed() -> void:
 	get_tree().paused = false

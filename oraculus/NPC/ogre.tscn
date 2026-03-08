@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://bwvlw1cwv1dl0"]
+[gd_scene load_steps=30 format=3 uid="uid://bwvlw1cwv1dl0"]
 
 [ext_resource type="Script" path="res://oraculus/NPC/ogre.gd" id="1_m5a8n"]
 [ext_resource type="Texture2D" uid="uid://dir7w5bgtrvsq" path="res://oraculus/NPC/Sprites-Ogre/Attack/ogre-attack1.png" id="2_xqjfd"]
@@ -9,7 +9,6 @@
 [ext_resource type="Texture2D" uid="uid://c2q8xj1iw70cu" path="res://oraculus/NPC/Sprites-Ogre/Attack/ogre-attack6.png" id="7_86knb"]
 [ext_resource type="Texture2D" uid="uid://cyahf6sqfyr74" path="res://oraculus/NPC/Sprites-Ogre/Attack/ogre-attack7.png" id="8_16ifb"]
 [ext_resource type="Texture2D" uid="uid://kjkwd15wrcas" path="res://oraculus/NPC/Sprites-Ogre/Idle/ogre-idle1.png" id="9_o456m"]
-[ext_resource type="Texture2D" uid="uid://dkd0u4sjf0m54" path="res://oraculus/NPC/Sprites-Ogre/Idle/ogre-idle2.png" id="10_aasn8"]
 [ext_resource type="Texture2D" uid="uid://cosdt8tj3mtd0" path="res://oraculus/NPC/Sprites-Ogre/Idle/ogre-idle3.png" id="11_r4lpc"]
 [ext_resource type="Texture2D" uid="uid://dlpfasfbfs4nt" path="res://oraculus/NPC/Sprites-Ogre/Idle/ogre-idle4.png" id="12_tyugi"]
 [ext_resource type="Texture2D" uid="uid://bvu8rnm4ftnwh" path="res://oraculus/NPC/Sprites-Ogre/walk/ogre-walk1.png" id="13_di7u2"]
@@ -61,9 +60,6 @@ animations = [{
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("9_o456m")
-}, {
-"duration": 1.0,
-"texture": ExtResource("10_aasn8")
 }, {
 "duration": 1.0,
 "texture": ExtResource("11_r4lpc")
@@ -166,7 +162,7 @@ speed = 20.0
 position = Vector2(0, -32)
 scale = Vector2(0.8, 0.8)
 sprite_frames = SubResource("SpriteFrames_g4vc4")
-animation = &"death"
+animation = &"idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -18.5)

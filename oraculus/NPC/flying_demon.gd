@@ -69,6 +69,7 @@ var ai_decision_weights: Dictionary = {}
 @onready var hurt_sound = $HurtSound
 @onready var attack_sound = $AttackSound
 @onready var death_sound = $DeathSound
+@onready var VFX = $VFX
 
 var fallback_responses = [
 	"*Chuckling* I challenge you with a riddle!",
@@ -149,6 +150,7 @@ func face_player():
 	if player and is_instance_valid(player):
 		var direction = sign(player.global_position.x - global_position.x)
 		sprite.flip_h = direction > 0
+		VFX.flip_h = direction > 0
 
 func _update_lateral_offset():
 	current_lateral_offset = randf_range(lateral_offset_range.x, lateral_offset_range.y)
@@ -344,6 +346,7 @@ func take_damage(amount: int):
 	current_health -= amount
 	hurt_sound.play()
 	animation_player.play("hit_flash")
+	VFX.play("hit")
 	is_invincible = true
 	invincibility_timer = invincibility_duration
 	
@@ -369,6 +372,8 @@ func die():
 	state = "dead"
 	death_sound.play()
 	sprite.play("death")
+	VFX.play("vanishing")
+	VFX.scale = Vector2(2.583, 2.583)
 	set_physics_process(false)
 	await sprite.animation_finished
 	queue_free()

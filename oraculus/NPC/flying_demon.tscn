@@ -1,4 +1,4 @@
-[gd_scene load_steps=61 format=3 uid="uid://bglcquetgjaby"]
+[gd_scene load_steps=73 format=3 uid="uid://bglcquetgjaby"]
 
 [ext_resource type="Script" path="res://oraculus/NPC/flying_demon.gd" id="1_f7qtu"]
 [ext_resource type="Texture2D" uid="uid://cmg7pqanx1kvg" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame1.png" id="2_i8exw"]
@@ -50,6 +50,17 @@
 [ext_resource type="AudioStream" uid="uid://ddlpkxfqlagnf" path="res://oraculus/Level/Sounds/Cinematic Whoosh Fireball - Sound Effect [HD].mp3" id="48_25n1h"]
 [ext_resource type="AudioStream" uid="uid://bbcrnk8m4htsn" path="res://oraculus/Level/Sounds/Death Sound Effects.mp3" id="49_60dhj"]
 [ext_resource type="AudioStream" uid="uid://qmk514s7ouyv" path="res://oraculus/Level/Sounds/hitHurt.wav" id="49_anenw"]
+[ext_resource type="Texture2D" uid="uid://c6k2ecfdchowi" path="res://oraculus/VFX/Vanishing/0.png" id="51_fhpmh"]
+[ext_resource type="Texture2D" uid="uid://b88ci5vkqqg8y" path="res://oraculus/VFX/Vanishing/1.png" id="52_7bkmn"]
+[ext_resource type="Texture2D" uid="uid://cv4vy2v6ie3mx" path="res://oraculus/VFX/Vanishing/2.png" id="53_khswt"]
+[ext_resource type="Texture2D" uid="uid://j6mnd52qu5su" path="res://oraculus/VFX/Vanishing/3.png" id="54_1qobk"]
+[ext_resource type="Texture2D" uid="uid://cthu7kg0nsfan" path="res://oraculus/VFX/VFX6/B&W/Frames/VFXimpact6_frame1.png" id="55_nrcgc"]
+[ext_resource type="Texture2D" uid="uid://dh56yxl32r5n" path="res://oraculus/VFX/VFX6/B&W/Frames/VFXimpact6_frame2.png" id="56_8c6yr"]
+[ext_resource type="Texture2D" uid="uid://dvw713w87m3b3" path="res://oraculus/VFX/VFX6/B&W/Frames/VFXimpact6_frame3.png" id="57_hid35"]
+[ext_resource type="Texture2D" uid="uid://k7humm2f4da" path="res://oraculus/VFX/VFX6/B&W/Frames/VFXimpact6_frame4.png" id="58_th7us"]
+[ext_resource type="Texture2D" uid="uid://bv7san5uged6o" path="res://oraculus/VFX/VFX6/B&W/Frames/VFXimpact6_frame5.png" id="59_t0edo"]
+[ext_resource type="Texture2D" uid="uid://bqohani4lxdh6" path="res://oraculus/VFX/VFX6/B&W/Frames/VFXimpact6_frame6.png" id="60_0mgm4"]
+[ext_resource type="Texture2D" uid="uid://dajn4cm7nigj2" path="res://oraculus/VFX/VFX6/B&W/Frames/VFXimpact6_frame7.png" id="61_0xd6m"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_thsae"]
 animations = [{
@@ -196,7 +207,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7w3pn"]
-size = Vector2(20, 37)
+size = Vector2(20, 17)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qal1g"]
 size = Vector2(103, 95)
@@ -267,6 +278,67 @@ _data = {
 "hit_flash": SubResource("Animation_dm5k4")
 }
 
+[sub_resource type="SpriteFrames" id="SpriteFrames_ntxlh"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": null
+}, {
+"duration": 1.0,
+"texture": ExtResource("55_nrcgc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("56_8c6yr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("57_hid35")
+}, {
+"duration": 1.0,
+"texture": ExtResource("58_th7us")
+}, {
+"duration": 1.0,
+"texture": ExtResource("59_t0edo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("60_0mgm4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("61_0xd6m")
+}, {
+"duration": 1.0,
+"texture": null
+}],
+"loop": false,
+"name": &"hit",
+"speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": null
+}, {
+"duration": 1.0,
+"texture": ExtResource("51_fhpmh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("52_7bkmn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("51_fhpmh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("53_khswt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("54_1qobk")
+}, {
+"duration": 1.0,
+"texture": null
+}],
+"loop": false,
+"name": &"vanishing",
+"speed": 6.0
+}]
+
 [node name="FlyingDemon" type="CharacterBody2D"]
 script = ExtResource("1_f7qtu")
 gravity = 0.0
@@ -275,10 +347,12 @@ gravity = 0.0
 position = Vector2(-6, -17)
 scale = Vector2(0.6, 0.6)
 sprite_frames = SubResource("SpriteFrames_thsae")
-animation = &"attack"
+animation = &"death"
+frame = 17
+frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 0.5)
+position = Vector2(0, -9.5)
 shape = SubResource("RectangleShape2D_7w3pn")
 
 [node name="Area2D" type="Area2D" parent="."]
@@ -340,6 +414,12 @@ stream = ExtResource("49_anenw")
 
 [node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("49_60dhj")
+
+[node name="VFX" type="AnimatedSprite2D" parent="."]
+position = Vector2(-1, 4.76837e-07)
+scale = Vector2(1, 0.839)
+sprite_frames = SubResource("SpriteFrames_ntxlh")
+animation = &"vanishing"
 
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
 [connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]

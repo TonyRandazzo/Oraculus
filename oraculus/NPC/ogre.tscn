@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://bwvlw1cwv1dl0"]
+[gd_scene load_steps=29 format=3 uid="uid://bwvlw1cwv1dl0"]
 
 [ext_resource type="Script" path="res://oraculus/NPC/ogre.gd" id="1_m5a8n"]
 [ext_resource type="Texture2D" uid="uid://dir7w5bgtrvsq" path="res://oraculus/NPC/Sprites-Ogre/Attack/ogre-attack1.png" id="2_xqjfd"]
@@ -19,7 +19,6 @@
 [ext_resource type="Texture2D" uid="uid://bafqaypeiym1k" path="res://oraculus/NPC/Sprites-Ogre/walk/ogre-walk6.png" id="18_sy505"]
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="19_5dvs0"]
 [ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="20_m864w"]
-[ext_resource type="Script" path="res://addons/player2/Player2AINPC.gd" id="21_8rsey"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_g4vc4"]
 animations = [{
@@ -157,6 +156,7 @@ _data = {
 [node name="Ogre" type="CharacterBody2D"]
 script = ExtResource("1_m5a8n")
 speed = 20.0
+npc_name = "Guardiano"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -32)
@@ -189,11 +189,6 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_lqswc")
 text = "*La voce demoniaca echeggia...*"
 autowrap_mode = 2
 script = ExtResource("20_m864w")
-
-[node name="Player2AINPC" type="Node" parent="."]
-script = ExtResource("21_8rsey")
-tts_enabled = true
-tts_default_gender = 0
 
 [node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
 position = Vector2(0, -24)

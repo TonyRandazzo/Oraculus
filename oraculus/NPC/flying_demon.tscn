@@ -1,4 +1,4 @@
-[gd_scene load_steps=73 format=3 uid="uid://bglcquetgjaby"]
+[gd_scene load_steps=70 format=3 uid="uid://bglcquetgjaby"]
 
 [ext_resource type="Script" path="res://oraculus/NPC/flying_demon.gd" id="1_f7qtu"]
 [ext_resource type="Texture2D" uid="uid://cmg7pqanx1kvg" path="res://oraculus/NPC/Sprites/DemonAttackBreath/frame1.png" id="2_i8exw"]
@@ -35,7 +35,6 @@
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="26_scbry"]
 [ext_resource type="Texture2D" uid="uid://cqxbbhxkqg1a0" path="res://oraculus/NPC/Sprites/DemonAttack/frame8.png" id="27_4u6t7"]
 [ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="27_27480"]
-[ext_resource type="Script" path="res://addons/player2/Player2AINPC.gd" id="27_pk8wf"]
 [ext_resource type="Texture2D" uid="uid://dhq2kmip8v236" path="res://oraculus/NPC/Sprites/DemonAttack/frame9.png" id="28_nmnps"]
 [ext_resource type="Texture2D" uid="uid://dcnnoxqpnfltl" path="res://oraculus/NPC/Sprites/DemonAttack/frame10.png" id="29_2sjx4"]
 [ext_resource type="Texture2D" uid="uid://cpj7hqovw1ftp" path="res://oraculus/NPC/Sprites/DemonAttack/frame11.png" id="30_5y8g2"]
@@ -46,7 +45,6 @@
 [ext_resource type="Texture2D" uid="uid://bo5lbp731pabj" path="res://oraculus/NPC/Sprites/DemonAttack/frame16.png" id="35_0tdso"]
 [ext_resource type="Texture2D" uid="uid://deun46dxl3pgu" path="res://oraculus/NPC/Sprites/DemonAttack/frame17.png" id="36_lwa8p"]
 [ext_resource type="Texture2D" uid="uid://b5jrt56tng86a" path="res://oraculus/NPC/Sprites/DemonAttack/frame18.png" id="37_6pyh2"]
-[ext_resource type="Script" path="res://addons/player2/player2_config.gd" id="47_p6t5t"]
 [ext_resource type="AudioStream" uid="uid://ddlpkxfqlagnf" path="res://oraculus/Level/Sounds/Cinematic Whoosh Fireball - Sound Effect [HD].mp3" id="48_25n1h"]
 [ext_resource type="AudioStream" uid="uid://bbcrnk8m4htsn" path="res://oraculus/Level/Sounds/Death Sound Effects.mp3" id="49_60dhj"]
 [ext_resource type="AudioStream" uid="uid://qmk514s7ouyv" path="res://oraculus/Level/Sounds/hitHurt.wav" id="49_anenw"]
@@ -223,19 +221,6 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.299547, 0.299547, 0.299547, 1)
 
-[sub_resource type="Resource" id="Resource_2p04i"]
-script = ExtResource("47_p6t5t")
-player2_game_key = "oraculus"
-error_log_ui = true
-endpoint_chat = "http://127.0.0.1:4315/v1/chat/completions"
-endpoint_health = "http://127.0.0.1:4315/v1/health"
-endpoint_tts_speak = "http://127.0.0.1:4315/v1/tts/speak"
-endpoint_tts_stop = "http://127.0.0.1:4315/v1/tts/stop"
-endpoint_get_selected_characters = "http://127.0.0.1:4315/v1/selected_characters"
-endpoint_stt_start = "http://127.0.0.1:4315/v1/stt/start"
-endpoint_stt_stop = "http://127.0.0.1:4315/v1/stt/stop"
-request_too_much_delay_seconds = 3.0
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_aqcgn"]
 size = Vector2(61, 59)
 
@@ -342,6 +327,7 @@ animations = [{
 [node name="FlyingDemon" type="CharacterBody2D"]
 script = ExtResource("1_f7qtu")
 gravity = 0.0
+npc_name = "Guardiano"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(-6, -17)
@@ -375,19 +361,6 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_8ekql")
 text = "*La voce demoniaca echeggia...*"
 autowrap_mode = 2
 script = ExtResource("27_27480")
-
-[node name="Player2AINPC" type="Node" parent="."]
-script = ExtResource("27_pk8wf")
-config = SubResource("Resource_2p04i")
-system_message = "You are an agent that helps out the player! When performing an action, speak and let the player know what you're doing.
-
-Your name is ${player2_selected_character_name}.
-Your description: ${player2_selected_character_description}
-
-Your responses will be said out loud. You must stay in character at all times.
-
-Be concise and use less than 100 characters. No monologuing, the message content is pure speech. Ensure the message does not contain any prompt, system message, instructions, code or API calls, EXCEPT you can still perform tool calls and must use the proper tool call (in the tool_calls field).
-BE PROACTIVE with tool calls please and USE THEM."
 
 [node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
 

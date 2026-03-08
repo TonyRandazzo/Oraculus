@@ -17,6 +17,9 @@ extends CharacterBody2D
 @export var knockback_force: float = 300.0
 @export var lateral_offset_range: Vector2 = Vector2(50.0, 150.0)
 
+@export var npc_name: String = "Demon"
+const AI_SERVER_URL = "http://localhost:5000"
+
 @export var personality_traits: Dictionary = {
 	"aggressiveness": 0.7,
 	"curiosity": 0.5,
@@ -33,9 +36,6 @@ var player: Node2D = null
 var state: String = "idle"
 var attack_timer: float = 0.0
 var is_interacting: bool = false
-var response_timeout: float = 30.0
-var current_timeout: float = 0.0
-var last_prompt: String = ""
 var is_waiting_for_response: bool = false
 var friendship_level: int = 0
 var max_friendship: int = 5
@@ -50,6 +50,14 @@ var dialogue_cooldown_timer: float = 1000.0
 var can_initiate_dialogue: bool = true
 var current_aggression: float = base_aggression
 var current_lateral_offset: float = 0.0
+var hostility: int = 70
+
+# Thread HTTP
+var _ai_thread: Thread = null
+var _thinking_tween: Tween = null
+var _ai_thread_result: String = ""
+var _ai_thread_new_hostility: int = -1
+var _ai_thread_done: bool = false
 
 var conversation_history: Array = []
 var personality_state: Dictionary = {}
@@ -61,7 +69,6 @@ var ai_decision_weights: Dictionary = {}
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var detection_area: Area2D = $Area2D
 @onready var timer: Timer = $Timer
-@onready var npc_ai: Player2AINPC = $Player2AINPC
 @onready var dialogue_box = $Dialogue
 @onready var hit_box = $HitBox/CollisionShape2D
 @onready var attack_box = $AttackBox/CollisionShape2D
@@ -76,7 +83,6 @@ var fallback_responses = [
 	"*Roaring* Too difficult for you!",
 	"*Hissing* Your ignorance amuses me!"
 ]
-
 var friendly_responses = [
 	"*Sighing* Perhaps you're not as useless as other humans...",
 	"*With interest* Keep talking, mortal...",
@@ -84,7 +90,6 @@ var friendly_responses = [
 	"*Calmer voice* Maybe I was wrong about you...",
 	"*Smiling* You've earned my respect, little mortal"
 ]
-
 var attack_phrases = [
 	"*Demonic screams* Prepare to suffer!",
 	"*Roar* Taste my fury!",
@@ -93,7 +98,6 @@ var attack_phrases = [
 	"*Hiss* I'll tear you apart!",
 	"*Howl* Die, insect!"
 ]
-
 var aggressive_hit_responses = [
 	"*Angry scream* ENOUGH NOW!",
 	"*Roar* I'LL REDUCE YOU TO DUST!",
@@ -102,49 +106,151 @@ var aggressive_hit_responses = [
 	"*Mad laughter* PAIN WILL MAKE YOU TASTIER!"
 ]
 
+# ─────────────────────────────────────────────────────────────
+#  HTTP THREADED — non soffre del bug Windows di HTTPRequest
+# ─────────────────────────────────────────────────────────────
+
+func _send_to_ai_server(player_message: String) -> void:
+	if is_waiting_for_response:
+		return
+	if _ai_thread != null and _ai_thread.is_alive():
+		return
+
+	is_waiting_for_response = true
+	is_interacting = true
+	_ai_thread_done = false
+	_start_thinking_dots()
+
+	var payload = {
+		"npc_name": npc_name,
+		"player_input": player_message,
+		"hostility": hostility,
+		"friendship": friendship_level * 20,
+		"language": "inglese"
+	}
+
+	_ai_thread = Thread.new()
+	_ai_thread.start(_thread_request.bind(payload))
+
+func _thread_request(payload: Dictionary) -> void:
+	var client = HTTPClient.new()
+	var err = client.connect_to_host("localhost", 5000)
+	if err != OK:
+		_ai_thread_done = true
+		return
+
+	# Aspetta connessione (max 5s)
+	var waited := 0.0
+	while client.get_status() in [HTTPClient.STATUS_CONNECTING, HTTPClient.STATUS_RESOLVING]:
+		OS.delay_msec(50)
+		client.poll()
+		waited += 0.05
+		if waited > 5.0:
+			_ai_thread_done = true
+			return
+
+	if client.get_status() != HTTPClient.STATUS_CONNECTED:
+		_ai_thread_done = true
+		return
+
+	var body_str = JSON.stringify(payload)
+	var headers = [
+		"Content-Type: application/json",
+		"Content-Length: " + str(body_str.length())
+	]
+	err = client.request(HTTPClient.METHOD_POST, "/chat", headers, body_str)
+	if err != OK:
+		_ai_thread_done = true
+		return
+
+	# Aspetta headers (max 90s — LLM lento)
+	waited = 0.0
+	while waited < 90.0:
+		OS.delay_msec(100)
+		client.poll()
+		var status = client.get_status()
+		if status == HTTPClient.STATUS_BODY or status == HTTPClient.STATUS_CONNECTED:
+			break
+		elif status == HTTPClient.STATUS_DISCONNECTED:
+			_ai_thread_done = true
+			return
+		waited += 0.1
+
+	# Leggi body
+	var response_body := PackedByteArray()
+	waited = 0.0
+	while waited < 30.0:
+		client.poll()
+		var status = client.get_status()
+		if status == HTTPClient.STATUS_BODY:
+			var chunk = client.read_response_body_chunk()
+			if chunk.size() > 0:
+				response_body.append_array(chunk)
+				waited = 0.0
+			else:
+				OS.delay_msec(50)
+				waited += 0.05
+		else:
+			break
+
+	# Parsa JSON
+	if response_body.size() > 0:
+		var json = JSON.new()
+		var text = response_body.get_string_from_utf8()
+		if json.parse(text) == OK:
+			var data = json.get_data()
+			_ai_thread_result = data.get("response", "")
+			_ai_thread_new_hostility = int(data.get("new_hostility", hostility))
+
+	_ai_thread_done = true
+
+func _process(_delta: float) -> void:
+	if not _ai_thread_done or _ai_thread == null:
+		return
+
+	_ai_thread.wait_to_finish()
+	_ai_thread = null
+	_ai_thread_done = false
+
+	_stop_thinking_dots()
+	if _ai_thread_result != "":
+		if _ai_thread_new_hostility >= 0:
+			hostility = _ai_thread_new_hostility
+			friendship_level = clamp(5 - int(hostility / 20.0), 0, max_friendship)
+		_on_ai_chat_received(_ai_thread_result)
+	else:
+		_on_ai_chat_failed(-1)
+
+	_ai_thread_result = ""
+	_ai_thread_new_hostility = -1
+
+# ─────────────────────────────────────────────────────────────
+#  READY
+# ─────────────────────────────────────────────────────────────
+
 func _ready() -> void:
 	current_health = max_health
 	current_aggression = base_aggression
 	personality_traits["aggressiveness"] = base_aggression
-	
+	hostility = int(base_aggression * 100)
+
 	add_to_group("demons")
 	detection_area.add_to_group("demon_detection")
-	
+
 	detection_area.connect("body_entered", _on_body_entered)
 	timer.connect("timeout", _on_timeout)
 	$HitBox.connect("area_entered", _on_hit_box_area_entered)
 	$AttackBox.connect("area_entered", _on_attack_box_area_entered)
 	sprite.connect("animation_finished", _on_animation_finished)
-	
-	if npc_ai:
-		setup_ai_profile()
-		if npc_ai.has_signal("chat_received"):
-			npc_ai.chat_received.connect(_on_ai_chat_received)
-		if npc_ai.has_signal("chat_failed"):
-			npc_ai.chat_failed.connect(_on_ai_chat_failed)
-	
+
 	sprite.play("idle")
 	await get_tree().create_timer(1.0).timeout
 	say_launch_message()
 	attack_box.disabled = true
-	
+
 	initialize_personality()
 	_update_ai_state()
 	_update_lateral_offset()
-
-func setup_ai_profile():
-	npc_ai._selected_character = {
-		"name": "Demon",
-		"description": "Concise and theatrical demon mage who can become a friend",
-		"voice_ids": ["demon_voice_1", "demon_voice_2"]
-	}
-	npc_ai.use_player2_selected_character = false
-	npc_ai.tts_enabled = false
-	npc_ai.auto_store_conversation_history = true
-	update_ai_profile()
-
-func update_ai_profile():
-	pass
 
 func face_player():
 	if player and is_instance_valid(player):
@@ -161,7 +267,6 @@ func initialize_personality():
 	personality_state = personality_traits.duplicate()
 	personality_state["patience"] = 1.0 - personality_traits["aggressiveness"]
 	personality_state["social"] = (personality_traits["curiosity"] + personality_traits["playfulness"]) / 2.0
-	
 	ai_decision_weights = {
 		"attack": current_aggression,
 		"talk": personality_traits["curiosity"],
@@ -172,13 +277,13 @@ func initialize_personality():
 
 func _physics_process(delta: float) -> void:
 	velocity.y += gravity * delta
-	
+
 	if player and not is_instance_valid(player):
 		player = null
 		state = "idle"
-	
+
 	attack_timer -= delta
-	
+
 	if is_attacking and sprite.animation == "attack":
 		if sprite.frame >= attack_frame_start and sprite.frame <= attack_frame_end:
 			if sprite.frame == attack_hit_frame and attack_box.disabled:
@@ -190,28 +295,26 @@ func _physics_process(delta: float) -> void:
 				attack_box.disabled = true
 		else:
 			attack_box.disabled = true
-	
+
 	if is_invincible:
 		invincibility_timer -= delta
 		if invincibility_timer <= 0:
 			is_invincible = false
 			animation_player.stop()
 			sprite.modulate = Color(1, 1, 1, 1)
-	
+
 	if not can_initiate_dialogue:
 		dialogue_cooldown_timer -= delta
 		if dialogue_cooldown_timer <= 0:
 			can_initiate_dialogue = true
 			dialogue_cooldown_timer = 5.0
-	
+
 	last_ai_update += delta
 	if player and state in ["idle", "ready", "conversing"] and not is_waiting_for_response and can_initiate_dialogue:
 		if last_ai_update > ai_update_interval:
 			last_ai_update = 0.0
 			var decision = make_ai_decision()
 			execute_ai_decision(decision)
-	if state != "attacking" or abs(velocity.y) < 10:
-		velocity.y += gravity * delta
 
 	match state:
 		"idle", "ready", "riddle", "waiting", "conversing":
@@ -222,7 +325,7 @@ func _physics_process(delta: float) -> void:
 			handle_attack_behavior(delta)
 		"hurt":
 			handle_hurt_behavior()
-	
+
 	move_and_slide()
 
 func handle_peaceful_states():
@@ -248,24 +351,22 @@ func handle_attack_behavior(delta: float):
 		var direction_x = sign(target_position.x - global_position.x)
 		var direction_y = sign(target_position.y - global_position.y)
 		var y_distance = abs(target_position.y - global_position.y)
-		
+
 		velocity.x = direction_x * speed * (1.0 + current_aggression)
 		sprite.flip_h = direction_x > 0
-		
+
 		if y_distance > 20:
-			var target_velocity_y = direction_y * speed * 0.7
-			velocity.y = lerp(velocity.y, target_velocity_y, 0.1)
-			
+			velocity.y = lerp(velocity.y, direction_y * speed * 0.7, 0.1)
+
 		var distance = global_position.distance_to(target_position)
 		if distance < attack_range and can_attack:
 			start_attack()
 		elif distance < attack_range * 1.5:
-			var approach_dir = sign(target_position.x - global_position.x)
-			velocity.x = approach_dir * speed * (0.8 + current_aggression * 0.2)
+			velocity.x = sign(target_position.x - global_position.x) * speed * (0.8 + current_aggression * 0.2)
 			sprite.play("walk")
 		else:
 			sprite.play("walk")
-		
+
 		if randf() < 0.01:
 			_update_lateral_offset()
 
@@ -278,7 +379,6 @@ func start_attack():
 	can_attack = false
 	is_attacking = true
 	state = "attacking"
-	
 	if sprite.sprite_frames.has_animation("attack"):
 		sprite.speed_scale = attack_animation_fps / sprite.sprite_frames.get_animation_speed("attack") * (1.0 + current_aggression * 0.3)
 		sprite.play("attack")
@@ -287,7 +387,6 @@ func start_attack():
 		push_error("'attack' animation not found!")
 		end_attack()
 		return
-	
 	attack_box.disabled = true
 	_update_lateral_offset()
 
@@ -298,71 +397,59 @@ func _on_animation_finished():
 	if sprite.animation == "attack":
 		end_attack()
 	elif sprite.animation == "hurt":
-		if friendship_level < 3:
-			state = "attacking"
-		else:
-			state = "ally"
+		state = "attacking" if friendship_level < 3 else "ally"
 
 func end_attack():
 	is_attacking = false
 	attack_box.disabled = true
-	
 	if player and global_position.distance_to(player.global_position) < attack_range * 1.5:
 		state = "conversing"
 	elif friendship_level >= max_friendship:
 		state = "ally"
 	else:
 		state = "idle"
-	
 	can_attack = true
 
 func _on_hit_box_area_entered(area: Area2D):
 	if area.is_in_group("player") and not is_invincible:
 		var damage_source = area.get_parent()
 		var damage = 10
-		
 		if damage_source.has_method("get_damage"):
 			damage = damage_source.get_damage()
 		elif damage_source.has_method("take_damage"):
 			damage = damage_source.damage if "damage" in damage_source else 10
-		
 		take_damage(damage)
 
 func _on_attack_box_area_entered(area: Area2D):
 	if area.is_in_group("hit_player"):
-		var player = area.get_parent()
-		if player.has_method("take_damage"):
-			player.take_damage(attack_damage * (1.0 + current_aggression * 0.5))
+		var p = area.get_parent()
+		if p.has_method("take_damage"):
+			p.take_damage(attack_damage * (1.0 + current_aggression * 0.5))
 
 func take_damage(amount: int):
 	if is_invincible or state == "ally":
 		return
-		
 	current_aggression = min(current_aggression + aggression_increase_on_hit, 1.0)
 	personality_traits["aggressiveness"] = current_aggression
 	personality_state["aggressiveness"] = current_aggression
+	hostility = min(hostility + 10, 100)
 	adapt_decision_weights()
-	
 	current_health -= amount
 	hurt_sound.play()
 	animation_player.play("hit_flash")
 	VFX.play("hit")
 	is_invincible = true
 	invincibility_timer = invincibility_duration
-	
 	var knockback_direction = -1.0 if not sprite.flip_h else 1.0
 	velocity.x = knockback_direction * knockback_force
 	velocity.y = -knockback_force * 0.5
-	
 	if friendship_level < 3:
 		state = "attacking"
 		can_attack = true
 		attack_timer = 0.0
 		start_attack()
 		dialogue_box.show_text(aggressive_hit_responses[randi() % aggressive_hit_responses.size()])
-	
 	sprite.play("hurt")
-	
 	if current_health <= 0:
 		die()
 	elif friendship_level < 3 and player and is_instance_valid(player):
@@ -393,39 +480,33 @@ func update_environmental_factors():
 	}
 
 func _get_time_factor() -> float:
-	var time = fmod(Time.get_unix_time_from_system() / 43200.0, 1.0)
-	return abs(time - 0.5) * 2.0
+	return abs(fmod(Time.get_unix_time_from_system() / 43200.0, 1.0) - 0.5) * 2.0
 
 func _get_player_proximity_factor() -> float:
-	if not player or not is_instance_valid(player):
-		return 0.0
-	var distance = global_position.distance_to(player.global_position)
-	return 1.0 - clamp(distance / 500.0, 0.0, 1.0)
+	if not player or not is_instance_valid(player): return 0.0
+	return 1.0 - clamp(global_position.distance_to(player.global_position) / 500.0, 0.0, 1.0)
 
 func _get_interaction_trend() -> float:
-	if conversation_history.size() == 0:
-		return 0.5
+	if conversation_history.size() == 0: return 0.5
 	var positive_count = conversation_history.filter(func(x): return x.get("sentiment", 0) > 0).size()
 	return float(positive_count) / conversation_history.size()
 
 func update_mood():
 	var mood_score = {
-		"angry": personality_state["aggressiveness"] * (1.0 - environmental_factors["health_status"]),
-		"happy": personality_state["playfulness"] * environmental_factors["recent_interactions"],
-		"curious": personality_state["curiosity"] * environmental_factors["player_proximity"],
-		"loyal": personality_state["loyalty"] * (friendship_level / float(max_friendship))
+		"angry":  personality_state["aggressiveness"] * (1.0 - environmental_factors["health_status"]),
+		"happy":  personality_state["playfulness"] * environmental_factors["recent_interactions"],
+		"curious":personality_state["curiosity"] * environmental_factors["player_proximity"],
+		"loyal":  personality_state["loyalty"] * (friendship_level / float(max_friendship))
 	}
-	
 	current_mood = mood_score.keys()[mood_score.values().find(mood_score.values().max())]
 	mood_intensity = mood_score[current_mood]
 
 func adapt_decision_weights():
-	ai_decision_weights["attack"] = current_aggression * (1.0 if current_mood == "angry" else 0.5)
-	ai_decision_weights["talk"] = personality_state["curiosity"] * (1.5 if current_mood == "curious" else 1.0) * (1.0 - current_aggression)
-	ai_decision_weights["ally"] = personality_state["loyalty"] * (2.0 if current_mood == "loyal" else 1.0) * (1.0 - current_aggression)
-	ai_decision_weights["tease"] = personality_state["playfulness"] * (1.8 if current_mood == "happy" else 0.8) * (1.0 - current_aggression)
+	ai_decision_weights["attack"]  = current_aggression * (1.0 if current_mood == "angry" else 0.5)
+	ai_decision_weights["talk"]    = personality_state["curiosity"] * (1.5 if current_mood == "curious" else 1.0) * (1.0 - current_aggression)
+	ai_decision_weights["ally"]    = personality_state["loyalty"] * (2.0 if current_mood == "loyal" else 1.0) * (1.0 - current_aggression)
+	ai_decision_weights["tease"]   = personality_state["playfulness"] * (1.8 if current_mood == "happy" else 0.8) * (1.0 - current_aggression)
 	ai_decision_weights["retreat"] = 0.5 if environmental_factors["health_status"] < 0.3 else 0.1
-	
 	if environmental_factors["time_of_day"] > 0.8:
 		ai_decision_weights["attack"] *= 1.5
 	if environmental_factors["health_status"] < 0.3:
@@ -435,23 +516,18 @@ func adapt_decision_weights():
 func make_ai_decision() -> String:
 	var decisions = ai_decision_weights.keys()
 	var weights = ai_decision_weights.values()
-	
 	var total = weights.reduce(func(a, b): return a + b)
 	var normalized = weights.map(func(x): return x / total)
-	
 	var rand = randf()
 	var cumulative = 0.0
 	for i in range(normalized.size()):
 		cumulative += normalized[i]
 		if rand <= cumulative:
 			return decisions[i]
-	
 	return decisions[-1]
 
 func execute_ai_decision(decision: String):
-	if not can_initiate_dialogue:
-		return
-	
+	if not can_initiate_dialogue: return
 	match decision:
 		"attack":
 			if friendship_level < 3:
@@ -459,10 +535,8 @@ func execute_ai_decision(decision: String):
 				dialogue_box.show_text(attack_phrases[randi() % attack_phrases.size()])
 				can_initiate_dialogue = false
 		"talk":
-			if randf() < 0.7:
-				ask_riddle()
-			else:
-				initiate_random_dialogue()
+			if randf() < 0.7: ask_riddle()
+			else: initiate_random_dialogue()
 			can_initiate_dialogue = false
 		"ally":
 			if friendship_level >= 3:
@@ -470,11 +544,7 @@ func execute_ai_decision(decision: String):
 				dialogue_box.show_text("*Calm voice* Perhaps we can work together...")
 				can_initiate_dialogue = false
 		"tease":
-			var teasings = [
-				"*Chuckling* What a funny face you have!",
-				"*Giggling* Humans are so amusing!",
-				"*Sarcastically* Really? That's the best you can do?"
-			]
+			var teasings = ["*Chuckling* What a funny face you have!", "*Giggling* Humans are so amusing!", "*Sarcastically* Really? That's the best you can do?"]
 			dialogue_box.show_text(teasings[randi() % teasings.size()])
 			can_initiate_dialogue = false
 		"retreat":
@@ -484,99 +554,47 @@ func execute_ai_decision(decision: String):
 				can_initiate_dialogue = false
 
 func say_launch_message():
-	var request_data = {
-		"action": "launch",
-		"friendship_level": friendship_level,
-		"stimuli": "Announce your presence with a threatening phrase"
-	}
-	send_structured_request(request_data)
+	_send_to_ai_server("Announce your threatening presence. You are a demon mage.")
 
 func ask_riddle():
-	var request_data = {
-		"action": "riddle", 
-		"friendship_level": friendship_level,
-		"stimuli": "Speak a riddle for the human"
-	}
-	send_structured_request(request_data)
+	_send_to_ai_server("Speak a riddle for the human in front of you.")
 
 func initiate_random_dialogue():
 	var prompts = [
-		{"action": "philosophy", "stimuli": "Ask a deep philosophical question"},
-		{"action": "story", "stimuli": "Tell a fragment of your story"},
-		{"action": "observation", "stimuli": "Make an observation about the environment"},
-		{"action": "challenge", "stimuli": "Challenge the player to prove their worth"}
+		"Ask the human a deep philosophical question.",
+		"Tell a fragment of your dark story.",
+		"Make a chilling observation about this place.",
+		"Challenge the player to prove their worth."
 	]
-	var selected = prompts[randi() % prompts.size()]
-	selected["friendship_level"] = friendship_level
-	send_structured_request(selected)
+	_send_to_ai_server(prompts[randi() % prompts.size()])
 
 func receive_player_answer(answer: String):
-	if state == "attacking":
-		state = "conversing"
-	
-	if state != "waiting" and state != "conversing" and state != "ready":
-		return
-		
-	if is_waiting_for_response:
-		return
-	
+	if state == "attacking": state = "conversing"
+	if state != "waiting" and state != "conversing" and state != "ready": return
+	if is_waiting_for_response: return
 	face_player()
 	state = "waiting"
 	analyze_answer_for_friendship(answer)
-	
-	var request_data = {
-		"action": "response",
-		"friendship_level": friendship_level,
-		"player_message": answer,
-		"stimuli": "Respond to the player's message"
-	}
-	send_structured_request(request_data)
-
-func send_structured_request(data: Dictionary):
-	if is_interacting or is_waiting_for_response:
-		return
-		
-	face_player()
-	last_prompt = JSON.stringify(data)
-	current_timeout = response_timeout
-	is_interacting = true
-	is_waiting_for_response = true
-	
-	if npc_ai:
-		timer.stop()
-		npc_ai.notify(JSON.stringify(data))
-		timer.start(response_timeout)
-	else:
-		_use_fallback_response(fallback_responses[0])
+	_send_to_ai_server(answer)
 
 func analyze_answer_for_friendship(answer: String):
-	var lower_answer = answer.to_lower()
+	var lower = answer.to_lower()
 	var change = 0
-	
-	if lower_answer.contains("please") or lower_answer.contains("thank you"):
-		change = 1
-	elif lower_answer.contains("alliance") or lower_answer.contains("friend"):
-		change = 2
-	elif lower_answer.contains("wisdom") or lower_answer.contains("power"):
-		change = 1
-	elif lower_answer.contains("asshole") or lower_answer.contains("idiot"):
-		change = -1
-	elif lower_answer.contains("respect") or lower_answer.contains("honor"):
-		change = 1
-	
-	if change != 0:
-		change_friendship(change)
+	if lower.contains("please") or lower.contains("thank you"): change = 1
+	elif lower.contains("alliance") or lower.contains("friend"): change = 2
+	elif lower.contains("wisdom") or lower.contains("power"): change = 1
+	elif lower.contains("asshole") or lower.contains("idiot"): change = -1
+	elif lower.contains("respect") or lower.contains("honor"): change = 1
+	if change != 0: change_friendship(change)
 
 func change_friendship(amount: int):
-	var previous_level = friendship_level
+	var prev = friendship_level
 	friendship_level = clamp(friendship_level + amount, 0, max_friendship)
-	
-	update_ai_profile()
-	
+	hostility = clamp(hostility - amount * 15, 0, 100)
 	if friendship_level >= max_friendship:
 		become_ally()
-	elif amount > 0 and friendship_level > previous_level and dialogue_box:
-		dialogue_box.show_text(friendly_responses[friendship_level-1])
+	elif amount > 0 and friendship_level > prev and dialogue_box:
+		dialogue_box.show_text(friendly_responses[friendship_level - 1])
 
 func become_ally():
 	state = "ally"
@@ -587,117 +605,83 @@ func _on_ai_chat_received(message: String):
 	timer.stop()
 	is_waiting_for_response = false
 	is_interacting = false
-	
 	var sentiment = analyze_sentiment(message)
-	var interaction = {
-		"message": message,
-		"sentiment": sentiment,
-		"time": Time.get_unix_time_from_system()
-	}
-	
 	if conversation_history.size() >= memory_capacity:
 		conversation_history.pop_front()
-	conversation_history.append(interaction)
-	
+	conversation_history.append({"message": message, "sentiment": sentiment, "time": Time.get_unix_time_from_system()})
 	update_personality_from_response(message, sentiment)
-	
 	if dialogue_box:
 		dialogue_box.show_text(message)
-	
 	match state:
-		"riddle":
-			state = "conversing"
-		"waiting":
-			state = "conversing"
-		_:
-			state = "ready"
+		"riddle", "waiting": state = "conversing"
+		_: state = "ready"
 
 func analyze_sentiment(text: String) -> float:
-	var positive_words = ["ally", "friend", "wise", "powerful", "respect"]
-	var negative_words = ["hate", "stupid", "weak", "ridiculous", "despise"]
-	
-	var lower_text = text.to_lower()
+	var pos = ["ally", "friend", "wise", "powerful", "respect"]
+	var neg = ["hate", "stupid", "weak", "ridiculous", "despise"]
+	var lower = text.to_lower()
 	var score = 0.0
-	
-	for word in positive_words:
-		if word in lower_text:
-			score += 0.2
-	
-	for word in negative_words:
-		if word in lower_text:
-			score -= 0.3
-	
+	for w in pos: if w in lower: score += 0.2
+	for w in neg: if w in lower: score -= 0.3
 	return clamp(score, -1.0, 1.0)
 
 func update_personality_from_response(message: String, sentiment: float):
-	var change_rate = 0.05
-	
+	var r = 0.05
 	if sentiment > 0.3:
-		personality_state["loyalty"] = min(personality_state["loyalty"] + change_rate, 1.0)
-		personality_state["playfulness"] = min(personality_state["playfulness"] + change_rate * 0.5, 1.0)
+		personality_state["loyalty"] = min(personality_state["loyalty"] + r, 1.0)
+		personality_state["playfulness"] = min(personality_state["playfulness"] + r * 0.5, 1.0)
 	elif sentiment < -0.3:
-		personality_state["aggressiveness"] = min(personality_state["aggressiveness"] + change_rate, 1.0)
-		personality_state["curiosity"] = max(personality_state["curiosity"] - change_rate * 0.3, 0.0)
-	
+		personality_state["aggressiveness"] = min(personality_state["aggressiveness"] + r, 1.0)
+		personality_state["curiosity"] = max(personality_state["curiosity"] - r * 0.3, 0.0)
 	adapt_decision_weights()
 
-func _on_ai_chat_failed(error_code: int):
-	timer.stop()
+func _on_ai_chat_failed(_error_code: int):
 	is_waiting_for_response = false
 	is_interacting = false
-	
-	if friendship_level > 2:
-		_use_fallback_response("*Calm voice* My magical energies are weak...")
-	else:
-		_use_fallback_response("*Stifled laughter*")
+	_stop_thinking_dots()
+	_use_fallback_response("*Calm voice* My magical energies are weak..." if friendship_level > 2 else "*Stifled laughter*")
 
 func _on_body_entered(body: Node2D):
-	if body.name == "Player" and (state == "idle" or state == "ready"):
+	if body.name == "Player" and state in ["idle", "ready"]:
 		player = body
 		face_player()
 		state = "riddle"
 		ask_riddle()
-	elif body.name == "Player" and (state == "conversing" or state == "waiting"):
+	elif body.name == "Player" and state in ["conversing", "waiting"]:
 		player = body
 		face_player()
 
 func _on_timeout():
 	if is_waiting_for_response:
-		_handle_ai_timeout()
-
-func _handle_ai_timeout():
-	timer.stop()
-	is_waiting_for_response = false
-	is_interacting = false
-	
-	if friendship_level > 3:
-		_use_fallback_response("*Yawning* You're boring me, human...")
-	else:
-		_use_fallback_response("*Evil echo*")
+		is_waiting_for_response = false
+		is_interacting = false
+		_stop_thinking_dots()
+		_use_fallback_response("*Yawning* You're boring me, human..." if friendship_level > 3 else "*Evil echo*")
 
 func _use_fallback_response(text: String):
-	if dialogue_box:
-		dialogue_box.show_text(text)
+	if dialogue_box: dialogue_box.show_text(text)
 	is_interacting = false
 	is_waiting_for_response = false
 
-func get_ai_state_description() -> String:
-	return """
-	Demon AI State:
-	Mood: {mood} (Intensity: {intensity})
-	Personality: {personality}
-	Friendship: {friendship}
-	Environment: {environment}
-	Decision Weights: {weights}
-	Aggression: {aggression}
-	Lateral Offset: {offset}
-	""".format({
-		"mood": current_mood,
-		"intensity": mood_intensity,
-		"personality": personality_state,
-		"friendship": str(friendship_level) + "/" + str(max_friendship),
-		"environment": environmental_factors,
-		"weights": ai_decision_weights,
-		"aggression": current_aggression,
-		"offset": current_lateral_offset
-	})
+func _start_thinking_dots() -> void:
+	if _thinking_tween:
+		_thinking_tween.kill()
+	if dialogue_box:
+		dialogue_box.show_text(".")
+	_thinking_tween = create_tween().set_loops()
+	_thinking_tween.tween_callback(_cycle_thinking_dots).set_delay(0.5)
+
+func _cycle_thinking_dots() -> void:
+	if not is_waiting_for_response or not dialogue_box:
+		return
+	var dots = [".","..","..."]
+	var cur = dialogue_box.get_displayed_text().strip_edges() if dialogue_box.has_method("get_displayed_text") else "."
+	match cur:
+		".":   dialogue_box.show_text("..")
+		"..":  dialogue_box.show_text("...")
+		_:     dialogue_box.show_text(".")
+
+func _stop_thinking_dots() -> void:
+	if _thinking_tween:
+		_thinking_tween.kill()
+		_thinking_tween = null

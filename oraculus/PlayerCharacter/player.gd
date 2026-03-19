@@ -10,7 +10,7 @@ var normal_speed: float
 @export var attack_damage: int = 10
 @export var invincibility_time: float = 0.5
 @export var damage: int = 10
-@export var slide_speed: float = 400.0
+@export var slide_speed: float = 100.0
 @export var slide_duration: float = 0.5
 var sliding: bool = false
 var slide_timer: Timer
@@ -32,15 +32,15 @@ var current_stairs: Node = null
 @export var knockback_force: float = 300.0
 var knockback_active: bool = false
 var running: bool = false
+var slide_direction: int = 0
+var collision_shape: CollisionShape2D
 
-# === WALL JUMP ===
 @export var wall_jump_force_x: float = 280.0
 @export var wall_jump_force_y: float = 380.0
 @export var wall_jump_lock_time: float = 0.18
 var wall_jumping: bool = false
 var wall_jump_lock_timer: Timer
 
-# === PARRY ===
 @export var parry_window: float = 0.15
 var parry_active: bool = false
 var parrying: bool = false
@@ -75,6 +75,8 @@ func _ready() -> void:
 	hud.hide()
 	attack_box.disabled = true
 	update_health()
+	
+	collision_shape = $CollisionShape2D
 
 	slide_timer = Timer.new()
 	slide_timer.one_shot = true
@@ -118,11 +120,15 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if sliding:
-		$CollisionShape2D.disabled = true
+		collision_shape.rotation = deg_to_rad(90)
+		velocity.x = slide_direction * slide_speed
 		move_and_slide()
+		if is_on_wall():
+			_on_slide_timeout()
+		sprite.play("slide")
 		return
 	else:
-		$CollisionShape2D.disabled = false
+		collision_shape.rotation = deg_to_rad(0)
 
 	detect_stairs()
 
@@ -130,11 +136,14 @@ func _physics_process(delta: float) -> void:
 		handle_stairs_movement(delta)
 		return
 
-	# === WALL SLIDE: rallenta la caduta a contatto col muro ===
 	if is_on_wall() and not is_on_floor() and velocity.y > 80:
 		velocity.y = 80
+		if not attacking and not sliding and not parrying:
+			var wall_normal = get_wall_normal()
+			sprite.flip_h = wall_normal.x < 0
+			if sprite.animation != "wall_slide":
+				sprite.play("wall_slide")
 
-	# === WALL JUMP INPUT ===
 	if Input.is_action_just_pressed("jump") and is_on_wall() and not is_on_floor():
 		var wall_normal = get_wall_normal()
 		velocity.x = wall_normal.x * wall_jump_force_x
@@ -148,10 +157,10 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	# Durante il lock del wall jump, non sovrascrivere velocity.x con l'input
 	if wall_jumping:
 		velocity.y += gravity * delta
-		sprite.play("jump")
+		if sprite.animation != "jump":
+			sprite.play("jump")
 		move_and_slide()
 		return
 
@@ -194,13 +203,17 @@ func _physics_process(delta: float) -> void:
 	else:
 		interact_banner.visible = false
 
-	# === PARRY INPUT ===
 	if Input.is_action_just_pressed("parry") and not attacking and not sliding and not parrying and not parry_active:
 		parry_active = true
+		parrying = true
 		parry_timer.start(parry_window)
 		sprite.play("parry")
+		velocity.x = 0
+		move_and_slide()
+		return
 
-	if attacking:
+	if attacking or parrying:
+		move_and_slide()
 		return
 
 	var direction = 0
@@ -261,7 +274,9 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	if sliding:
+	if is_on_wall() and not is_on_floor() and velocity.y > 80 and not attacking and not sliding and not parrying:
+		pass
+	elif sliding:
 		sprite.play("slide")
 	elif not is_on_floor():
 		if velocity.y < 0:
@@ -270,10 +285,10 @@ func _physics_process(delta: float) -> void:
 			sprite.play("fall")
 	elif direction != 0:
 		sprite.play("run")
-	elif not parry_active:
+	elif not parry_active and not attacking and not parrying:
 		sprite.play("idle")
 
-	if direction != 0:
+	if not (is_on_wall() and not is_on_floor() and velocity.y > 80) and direction != 0 and not sliding and not parrying:
 		sprite.flip_h = direction < 0
 
 	health_bar.value += 2 * delta
@@ -286,16 +301,18 @@ func _disable_attack_box():
 
 func start_slide(action: String) -> void:
 	sliding = true
+	slide_direction = -1 if action == "move_left" else 1
 	sprite.position.y = 10
 	sprite.play("slide")
-	var dir = -1 if action == "move_left" else 1
-	velocity.x = dir * slide_speed
+	velocity.x = slide_direction * slide_speed
 	slide_timer.start(slide_duration)
 
 func _on_slide_timeout() -> void:
 	sliding = false
+	slide_direction = 0
 	velocity.x = 0
 	sprite.position.y = 0
+	collision_shape.rotation = deg_to_rad(0)
 
 func detect_stairs():
 	var areas = $StairDetector.get_overlapping_areas()
@@ -357,7 +374,6 @@ func _on_animation_finished() -> void:
 
 func _on_hit_box_area_entered(area: Area2D) -> void:
 	if area.is_in_group("demon") and can_take_damage:
-		# PARRY RIUSCITO
 		if parry_active:
 			parry_active = false
 			parry_timer.stop()

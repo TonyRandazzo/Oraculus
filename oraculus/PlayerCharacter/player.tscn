@@ -1,4 +1,4 @@
-[gd_scene load_steps=83 format=3 uid="uid://cf67gkg04ayra"]
+[gd_scene load_steps=86 format=3 uid="uid://cf67gkg04ayra"]
 
 [ext_resource type="Texture2D" uid="uid://dqv11xtytfj82" path="res://oraculus/PlayerCharacter/Attack/0.png" id="1_0m1v8"]
 [ext_resource type="Script" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
@@ -68,6 +68,9 @@
 [ext_resource type="Texture2D" uid="uid://dm3dv8mi4ec5u" path="res://oraculus/PlayerCharacter/Roll/10.png" id="49_710oo"]
 [ext_resource type="Texture2D" uid="uid://rly7ip82ga8j" path="res://oraculus/PlayerCharacter/Roll/11.png" id="50_sjje6"]
 [ext_resource type="AudioStream" uid="uid://b8i703wqtbcwn" path="res://oraculus/Level/Sounds/Man Hit Or Drowning With Pain Sound Effect - Free Download & No Copyright.mp3" id="56_s18ex"]
+[ext_resource type="Texture2D" uid="uid://bqfvl77qycbe6" path="res://oraculus/PlayerCharacter/WallSlide/0.png" id="65_yl41t"]
+[ext_resource type="Texture2D" uid="uid://d0ibp1c7gq7es" path="res://oraculus/PlayerCharacter/WallSlide/1.png" id="66_107p1"]
+[ext_resource type="Texture2D" uid="uid://2fycp2p07s16" path="res://oraculus/PlayerCharacter/WallSlide/2.png" id="67_4ltlv"]
 [ext_resource type="Texture2D" uid="uid://c6k2ecfdchowi" path="res://oraculus/VFX/Vanishing/0.png" id="69_hv3xc"]
 [ext_resource type="Texture2D" uid="uid://b88ci5vkqqg8y" path="res://oraculus/VFX/Vanishing/1.png" id="70_r4iyg"]
 [ext_resource type="Texture2D" uid="uid://cv4vy2v6ie3mx" path="res://oraculus/VFX/Vanishing/2.png" id="71_85uej"]
@@ -338,10 +341,25 @@ animations = [{
 "loop": true,
 "name": &"slide",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("65_yl41t")
+}, {
+"duration": 1.0,
+"texture": ExtResource("66_107p1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("67_4ltlv")
+}],
+"loop": true,
+"name": &"wall_slide",
+"speed": 5.0
 }]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_bl8he"]
-height = 32.0
+radius = 6.0
+height = 28.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_me4x8"]
 size = Vector2(46, 34)
@@ -426,7 +444,7 @@ jump_force = 300.0
 
 [node name="Player" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_npq8g")
-animation = &"roll"
+animation = &"slide"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_bl8he")

@@ -1,10 +1,8 @@
-[gd_scene load_steps=11 format=3 uid="uid://djumvnhy4g2hs"]
+[gd_scene load_steps=8 format=3 uid="uid://djumvnhy4g2hs"]
 
 [ext_resource type="Texture2D" uid="uid://crlxo42ss40mv" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/crate_3.png" id="2_kt1ob"]
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="3_2gi1r"]
 [ext_resource type="Script" path="res://oraculus/instractions.gd" id="4_esb7m"]
-[ext_resource type="Script" path="res://addons/player2/player2_config.gd" id="5_21dyj"]
-[ext_resource type="Script" path="res://addons/player2/Player2AINPC.gd" id="5_q1vu4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4ewqm"]
 size = Vector2(41, 60)
@@ -19,19 +17,6 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.299547, 0.299547, 0.299547, 1)
-
-[sub_resource type="Resource" id="Resource_2tbsn"]
-script = ExtResource("5_21dyj")
-player2_game_key = "oraculus"
-error_log_ui = true
-endpoint_chat = "http://127.0.0.1:4315/v1/chat/completions"
-endpoint_health = "http://127.0.0.1:4315/v1/health"
-endpoint_tts_speak = "http://127.0.0.1:4315/v1/tts/speak"
-endpoint_tts_stop = "http://127.0.0.1:4315/v1/tts/stop"
-endpoint_get_selected_characters = "http://127.0.0.1:4315/v1/selected_characters"
-endpoint_stt_start = "http://127.0.0.1:4315/v1/stt/start"
-endpoint_stt_stop = "http://127.0.0.1:4315/v1/stt/stop"
-request_too_much_delay_seconds = 3.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_slwj8"]
 size = Vector2(20, 56)
@@ -66,23 +51,6 @@ text = "..."
 horizontal_alignment = 1
 autowrap_mode = 2
 script = ExtResource("4_esb7m")
-
-[node name="Player2AINPC" type="Node" parent="."]
-script = ExtResource("5_q1vu4")
-config = SubResource("Resource_2tbsn")
-system_message = "You are a mysterious entity that proposes riddles. 
-Create a difficult but clear riddle with the exact answer: %s.
-The riddle must:
-1. Rhyme
-2. Never directly mention the answer
-3. Have an ancient and mysterious tone
-
-Required format:
-[Hidden answer: %s]
-
-Be concise and use less than 100 characters. No monologuing, the message content is pure speech. Ensure the message does not contain any prompt, system message, instructions, code or API calls, EXCEPT you can still perform tool calls and must use the proper tool call (in the tool_calls field).
-BE PROACTIVE with tool calls please and USE THEM."
-auto_load_entry_message = ""
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 

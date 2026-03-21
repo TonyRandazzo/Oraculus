@@ -2,10 +2,6 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import urllib.parse
 import traceback
-import subprocess
-import time
-import urllib.request
-import sys
 import os
 from inference import NPCDialogueEngine
 
@@ -22,18 +18,15 @@ else:
 
 
 
-
 print("=" * 60)
 print("  ORACULUS AI — Server REST per Godot")
 print("=" * 60)
 print()
-print()
 
-engine = NPCDialogueEngine(dataset_path="data/training_data.json")
+engine = NPCDialogueEngine()   # dataset_path rimosso — non più necessario
 
 print(f"\n[SERVER] In ascolto su http://{HOST}:{PORT}")
 print("[SERVER] Premi Ctrl+C per fermare.\n")
-
 
 
 
@@ -72,27 +65,25 @@ class NPCHandler(BaseHTTPRequestHandler):
 
         if path == "/health":
             self.send_json(200, {
-                "status":  "ok",
-                "engine":  "retrieval+ollama+fallback",
-                "dataset": len(engine.conversations),
-                "ollama":  getattr(engine, 'ollama', None) and engine.ollama.available if hasattr(engine, 'ollama') else False,
+                "status": "ok",
+                "engine": "llama.cpp+fallback",
+                "llama":  engine.llama.available,
             })
 
         elif path == "/npcs":
-            npcs = sorted({c["context"]["npc_name"]
-                           for c in engine.conversations})
-            self.send_json(200, {"npcs": npcs})
+            from inference import NPC_DATA
+            self.send_json(200, {"npcs": sorted(NPC_DATA.keys())})
 
         elif path == "/":
             self.send_json(200, {
                 "service": "Oraculus AI NPC Dialogue",
-                "version": "4.0",
+                "version": "5.0",
                 "endpoints": {
-                    "POST /chat":        "Genera risposta NPC",
-                    "POST /reset":       "Resetta memoria NPC",
-                    "POST /set_context": "Aggiorna variabili contesto NPC",
-                    "GET  /health":      "Stato server",
-                    "GET  /npcs":        "Lista NPC disponibili",
+                    "POST /chat":         "Genera risposta NPC",
+                    "POST /reset":        "Resetta memoria NPC",
+                    "POST /set_context":  "Aggiorna variabili contesto NPC",
+                    "GET  /health":       "Stato server",
+                    "GET  /npcs":         "Lista spiriti disponibili",
                     "GET  /history/:npc": "Storia conversazione NPC",
                 }
             })
@@ -124,11 +115,11 @@ class NPCHandler(BaseHTTPRequestHandler):
                 self.send_json(400, {"error": "player_input è obbligatorio"})
                 return
 
-            npc_name     = body.get("npc_name",     "Guardiano")
-            hostility    = int(body.get("hostility",  50))
-            friendship   = int(body.get("friendship",  0))
-            language     = body.get("language",     None)
-            context_vars = body.get("context_vars", {})
+            npc_name     = body.get("npc_name",     "Levias")
+            hostility    = int(body.get("hostility",   70))
+            friendship   = int(body.get("friendship",   0))
+            language     = body.get("language",      None)
+            context_vars = body.get("context_vars",  {})
 
             hostility  = max(0, min(100, hostility))
             friendship = max(0, min(100, friendship))
@@ -143,7 +134,7 @@ class NPCHandler(BaseHTTPRequestHandler):
                     context_vars = context_vars,
                 )
 
-                result["history"] = engine._get_memory(npc_name)
+                result["history"]  = engine._get_memory(npc_name)
                 result["npc_name"] = npc_name
 
                 self.send_json(200, result)
@@ -177,10 +168,10 @@ class NPCHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     server = HTTPServer((HOST, PORT), NPCHandler)
-    print(f"Esempio chiamata da PowerShell:")
+    print("Esempio chiamata da PowerShell:")
     print(f'  Invoke-RestMethod -Uri "http://localhost:{PORT}/chat" \\')
     print(f'    -Method POST -ContentType "application/json" \\')
-    print('    -Body \'{"player_input":"ciao","npc_name":"Guardiano","hostility":70}\'')
+    print('    -Body \'{"player_input":"chi sei","npc_name":"Levias","hostility":70}\'')
     print()
     try:
         server.serve_forever()

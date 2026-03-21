@@ -4,14 +4,11 @@ extends Label
 @onready var label: Label = $"."
 
 func show_text(text: String):
-	print("DEBUG DialogueBox: Mostrando testo: ", text)
 	
 	if label == null:
-		print("ERRORE: Label è null!")
 		return
 	
 	if text.is_empty():
-		print("ERRORE: Testo vuoto ricevuto!")
 		return
 	
 	label.text = text

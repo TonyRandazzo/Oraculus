@@ -284,7 +284,10 @@ func _physics_process(delta: float) -> void:
 		else:
 			sprite.play("fall")
 	elif direction != 0:
-		sprite.play("run")
+		if running:
+			sprite.play("sprint")
+		else:
+			sprite.play("run")
 	elif not parry_active and not attacking and not parrying:
 		sprite.play("idle")
 

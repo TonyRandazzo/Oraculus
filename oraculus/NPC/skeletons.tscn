@@ -1,0 +1,380 @@
+[gd_scene load_steps=70 format=3 uid="uid://ys1qoe2vjc5g"]
+
+[ext_resource type="Texture2D" uid="uid://kkgx124d1uyh" path="res://oraculus/NPC/Sprite-Skeletons/Attack/0.png" id="1_cg47v"]
+[ext_resource type="Script" path="res://oraculus/NPC/skeletons.gd" id="1_hnf5g"]
+[ext_resource type="Texture2D" uid="uid://bo4gpn0vlb84x" path="res://oraculus/NPC/Sprite-Skeletons/Attack/1.png" id="2_j8jmo"]
+[ext_resource type="Texture2D" uid="uid://dcto6xd3bap2f" path="res://oraculus/NPC/Sprite-Skeletons/Attack/2.png" id="3_gpmqh"]
+[ext_resource type="Texture2D" uid="uid://bt4wl7jsb6ck6" path="res://oraculus/NPC/Sprite-Skeletons/Attack/3.png" id="4_fsydw"]
+[ext_resource type="Texture2D" uid="uid://mf3vv6ic26hg" path="res://oraculus/NPC/Sprite-Skeletons/Attack/4.png" id="5_gubha"]
+[ext_resource type="Texture2D" uid="uid://cctvx77dvi6pg" path="res://oraculus/NPC/Sprite-Skeletons/Attack/5.png" id="6_jj1ml"]
+[ext_resource type="Texture2D" uid="uid://u8ouci5jauh" path="res://oraculus/NPC/Sprite-Skeletons/Attack/6.png" id="7_6wkvl"]
+[ext_resource type="Texture2D" uid="uid://4oxtio8bjrft" path="res://oraculus/NPC/Sprite-Skeletons/Attack/7.png" id="8_swp2r"]
+[ext_resource type="Texture2D" uid="uid://b81j3unw6ky51" path="res://oraculus/NPC/Sprite-Skeletons/Attack/8.png" id="9_o8ak4"]
+[ext_resource type="Texture2D" uid="uid://c78tbnm0bj6jl" path="res://oraculus/NPC/Sprite-Skeletons/Attack/9.png" id="10_aq5td"]
+[ext_resource type="Texture2D" uid="uid://dluw154x2n4vc" path="res://oraculus/NPC/Sprite-Skeletons/Attack/10.png" id="11_y5svr"]
+[ext_resource type="Texture2D" uid="uid://eehtcd8rtgy2" path="res://oraculus/NPC/Sprite-Skeletons/Attack/11.png" id="12_2idji"]
+[ext_resource type="Texture2D" uid="uid://cpbubmxnwhcm6" path="res://oraculus/NPC/Sprite-Skeletons/Attack/12.png" id="13_4npui"]
+[ext_resource type="Texture2D" uid="uid://cujdmvm6x5oiu" path="res://oraculus/NPC/Sprite-Skeletons/Attack/13.png" id="14_suxgg"]
+[ext_resource type="Texture2D" uid="uid://srevtntgsf2r" path="res://oraculus/NPC/Sprite-Skeletons/Attack/14.png" id="15_05iec"]
+[ext_resource type="Texture2D" uid="uid://jxn3duk6n6b6" path="res://oraculus/NPC/Sprite-Skeletons/Attack/15.png" id="16_ld6q1"]
+[ext_resource type="Texture2D" uid="uid://drofvp0wy1lqa" path="res://oraculus/NPC/Sprite-Skeletons/Attack/16.png" id="17_vgd6q"]
+[ext_resource type="Texture2D" uid="uid://dls067mc1qpu1" path="res://oraculus/NPC/Sprite-Skeletons/Attack/17.png" id="18_6ennf"]
+[ext_resource type="Texture2D" uid="uid://co7joyr4u1qrb" path="res://oraculus/NPC/Sprite-Skeletons/Death/0.png" id="19_vkwiu"]
+[ext_resource type="Texture2D" uid="uid://bc2n7ppvh6o6x" path="res://oraculus/NPC/Sprite-Skeletons/Death/1.png" id="20_htnvd"]
+[ext_resource type="Texture2D" uid="uid://b1ru4hcph1pjy" path="res://oraculus/NPC/Sprite-Skeletons/Death/2.png" id="21_i0cc5"]
+[ext_resource type="Texture2D" uid="uid://bt8ooekmr7kos" path="res://oraculus/NPC/Sprite-Skeletons/Death/3.png" id="22_ely6p"]
+[ext_resource type="Texture2D" uid="uid://d2bpvc1efxi0h" path="res://oraculus/NPC/Sprite-Skeletons/Death/4.png" id="23_sh4ya"]
+[ext_resource type="Texture2D" uid="uid://dles62k5ar5j5" path="res://oraculus/NPC/Sprite-Skeletons/Death/5.png" id="24_av6h5"]
+[ext_resource type="Texture2D" uid="uid://ctocyr656hb8n" path="res://oraculus/NPC/Sprite-Skeletons/Death/6.png" id="25_3161f"]
+[ext_resource type="Texture2D" uid="uid://7ahytwgbabi4" path="res://oraculus/NPC/Sprite-Skeletons/Death/7.png" id="26_fonfm"]
+[ext_resource type="Texture2D" uid="uid://bc8ytaautmsuc" path="res://oraculus/NPC/Sprite-Skeletons/Death/8.png" id="27_qwh7q"]
+[ext_resource type="Texture2D" uid="uid://bkfhkphl2w8t7" path="res://oraculus/NPC/Sprite-Skeletons/Death/9.png" id="28_pocaf"]
+[ext_resource type="Texture2D" uid="uid://45417ucnwg44" path="res://oraculus/NPC/Sprite-Skeletons/Death/10.png" id="29_37n6q"]
+[ext_resource type="Texture2D" uid="uid://bp3k7g6utr72p" path="res://oraculus/NPC/Sprite-Skeletons/Death/11.png" id="30_ilxh7"]
+[ext_resource type="Texture2D" uid="uid://dkawgdqaoqqaw" path="res://oraculus/NPC/Sprite-Skeletons/Death/12.png" id="31_4pcqf"]
+[ext_resource type="Texture2D" uid="uid://chyvc0avijl5b" path="res://oraculus/NPC/Sprite-Skeletons/Death/13.png" id="32_pnha6"]
+[ext_resource type="Texture2D" uid="uid://biosmnqyu8h1k" path="res://oraculus/NPC/Sprite-Skeletons/Death/14.png" id="33_64aah"]
+[ext_resource type="Texture2D" uid="uid://0sqw0hpu70ed" path="res://oraculus/NPC/Sprite-Skeletons/Idle/0.png" id="34_x3hh3"]
+[ext_resource type="Texture2D" uid="uid://g21ngcldyti2" path="res://oraculus/NPC/Sprite-Skeletons/Idle/1.png" id="35_r30gy"]
+[ext_resource type="Texture2D" uid="uid://dbck8a3yxgd1j" path="res://oraculus/NPC/Sprite-Skeletons/Idle/2.png" id="36_vkd1o"]
+[ext_resource type="Texture2D" uid="uid://dacqhlivx0fs2" path="res://oraculus/NPC/Sprite-Skeletons/Idle/3.png" id="37_peay6"]
+[ext_resource type="Texture2D" uid="uid://dkghpmclnhpsk" path="res://oraculus/NPC/Sprite-Skeletons/Idle/4.png" id="38_8n85t"]
+[ext_resource type="Texture2D" uid="uid://c7bjrkw6epuyi" path="res://oraculus/NPC/Sprite-Skeletons/Idle/5.png" id="39_agcv0"]
+[ext_resource type="Texture2D" uid="uid://dd28u2mfyhk2m" path="res://oraculus/NPC/Sprite-Skeletons/Idle/6.png" id="40_bgv40"]
+[ext_resource type="Texture2D" uid="uid://bbh1jx5oepp73" path="res://oraculus/NPC/Sprite-Skeletons/Idle/7.png" id="41_4qc7l"]
+[ext_resource type="Texture2D" uid="uid://cshjifat50kiy" path="res://oraculus/NPC/Sprite-Skeletons/Idle/8.png" id="42_kj1yh"]
+[ext_resource type="Texture2D" uid="uid://cm08wgu80a1tl" path="res://oraculus/NPC/Sprite-Skeletons/Idle/9.png" id="43_n11hi"]
+[ext_resource type="Texture2D" uid="uid://de6w88mf6fibe" path="res://oraculus/NPC/Sprite-Skeletons/Idle/10.png" id="44_mpcso"]
+[ext_resource type="Texture2D" uid="uid://bt0y8jrinrqvb" path="res://oraculus/NPC/Sprite-Skeletons/Walk/0.png" id="45_pdtcu"]
+[ext_resource type="Texture2D" uid="uid://cug435neo6q55" path="res://oraculus/NPC/Sprite-Skeletons/Walk/1.png" id="46_uuu1k"]
+[ext_resource type="Texture2D" uid="uid://cp1unyi122gu1" path="res://oraculus/NPC/Sprite-Skeletons/Walk/2.png" id="47_pm35j"]
+[ext_resource type="Texture2D" uid="uid://kjbh7506kbsi" path="res://oraculus/NPC/Sprite-Skeletons/Walk/3.png" id="48_e3fsw"]
+[ext_resource type="Texture2D" uid="uid://bvhjjlr4v51co" path="res://oraculus/NPC/Sprite-Skeletons/Walk/4.png" id="49_n54kn"]
+[ext_resource type="Texture2D" uid="uid://cavjujncgv5en" path="res://oraculus/NPC/Sprite-Skeletons/Walk/5.png" id="50_ovksy"]
+[ext_resource type="Texture2D" uid="uid://bk6rm8igfa60q" path="res://oraculus/NPC/Sprite-Skeletons/Walk/6.png" id="51_r5eu4"]
+[ext_resource type="Texture2D" uid="uid://bueh8s528kjwd" path="res://oraculus/NPC/Sprite-Skeletons/Walk/7.png" id="52_0jw7q"]
+[ext_resource type="Texture2D" uid="uid://cuk02bxwqpkwb" path="res://oraculus/NPC/Sprite-Skeletons/Walk/8.png" id="53_lhcgp"]
+[ext_resource type="Texture2D" uid="uid://bb13lqaunipao" path="res://oraculus/NPC/Sprite-Skeletons/Walk/9.png" id="54_ggvah"]
+[ext_resource type="Texture2D" uid="uid://drh4qgdqfse0r" path="res://oraculus/NPC/Sprite-Skeletons/Walk/10.png" id="55_vh16j"]
+[ext_resource type="Texture2D" uid="uid://hg4qk4757rns" path="res://oraculus/NPC/Sprite-Skeletons/Walk/11.png" id="56_p8acn"]
+[ext_resource type="Texture2D" uid="uid://de8vd6jcfqv6w" path="res://oraculus/NPC/Sprite-Skeletons/Walk/12.png" id="57_801x7"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="58_leovs"]
+[ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="59_gcsra"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ovafn"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_cg47v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_j8jmo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_gpmqh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_fsydw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_gubha")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_jj1ml")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_6wkvl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_swp2r")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_o8ak4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_aq5td")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_y5svr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_2idji")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_4npui")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_suxgg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_05iec")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_ld6q1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_vgd6q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_6ennf")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("19_vkwiu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_htnvd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_i0cc5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_ely6p")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_sh4ya")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_av6h5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_3161f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_fonfm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_qwh7q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_pocaf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_37n6q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_ilxh7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_4pcqf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("32_pnha6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_64aah")
+}],
+"loop": true,
+"name": &"death",
+"speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("34_x3hh3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_r30gy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_vkd1o")
+}, {
+"duration": 1.0,
+"texture": ExtResource("37_peay6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("38_8n85t")
+}, {
+"duration": 1.0,
+"texture": ExtResource("39_agcv0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("40_bgv40")
+}, {
+"duration": 1.0,
+"texture": ExtResource("41_4qc7l")
+}, {
+"duration": 1.0,
+"texture": ExtResource("42_kj1yh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("43_n11hi")
+}, {
+"duration": 1.0,
+"texture": ExtResource("44_mpcso")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("45_pdtcu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("46_uuu1k")
+}, {
+"duration": 1.0,
+"texture": ExtResource("47_pm35j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_e3fsw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("49_n54kn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("50_ovksy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("51_r5eu4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("52_0jw7q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("53_lhcgp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("54_ggvah")
+}, {
+"duration": 1.0,
+"texture": ExtResource("55_vh16j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("56_p8acn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("57_801x7")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 15.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8jfpg"]
+size = Vector2(20, 37)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kpv57"]
+size = Vector2(146, 59.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ojet1"]
+bg_color = Color(0.0862745, 0.0862745, 0.0862745, 0.666667)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.404511, 0.404511, 0.404511, 1)
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_v0f2p"]
+size = Vector2(63.3333, 44)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hfp2k"]
+size = Vector2(102.5, 44)
+
+[sub_resource type="Animation" id="Animation_331hb"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_dm5k4"]
+resource_name = "hit_flash"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.0333332, 0.133333, 0.2, 0.233333, 0.3, 0.333333, 0.4, 0.433333, 0.5, 0.533333, 0.6, 0.666667, 0.733333, 0.8, 0.866667, 0.933333, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wiofy"]
+_data = {
+"RESET": SubResource("Animation_331hb"),
+"hit_flash": SubResource("Animation_dm5k4")
+}
+
+[node name="skeletons" type="CharacterBody2D"]
+script = ExtResource("1_hnf5g")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(3, -13)
+scale = Vector2(0.8, 0.8)
+sprite_frames = SubResource("SpriteFrames_ovafn")
+animation = &"death"
+frame_progress = 0.580087
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -18.5)
+shape = SubResource("RectangleShape2D_8jfpg")
+
+[node name="Area2D" type="Area2D" parent="."]
+position = Vector2(0, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-6, -5.25)
+shape = SubResource("RectangleShape2D_kpv57")
+
+[node name="Timer" type="Timer" parent="."]
+
+[node name="Dialogue" type="Label" parent="."]
+z_index = 4095
+offset_left = 4.0
+offset_top = -60.0
+offset_right = 206.0
+offset_bottom = -27.0
+scale = Vector2(0.5, 0.5)
+theme_override_fonts/font = ExtResource("58_leovs")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ojet1")
+text = "*La voce demoniaca echeggia...*"
+autowrap_mode = 3
+script = ExtResource("59_gcsra")
+
+[node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
+position = Vector2(0, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+position = Vector2(0.999999, 2)
+shape = SubResource("RectangleShape2D_v0f2p")
+
+[node name="AttackBox" type="Area2D" parent="." groups=["demon"]]
+position = Vector2(40, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox"]
+position = Vector2(-40.25, 2)
+shape = SubResource("RectangleShape2D_hfp2k")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_wiofy")
+}
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -24)
+
+[node name="HurtSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -24)
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -24)

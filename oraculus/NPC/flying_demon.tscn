@@ -210,16 +210,17 @@ size = Vector2(20, 17)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qal1g"]
 size = Vector2(103, 95)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8ekql"]
-content_margin_left = 5.0
-content_margin_top = 5.0
-content_margin_right = 5.0
-bg_color = Color(0.111197, 0.111197, 0.111197, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ojet1"]
+bg_color = Color(0.0862745, 0.0862745, 0.0862745, 0.666667)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.299547, 0.299547, 0.299547, 1)
+border_color = Color(0.404511, 0.404511, 0.404511, 1)
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_aqcgn"]
 size = Vector2(61, 59)
@@ -327,7 +328,6 @@ animations = [{
 [node name="FlyingDemon" type="CharacterBody2D"]
 script = ExtResource("1_f7qtu")
 gravity = 0.0
-npc_name = "Guardiano"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(-6, -17)
@@ -338,7 +338,7 @@ frame = 17
 frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -9.5)
+position = Vector2(-8, -12)
 shape = SubResource("RectangleShape2D_7w3pn")
 
 [node name="Area2D" type="Area2D" parent="."]
@@ -352,14 +352,14 @@ shape = SubResource("RectangleShape2D_qal1g")
 [node name="Dialogue" type="Label" parent="."]
 z_index = 4095
 offset_left = 4.0
-offset_top = -53.0
-offset_right = 123.0
-offset_bottom = -18.0
-scale = Vector2(0.8, 0.8)
+offset_top = -60.0
+offset_right = 206.0
+offset_bottom = -46.0
+scale = Vector2(0.5, 0.5)
 theme_override_fonts/font = ExtResource("26_scbry")
-theme_override_styles/normal = SubResource("StyleBoxFlat_8ekql")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ojet1")
 text = "*La voce demoniaca echeggia...*"
-autowrap_mode = 2
+autowrap_mode = 3
 script = ExtResource("27_27480")
 
 [node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]

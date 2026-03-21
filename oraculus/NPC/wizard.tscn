@@ -1,0 +1,247 @@
+[gd_scene load_steps=36 format=3 uid="uid://cyd5g3jxl0kcn"]
+
+[ext_resource type="Texture2D" uid="uid://duomcr7darpfg" path="res://oraculus/NPC/Sprite-Wizard/Attack/0.png" id="1_0t588"]
+[ext_resource type="Script" path="res://oraculus/NPC/wizard.gd" id="1_hqke6"]
+[ext_resource type="Texture2D" uid="uid://bc5a8rxlyqg40" path="res://oraculus/NPC/Sprite-Wizard/Attack/1.png" id="2_2hn44"]
+[ext_resource type="Texture2D" uid="uid://cci2j3ri6e6te" path="res://oraculus/NPC/Sprite-Wizard/Attack/2.png" id="3_mgvj6"]
+[ext_resource type="Texture2D" uid="uid://dq8i868arcued" path="res://oraculus/NPC/Sprite-Wizard/Attack/3.png" id="4_t68qh"]
+[ext_resource type="Texture2D" uid="uid://cklokxkeaqjve" path="res://oraculus/NPC/Sprite-Wizard/Attack/4.png" id="5_xoilv"]
+[ext_resource type="Texture2D" uid="uid://ccl4scu5drsvd" path="res://oraculus/NPC/Sprite-Wizard/Attack/5.png" id="6_pdioh"]
+[ext_resource type="Texture2D" uid="uid://ob3w66meva3u" path="res://oraculus/NPC/Sprite-Wizard/Attack/6.png" id="7_ixmoy"]
+[ext_resource type="Texture2D" uid="uid://dm8lnxkj3opfm" path="res://oraculus/NPC/Sprite-Wizard/Attack/7.png" id="8_6irax"]
+[ext_resource type="Texture2D" uid="uid://to36slpcsc53" path="res://oraculus/NPC/Sprite-Wizard/Death/0.png" id="9_j5oq1"]
+[ext_resource type="Texture2D" uid="uid://qn6jkjlutgx" path="res://oraculus/NPC/Sprite-Wizard/Death/1.png" id="10_hvu77"]
+[ext_resource type="Texture2D" uid="uid://76qxcwco3yn0" path="res://oraculus/NPC/Sprite-Wizard/Death/2.png" id="11_nqklb"]
+[ext_resource type="Texture2D" uid="uid://b2sj531tl736e" path="res://oraculus/NPC/Sprite-Wizard/Death/3.png" id="12_xih0x"]
+[ext_resource type="Texture2D" uid="uid://c564ecx1aewhi" path="res://oraculus/NPC/Sprite-Wizard/Death/4.png" id="13_4s5mt"]
+[ext_resource type="Texture2D" uid="uid://ctf1lkip18fvh" path="res://oraculus/NPC/Sprite-Wizard/Death/5.png" id="14_pcptp"]
+[ext_resource type="Texture2D" uid="uid://qdgrl083ih0n" path="res://oraculus/NPC/Sprite-Wizard/Death/6.png" id="15_surwb"]
+[ext_resource type="Texture2D" uid="uid://b0xkpnfonbnu0" path="res://oraculus/NPC/Sprite-Wizard/Walk/0.png" id="16_8huuj"]
+[ext_resource type="Texture2D" uid="uid://dqdfahp0mxqxa" path="res://oraculus/NPC/Sprite-Wizard/Walk/1.png" id="17_xweeb"]
+[ext_resource type="Texture2D" uid="uid://dj3ct00wba8ql" path="res://oraculus/NPC/Sprite-Wizard/Walk/2.png" id="18_x6uw4"]
+[ext_resource type="Texture2D" uid="uid://bbfc2mytmnvj3" path="res://oraculus/NPC/Sprite-Wizard/Walk/3.png" id="19_7f53g"]
+[ext_resource type="Texture2D" uid="uid://deyxfwe1xfsja" path="res://oraculus/NPC/Sprite-Wizard/Walk/4.png" id="20_deisu"]
+[ext_resource type="Texture2D" uid="uid://25yh4qxei2hi" path="res://oraculus/NPC/Sprite-Wizard/Walk/5.png" id="21_51aik"]
+[ext_resource type="Texture2D" uid="uid://d1xptlxx6rwvr" path="res://oraculus/NPC/Sprite-Wizard/Walk/6.png" id="22_v158t"]
+[ext_resource type="Texture2D" uid="uid://3nvyd4iy2jcm" path="res://oraculus/NPC/Sprite-Wizard/Walk/7.png" id="23_xslkh"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="24_7bqhf"]
+[ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="25_5cqwp"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_o5mpm"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_0t588")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_2hn44")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_mgvj6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_t68qh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_xoilv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_pdioh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ixmoy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_6irax")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_j5oq1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_hvu77")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_nqklb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_xih0x")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_4s5mt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_pcptp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_surwb")
+}],
+"loop": true,
+"name": &"death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_0t588")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("16_8huuj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_xweeb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_x6uw4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_7f53g")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_deisu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_51aik")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_v158t")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_xslkh")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8jfpg"]
+size = Vector2(20, 37)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kpv57"]
+size = Vector2(146, 59.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ojet1"]
+bg_color = Color(0.0862745, 0.0862745, 0.0862745, 0.666667)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.404511, 0.404511, 0.404511, 1)
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_v0f2p"]
+size = Vector2(63.3333, 44)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hfp2k"]
+size = Vector2(102.5, 44)
+
+[sub_resource type="Animation" id="Animation_331hb"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_dm5k4"]
+resource_name = "hit_flash"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.0333332, 0.133333, 0.2, 0.233333, 0.3, 0.333333, 0.4, 0.433333, 0.5, 0.533333, 0.6, 0.666667, 0.733333, 0.8, 0.866667, 0.933333, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wiofy"]
+_data = {
+"RESET": SubResource("Animation_331hb"),
+"hit_flash": SubResource("Animation_dm5k4")
+}
+
+[node name="wizard" type="CharacterBody2D"]
+script = ExtResource("1_hqke6")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(4.76837e-07, -22)
+scale = Vector2(0.8, 0.8)
+sprite_frames = SubResource("SpriteFrames_o5mpm")
+animation = &"idle"
+frame_progress = 0.297977
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -18.5)
+shape = SubResource("RectangleShape2D_8jfpg")
+
+[node name="Area2D" type="Area2D" parent="."]
+position = Vector2(0, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-6, -5.25)
+shape = SubResource("RectangleShape2D_kpv57")
+
+[node name="Timer" type="Timer" parent="."]
+
+[node name="Dialogue" type="Label" parent="."]
+z_index = 4095
+offset_left = 4.0
+offset_top = -60.0
+offset_right = 206.0
+offset_bottom = -27.0
+scale = Vector2(0.5, 0.5)
+theme_override_fonts/font = ExtResource("24_7bqhf")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ojet1")
+text = "*La voce demoniaca echeggia...*"
+autowrap_mode = 3
+script = ExtResource("25_5cqwp")
+
+[node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
+position = Vector2(0, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+position = Vector2(0.999999, 2)
+shape = SubResource("RectangleShape2D_v0f2p")
+
+[node name="AttackBox" type="Area2D" parent="." groups=["demon"]]
+position = Vector2(40, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox"]
+position = Vector2(-40.25, 2)
+shape = SubResource("RectangleShape2D_hfp2k")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_wiofy")
+}
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -24)
+
+[node name="HurtSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -24)
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -24)

@@ -1,0 +1,282 @@
+[gd_scene load_steps=44 format=3 uid="uid://b6j5hwsc0ayfd"]
+
+[ext_resource type="Texture2D" uid="uid://daafw2fsxwgmc" path="res://oraculus/NPC/Sprite-Falciatore/Attack/0.png" id="1_xcvlq"]
+[ext_resource type="Script" path="res://oraculus/NPC/falciatore.gd" id="1_xg2ph"]
+[ext_resource type="Texture2D" uid="uid://cwx3q7021ttor" path="res://oraculus/NPC/Sprite-Falciatore/Attack/1.png" id="2_a4jno"]
+[ext_resource type="Texture2D" uid="uid://cbvsj683ij43o" path="res://oraculus/NPC/Sprite-Falciatore/Attack/2.png" id="3_3irtc"]
+[ext_resource type="Texture2D" uid="uid://c7d2rqbel2vx8" path="res://oraculus/NPC/Sprite-Falciatore/Attack/3.png" id="4_pblnb"]
+[ext_resource type="Texture2D" uid="uid://qv5h33pehivo" path="res://oraculus/NPC/Sprite-Falciatore/Attack/4.png" id="5_bwmks"]
+[ext_resource type="Texture2D" uid="uid://bcrispdacphj" path="res://oraculus/NPC/Sprite-Falciatore/Attack/5.png" id="6_3hjoi"]
+[ext_resource type="Texture2D" uid="uid://b45d1ribdnl1o" path="res://oraculus/NPC/Sprite-Falciatore/Attack/6.png" id="7_gi3vf"]
+[ext_resource type="Texture2D" uid="uid://dddjcw1qlk54g" path="res://oraculus/NPC/Sprite-Falciatore/Attack/7.png" id="8_vgql8"]
+[ext_resource type="Texture2D" uid="uid://bj1lmqktv1ceq" path="res://oraculus/NPC/Sprite-Falciatore/Death/0.png" id="9_v8t3e"]
+[ext_resource type="Texture2D" uid="uid://rqpnxiv4j6hi" path="res://oraculus/NPC/Sprite-Falciatore/Death/1.png" id="10_8as8y"]
+[ext_resource type="Texture2D" uid="uid://c6n6x2g3ncuab" path="res://oraculus/NPC/Sprite-Falciatore/Death/2.png" id="11_ekoer"]
+[ext_resource type="Texture2D" uid="uid://oxxopqymm43q" path="res://oraculus/NPC/Sprite-Falciatore/Death/3.png" id="12_6rswv"]
+[ext_resource type="Texture2D" uid="uid://nb48sqligx51" path="res://oraculus/NPC/Sprite-Falciatore/Death/4.png" id="13_0d5co"]
+[ext_resource type="Texture2D" uid="uid://0sttupy1chhn" path="res://oraculus/NPC/Sprite-Falciatore/Death/5.png" id="14_jekca"]
+[ext_resource type="Texture2D" uid="uid://bijufsidgv1wn" path="res://oraculus/NPC/Sprite-Falciatore/Death/6.png" id="15_bp112"]
+[ext_resource type="Texture2D" uid="uid://dxfoyo2yig0mu" path="res://oraculus/NPC/Sprite-Falciatore/Idle/0.png" id="16_cllym"]
+[ext_resource type="Texture2D" uid="uid://nakvwmk0ovjt" path="res://oraculus/NPC/Sprite-Falciatore/Idle/1.png" id="17_fpk5y"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="17_kio0d"]
+[ext_resource type="Texture2D" uid="uid://dlsuj26greijr" path="res://oraculus/NPC/Sprite-Falciatore/Idle/2.png" id="18_834lk"]
+[ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="18_l5xem"]
+[ext_resource type="Texture2D" uid="uid://b0sr0ya51kkgy" path="res://oraculus/NPC/Sprite-Falciatore/Idle/3.png" id="19_8rwao"]
+[ext_resource type="Texture2D" uid="uid://c48mjly8tr8go" path="res://oraculus/NPC/Sprite-Falciatore/Idle/4.png" id="20_avu3f"]
+[ext_resource type="Texture2D" uid="uid://dmd84wc3mcxvk" path="res://oraculus/NPC/Sprite-Falciatore/Idle/5.png" id="21_dct3l"]
+[ext_resource type="Texture2D" uid="uid://geljgxtej28w" path="res://oraculus/NPC/Sprite-Falciatore/Idle/6.png" id="22_tpaf7"]
+[ext_resource type="Texture2D" uid="uid://bbfrpy20xuj2f" path="res://oraculus/NPC/Sprite-Falciatore/Idle/7.png" id="23_j8sew"]
+[ext_resource type="Texture2D" uid="uid://1fholdm2wxoy" path="res://oraculus/NPC/Sprite-Falciatore/Walk/0.png" id="24_2fwya"]
+[ext_resource type="Texture2D" uid="uid://fjf8bvf0ja8j" path="res://oraculus/NPC/Sprite-Falciatore/Walk/1.png" id="25_kvnw7"]
+[ext_resource type="Texture2D" uid="uid://83bdonyaardp" path="res://oraculus/NPC/Sprite-Falciatore/Walk/2.png" id="26_ks3pp"]
+[ext_resource type="Texture2D" uid="uid://d2bel1hcv5bh5" path="res://oraculus/NPC/Sprite-Falciatore/Walk/3.png" id="27_ea273"]
+[ext_resource type="Texture2D" uid="uid://cb83uccxa8af" path="res://oraculus/NPC/Sprite-Falciatore/Walk/4.png" id="28_q5cnx"]
+[ext_resource type="Texture2D" uid="uid://djvp17uak84y2" path="res://oraculus/NPC/Sprite-Falciatore/Walk/5.png" id="29_41ern"]
+[ext_resource type="Texture2D" uid="uid://bggmcyh0ank4e" path="res://oraculus/NPC/Sprite-Falciatore/Walk/6.png" id="30_3skw1"]
+[ext_resource type="Texture2D" uid="uid://cf7q6nwd34qyr" path="res://oraculus/NPC/Sprite-Falciatore/Walk/7.png" id="31_na8t2"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_p4ts8"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_xcvlq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_a4jno")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_3irtc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_pblnb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_bwmks")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_3hjoi")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_gi3vf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_vgql8")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_v8t3e")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_8as8y")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_ekoer")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_6rswv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_0d5co")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_jekca")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_bp112")
+}, {
+"duration": 1.0,
+"texture": null
+}, {
+"duration": 1.0,
+"texture": null
+}],
+"loop": false,
+"name": &"death",
+"speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("16_cllym")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_fpk5y")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_834lk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_8rwao")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_avu3f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_dct3l")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_tpaf7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_j8sew")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("24_2fwya")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_kvnw7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_ks3pp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_ea273")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_q5cnx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_41ern")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_3skw1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_na8t2")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 10.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8jfpg"]
+size = Vector2(20, 37)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kpv57"]
+size = Vector2(146, 59.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ojet1"]
+bg_color = Color(0.0862745, 0.0862745, 0.0862745, 0.666667)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.404511, 0.404511, 0.404511, 1)
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_v0f2p"]
+size = Vector2(63.3333, 44)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hfp2k"]
+size = Vector2(102.5, 44)
+
+[sub_resource type="Animation" id="Animation_331hb"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_dm5k4"]
+resource_name = "hit_flash"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.0333332, 0.133333, 0.2, 0.233333, 0.3, 0.333333, 0.4, 0.433333, 0.5, 0.533333, 0.6, 0.666667, 0.733333, 0.8, 0.866667, 0.933333, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 0.105509, 0.194688, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wiofy"]
+_data = {
+"RESET": SubResource("Animation_331hb"),
+"hit_flash": SubResource("Animation_dm5k4")
+}
+
+[node name="falciatore" type="CharacterBody2D"]
+script = ExtResource("1_xg2ph")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -21)
+scale = Vector2(0.8, 0.8)
+sprite_frames = SubResource("SpriteFrames_p4ts8")
+animation = &"idle"
+frame_progress = 0.698587
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -18.5)
+shape = SubResource("RectangleShape2D_8jfpg")
+
+[node name="Area2D" type="Area2D" parent="."]
+position = Vector2(0, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-6, -5.25)
+shape = SubResource("RectangleShape2D_kpv57")
+
+[node name="Timer" type="Timer" parent="."]
+
+[node name="Dialogue" type="Label" parent="."]
+z_index = 4095
+offset_left = 4.0
+offset_top = -60.0
+offset_right = 206.0
+offset_bottom = -27.0
+scale = Vector2(0.5, 0.5)
+theme_override_fonts/font = ExtResource("17_kio0d")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ojet1")
+text = "*La voce demoniaca echeggia...*"
+autowrap_mode = 3
+script = ExtResource("18_l5xem")
+
+[node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
+position = Vector2(0, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+position = Vector2(0.999999, 2)
+shape = SubResource("RectangleShape2D_v0f2p")
+
+[node name="AttackBox" type="Area2D" parent="." groups=["demon"]]
+position = Vector2(40, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox"]
+position = Vector2(-40.25, 2)
+shape = SubResource("RectangleShape2D_hfp2k")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_wiofy")
+}
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -24)
+
+[node name="HurtSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -24)
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -24)

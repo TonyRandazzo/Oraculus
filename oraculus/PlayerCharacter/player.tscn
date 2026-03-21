@@ -344,6 +344,41 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("14_3rf7u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_yxc2u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_yugw4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_6k0dv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_v44op")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_8v6t0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_3ocfg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_stbob")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_oaswr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_fdfas")
+}],
+"loop": true,
+"name": &"sprint",
+"speed": 25.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("65_yl41t")
 }, {
 "duration": 1.0,
@@ -444,7 +479,8 @@ jump_force = 300.0
 
 [node name="Player" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_npq8g")
-animation = &"slide"
+animation = &"sprint"
+frame_progress = 0.938394
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_bl8he")

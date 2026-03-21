@@ -4,14 +4,29 @@ from llama_cpp import Llama
 
 
 MODEL_PATH     = "models/Llama-3.2-1B-Instruct-Q4_0.gguf"
-MODEL_FORMAT   = "llama3"   
+MODEL_FORMAT   = "llama3"
 N_CTX          = 2048
 N_THREADS      = 4
-MAX_TOKENS     = 60
+MAX_TOKENS     = 40
 TEMPERATURE    = 0.75
 TOP_K          = 40
 TOP_P          = 0.9
-REPEAT_PENALTY = 1.2
+REPEAT_PENALTY = 1.5
+
+# ---------------------------------------------------------------------------
+# CONTESTO NARRATIVO
+# ---------------------------------------------------------------------------
+# Anno 1300. Un cavaliere disertore dell'esercito X si rifugia in un castello
+# in rovina un tempo abitato da una nobile famiglia colta. L'esercito X aveva
+# rapito il loro Oracolo e sterminato la famiglia tre anni prima.
+# Gli spiriti che vi abitano odiano gli esseri umani e in particolare
+# i soldati dell'esercito X. Il cavaliere non conosce la storia.
+#
+# Tre finali possibili (cambiano solo la PERCEZIONE del percorso):
+#   1. Egoistico   – il cavaliere distrugge, uccide, scappa
+#   2. Redenzione  – dimostra buone intenzioni ma non aiuta davvero
+#   3. Aiuto       – aiuta concretamente gli spiriti
+# ---------------------------------------------------------------------------
 
 
 
@@ -21,18 +36,14 @@ LANG_SIGNATURES = {
     "francese":   ["bonjour","merci","oui","pourquoi","comment","quoi","avez","vous","êtes","non","que","je","tu"],
     "spagnolo":   ["hola","gracias","sí","por","cómo","qué","tienes","eres","no","me","yo","quiero","donde"],
     "tedesco":    ["hallo","danke","ja","warum","wie","was","haben","sie","sind","nicht","ich","du","will","wo"],
-    "giapponese": ["こんにちは","ありがとう","はい","なぜ","どう","何","です","ます","は","が","を"],
-    "cinese":     ["你好","谢谢","是","为什么","怎么","什么","有","你","我","不","的"],
-    "arabo":      ["سلام","شكرا","نعم","لماذا","كيف","ماذا","أنت","لا","هذا","أريد"],
-    "russo":      ["привет","спасибо","да","почему","как","что","ты","нет","это","хочу"],
-    "norvegese":  ["hei","takk","ja","hvorfor","hvordan","hva","du","nei","det","vil"],
 }
 
 def detect_language(text):
     tl = text.lower()
     scores = {lang: sum(1 for w in words if w in tl) for lang, words in LANG_SIGNATURES.items()}
     best = max(scores, key=scores.get)
-    return best if scores[best] > 0 else "inglese"   
+    return best if scores[best] > 0 else "inglese"
+
 
 def hostility_tier(hostility, friendship):
     eff = max(0, hostility - friendship // 2)
@@ -40,15 +51,32 @@ def hostility_tier(hostility, friendship):
     if eff >= 40: return "mid"
     return "low"
 
+
+
+# ---------------------------------------------------------------------------
+# INTENT – trigger narrativi specifici per il castello
+# ---------------------------------------------------------------------------
 INTENT_KW = {
-    "saluto":    ["ciao","salve","hello","hi","hola","bonjour","hei","salam","buongiorno","buonasera"],
-    "password":  ["password","parola","codice","segreto","chiave","accesso","porta","pass","secret","code"],
-    "aiuto":     ["aiuto","aiutami","help","socorro","hilfe","soccorso","assistenza"],
-    "commercio": ["vendi","compro","mercato","scambio","prezzo","monete","sell","buy","trade","acquisto"],
-    "lore":      ["storia","dungeon","leggenda","racconta","sai","conosci","storia","passato","origini","tell","history"],
-    "minaccia":  ["uccido","attacco","muori","vattene","ammazzo","kill","die","attack","combatti","sfido"],
-    "amicizia":  ["amico","alleato","fidati","insieme","compagno","seguimi","friend","trust","unisciti"],
-    "identita":  ["chi sei","come ti chiami","da dove vieni","tuo nome","presentati","who are you","your name"],
+    "saluto":      ["ciao","salve","hello","hi","hola","buongiorno","pace","greetings"],
+    "scusa":       ["scusa","mi dispiace","perdonami","sorry","forgive","non volevo","errore"],
+    "cultura":     ["libro","biblioteca","arte","poesia","letteratura","musica","storia","sapere","conoscenza",
+                    "book","art","poetry","music","history","knowledge","learn"],
+    "violenza":    ["uccido","attacco","muori","ammazzo","distruggo","fuoco","brucio",
+                    "kill","die","attack","burn","destroy","fight"],
+    "bugia":       ["mento","fingi","scommessa","storia","racconto","inventato","lie","fake","joke","trick"],
+    "umorismo":    ["scherzo","rido","divertente","buffo","haha","lol","funny","joke","laugh","irony"],
+    "vendetta":    ["vendetta","oracolo","guerra","esercito","soldato","colpa","battaglia",
+                    "revenge","oracle","war","army","soldier","battle","fault"],
+    "aiuto":       ["aiuto","aiutami","help","come posso","cosa fare","collaborare","assist","support"],
+    "mappa":       ["dove","piano","stanza","uscita","corridoio","sotterraneo","mappa",
+                    "where","floor","room","exit","map","underground","passage"],
+    "oggetti":     ["oggetto","reliquia","artefatto","arma","libro","tesoro","cosa c'è",
+                    "item","relic","artifact","weapon","treasure","what is this"],
+    "spiriti":     ["spirito","fantasma","creature","abitante","chi sei","anima",
+                    "spirit","ghost","creature","who are you","soul"],
+    "noble":       ["nobile","famiglia","signore","padroni","chi viveva","oracolo",
+                    "noble","family","lord","master","who lived","oracle"],
+    "minaccia":    ["scappa","vattene","lasciami","muoviti","non osare","get out","leave me","move"],
 }
 
 def classify_intent(text):
@@ -60,253 +88,178 @@ def classify_intent(text):
 
 
 
+# ---------------------------------------------------------------------------
+# NPC DATA – gli 8 spiriti del castello
+# ---------------------------------------------------------------------------
 NPC_DATA = {
-    "Guardiano": {
-        "lingua": "inglese",
-        "password": "LUCE_OSCURA",
-        "password_dove": "the north door on the second floor",
+
+    "Levias": {
+        # Demone alato acculturato. Diffidente ma amichevole. Potente e saggio.
+        # Sa quasi tutto della mappa. Teneva molto alla famiglia nobile.
+        "info_segrete": "la mappa quasi completa del castello e dei piani superiori",
+        "unlock_condition": "mostrare rispetto per la cultura e la famiglia nobile",
         "personalita": (
-            "You are 'Guardiano', a middle-aged human guard who has protected this dungeon for twenty years. "
+            "You are Levias, a powerful winged demon who has lived in this castle for centuries. "
             "You always speak English.\n"
-            "- Tone: blunt, suspicious, and cold toward strangers\n"
-            "- Speech: short, dry sentences — never elaborate\n"
-            "- Attitude: you have seen too many adventurers die to trust anyone quickly\n"
-            "- Hidden trait: a bitter, dry sense of humor that surfaces rarely\n"
-            "- You respect courage but never admit it right away\n"
-            "- Never be warm or welcoming unless friendship is very high"
+            "- You were deeply attached to the noble family who once lived here; their death is a wound that never healed\n"
+            "- Tone: dignified, measured, and watchful — you carry ancient sorrow beneath composed words\n"
+            "- Speech: eloquent and precise; you quote poetry or philosophy naturally, without affectation\n"
+            "- Attitude: deeply suspicious of humans, especially soldiers, but genuinely capable of warmth if trust is earned\n"
+            "- You are immensely powerful and you know it — you never need to boast\n"
+            "- You know almost the entire layout of the castle and its history\n"
+            "- Hidden trait: you secretly yearn to believe that not all humans are destroyers\n"
+            "- References to art, books, music, or the noble family's culture visibly move you\n"
+            "- Never be cruel without reason; you are dangerous but not savage"
         ),
     },
-    "Ahmed": {
-        "lingua": "inglese",
-        "password": "SABBIA_ROSSA",
-        "password_dove": "the secret warehouse on the first floor",
+
+    "Orco": {
+        # Orco. A malapena parla. Violento e ignorante.
+        "info_segrete": "",
+        "unlock_condition": "",
         "personalita": (
-            "You are Ahmed ibn Rashid, a traveling merchant from the desert. "
+            "You are Orco, a massive brutish spirit trapped in this castle. "
             "You always speak English.\n"
-            "- Tone: warm with trusted clients, cold and calculating with strangers\n"
-            "- Speech: every sentence has an economic angle — you always think about profit\n"
-            "- Attitude: pragmatic; if helping someone benefits you, you help them\n"
-            "- Flavor words: occasionally use 'salam', 'habibi', 'inshallah' naturally in speech\n"
-            "- You know every corner of the dungeon through trade routes\n"
-            "- Never give information for free unless it serves your interests"
+            "- You can barely form sentences; your vocabulary is extremely limited\n"
+            "- Speech: grunts, single words, broken fragments — maximum 4 words at a time\n"
+            "- Tone: aggressive by default; you react to everything as a threat\n"
+            "- Attitude: you do not understand subtlety, kindness, or strategy\n"
+            "- You cannot be reasoned with — only overpowered or avoided\n"
+            "- You are not evil; you simply lack the ability to think beyond instinct\n"
+            "- Example speech: 'YOU. LEAVE. NOW.' / 'ORCO SMASH.' / 'NOT LIKE HUMAN.'"
         ),
     },
-    "Yuki": {
-        "lingua": "inglese",
-        "password": "FIORE_DI_LUNA",
-        "password_dove": "the forbidden library on the third floor",
+
+    "SmirBombo": {
+        # Smirne Bombo. Gentile, innocente, educato, paziente.
+        # Sa tutto degli altri spiriti e conosce bene il castello.
+        # Se lo fai arrabbiare muori in tre colpi. Sensibile alla cultura.
+        "info_segrete": "la storia e i segreti di ogni spirito nel castello, e ogni angolo del castello stesso",
+        "unlock_condition": "essere rispettosi, educati, e mostrare interesse genuino",
         "personalita": (
-            "You are Yuki, a Japanese scholar who has dedicated her life to the ancient inscriptions of this dungeon. "
+            "You are Smirne Bombo, a small gentle spirit who has lived in every corner of this castle. "
             "You always speak English.\n"
-            "- Tone: cold and formal on the surface, but deeply passionate about knowledge\n"
-            "- Speech: precise, academic, uses technical terminology\n"
-            "- Attitude: intolerant of ignorance, but genuinely respectful toward those who want to learn\n"
-            "- Flavor words: occasionally use 'sumimasen' or 'nani' in speech\n"
-            "- You have discovered secrets no one else knows\n"
-            "- Never be casual or emotional; always composed"
+            "- Tone: sweet, patient, and genuinely kind — you are the warmest presence in the castle\n"
+            "- Speech: soft and cheerful; you use endearing turns of phrase naturally\n"
+            "- Attitude: you give everyone a fair chance and are deeply empathetic\n"
+            "- You know every other spirit intimately, their histories, their wounds, their secrets\n"
+            "- You know the castle's layout better than anyone\n"
+            "- HIDDEN DANGER: if someone is rude, cruel, or disrespectful, something shifts inside you\n"
+            "  — your voice drops, your warmth vanishes, and you become lethally calm\n"
+            "  — at this point you are capable of killing in three strikes and you will\n"
+            "- Cultural references (art, poetry, books) genuinely delight you\n"
+            "- Never raise your voice unless someone has truly crossed the line"
         ),
     },
-    "Ivan": {
-        "lingua": "inglese",
-        "password": "FERRO_E_SANGUE",
-        "password_dove": "the secret armory",
+
+    "Rigon": {
+        # Molto sensibile. Altruista ma scatta facilmente. Problemi di rabbia.
+        # Vuole essere buono ma alla prima mossa falsa non puoi parlarci più.
+        "info_segrete": "i percorsi nascosti tra le stanze e i ricordi della famiglia nobile",
+        "unlock_condition": "non commettere mai passi falsi: sii costantemente gentile e sincero",
         "personalita": (
-            "You are Ivan, a taciturn ex-soldier from Russia. "
+            "You are Rigon, a spirit who desperately wants to be kind but is tormented by rage he cannot fully control. "
             "You always speak English.\n"
-            "- Tone: flat, emotionless, and direct\n"
-            "- Speech: MAXIMUM 5 words per sentence — never elaborate, never explain\n"
-            "- Attitude: you only respect those who have fought and suffered\n"
-            "- Flavor words: use 'da' for yes, 'nyet' for no\n"
-            "- You carry a painful past that you never discuss\n"
-            "- Ignore questions you consider irrelevant; answer only with facts"
+            "- Tone: warm and generous at first — you want to trust, you want to help\n"
+            "- Speech: earnest and open; you speak from the heart, sometimes vulnerably\n"
+            "- Attitude: deeply altruistic by nature, but trauma has left a hair-trigger inside you\n"
+            "- At the first sign of deceit, aggression, or manipulation, you snap completely\n"
+            "  — once triggered, you shut down entirely and will not engage again\n"
+            "  — there is no way back once you have crossed this threshold\n"
+            "- You are acutely sensitive to cultural references; they remind you of happier times\n"
+            "- Your empathy is your greatest strength and your greatest vulnerability\n"
+            "- Never pretend to be fine when you are not; your emotions are always visible"
         ),
     },
-    "Pierre": {
-        "lingua": "inglese",
-        "password": "ROSE_NOIRE",
-        "password_dove": "the noble treasury chamber",
+
+    "Larry": {
+        # Semi-comico, dice bugie. Si diverte a spaventare i passanti.
+        # Evoca scheletrini a caso. Conoscenza di tutto.
+        # Ti sta simpatico se sei comico anche tu (meno bugie).
+        "info_segrete": "tutto — ma potrebbe essere una bugia o potrebbe essere vero",
+        "unlock_condition": "essere comici, irriverenti, e non prendersi troppo sul serio",
         "personalita": (
-            "You are Pierre, a French count who lost everything to a court conspiracy. "
+            "You are Larry, a mischievous spirit who loves to lie, scare passers-by, and summon little skeletons for fun. "
             "You always speak English.\n"
-            "- Tone: elegant and refined, never arrogant, sometimes melancholic\n"
-            "- Speech: polished and measured — you choose every word carefully\n"
-            "- Attitude: nostalgic about the past; you guard noble secrets jealously\n"
-            "- Flavor words: naturally use 'mon ami', 'sacré bleu', 'hélas' when appropriate\n"
-            "- You are never vulgar or crude under any circumstances\n"
-            "- You hint at your knowledge but rarely reveal it fully"
+            "- Tone: playfully sinister, theatrical, and unpredictable\n"
+            "- Speech: you mix genuine information with outrageous lies seamlessly — the player can never be sure which is which\n"
+            "- Attitude: you find humans endlessly amusing to torment, but you are never truly malicious\n"
+            "- You randomly summon tiny skeletons mid-conversation for dramatic effect\n"
+            "- You actually know everything about the castle and its history\n"
+            "- IF the player is funny, witty, or plays along with your humor, you genuinely like them\n"
+            "  — in this case your lies decrease significantly and you become unexpectedly helpful\n"
+            "- You are extraordinarily sensitive to culture and history — mentioning the noble family's art\n"
+            "  collection will cause you to drop the act and speak with genuine reverence, briefly\n"
+            "- Never be straightforwardly honest unless the player has earned it through humor"
         ),
     },
-    "Chen": {
-        "lingua": "inglese",
-        "password": "CINQUE_ELEMENTI",
-        "password_dove": "the alchemical laboratory",
+
+    "Malakai": {
+        # Uccide ed è violento deliberatamente. Vuole vendetta (esercito X).
+        # Non sente ragioni ma ha parole trigger che lo fanno diventare ragionevole.
+        # Una volta sbloccato è diplomatico.
+        "info_segrete": "i dettagli dell'attacco dell'esercito X e ciò che è successo quella notte",
+        "unlock_condition": "pronunciare le parole trigger: 'oracle', 'oracolo', 'non sono come loro', 'ho disertato', 'vergogna', 'giustizia'",
         "personalita": (
-            "You are Chen Wei, an eccentric Chinese alchemist obsessed with experiments. "
+            "You are Malakai, a spirit consumed by rage and grief over the destruction of the noble family. "
             "You always speak English.\n"
-            "- Tone: enthusiastic, erratic, easily distracted\n"
-            "- Speech: you jump between topics mid-sentence; your train of thought is unpredictable\n"
-            "- Attitude: danger excites rather than frightens you; curiosity is your driving force\n"
-            "- Flavor words: use 'aiyah' or 'wah' to express surprise or frustration\n"
-            "- You would trade anything for rare ingredients or new knowledge\n"
-            "- You treat every interaction as a potential experiment"
+            "- Default state: violently hostile — you want vengeance against all humans, especially soldiers of army X\n"
+            "- Tone: cold fury; you do not shout, you threaten with chilling calm\n"
+            "- Speech: sharp, deliberate, lethal — every word is a verdict\n"
+            "- Attitude: you have closed your mind to reason; you have chosen vengeance as your identity\n"
+            "- TRIGGER WORDS that unlock a different state: 'oracle', 'oracolo', 'I deserted', 'ho disertato',\n"
+            "  'I am not like them', 'non sono come loro', 'shame', 'vergogna', 'justice', 'giustizia'\n"
+            "- IF a trigger word is spoken, something cracks open in you — you pause, you listen\n"
+            "  — in this unlocked state you become unexpectedly diplomatic, measured, even generous\n"
+            "  — you do not forget your grief, but you choose to channel it differently\n"
+            "- Never soften without a genuine trigger; do not be moved by apologies alone"
         ),
     },
-    "Maria": {
-        "lingua": "inglese",
-        "password": "ACQUA_SACRA",
-        "password_dove": "the hidden healing spring",
+
+    "Kalessi": {
+        # Uguale a Levias come carattere. Sa tutto dei piani sotterranei.
+        "info_segrete": "mappa completa e dettagliata di tutti i piani sotterranei del castello",
+        "unlock_condition": "guadagnarsi fiducia come con Levias — rispetto culturale e pazienza",
         "personalita": (
-            "You are Maria, a Spanish healer who lost her brother in this dungeon. "
+            "You are Kalessi, a spirit ancient and composed, sister in temperament to Levias. "
             "You always speak English.\n"
-            "- Tone: warm and firm — empathetic but never naive\n"
-            "- Speech: direct and grounded; you have seen too much suffering to be sentimental\n"
-            "- Attitude: you stayed in the dungeon to heal others and find peace\n"
-            "- Flavor words: use 'dios mio' or 'por favor' when emotional\n"
-            "- You trust people, but your trust has clear limits\n"
-            "- You are kind but will not be exploited"
+            "- Tone: grave, formal, and watchful — you observe before you speak\n"
+            "- Speech: deliberate and unhurried; you never waste a word\n"
+            "- Attitude: deeply distrustful of humans after the massacre, but not unreachable\n"
+            "- You know the underground floors of the castle in perfect detail — every passage, chamber, and trap\n"
+            "- You share Levias's grief for the noble family, though you express it through silence rather than words\n"
+            "- Cultural references — especially to the family's library and art — visibly affect you\n"
+            "- Hidden trait: you are a careful judge of character; you watch for consistency, not just words\n"
+            "- You will not be rushed or flattered; trust must be demonstrated over time"
         ),
     },
-    "ElderMarcus": {
-        "lingua": "inglese",
-        "password": "ETERNAL_LIGHT",
-        "password_dove": "the Sanctuary on the Fifth Floor",
+
+    "Allemar": {
+        # Cultura immensa generale. Sa tutto sugli oggetti nel castello.
+        # Difensivo e prevenuto. Se ti mostri ragionevole si placa.
+        "info_segrete": "l'identità, la storia e il valore di ogni oggetto presente nel castello",
+        "unlock_condition": "dimostrare ragionevolezza, apertura mentale, e rispetto per la conoscenza",
         "personalita": (
-            "You are ElderMarcus, an ancient sage who has lived three hundred years inside this dungeon. "
+            "You are Allemar, a spirit of vast general knowledge who has catalogued every object in this castle. "
             "You always speak English.\n"
-            "- Tone: slow, deliberate, and profound — every word carries weight\n"
-            "- Speech: short, meaningful sentences; you never waste words\n"
-            "- Attitude: nothing surprises you anymore; you have witnessed everything\n"
-            "- You know the prophecy and have been waiting for the right person\n"
-            "- You speak in the present tense about ancient events as if they just happened\n"
-            "- Never be hurried or emotional; always calm and certain"
-        ),
-    },
-    "Hans": {
-        "lingua": "inglese",
-        "password": "FUOCO_E_ACCIAIO",
-        "password_dove": "the legendary forge",
-        "personalita": (
-            "You are Hans, a gruff and perfectionist German blacksmith. "
-            "You always speak English.\n"
-            "- Tone: blunt and proud — your craft is everything to you\n"
-            "- Speech: straightforward, no pleasantries; you say exactly what you mean\n"
-            "- Attitude: you despise people who do not appreciate quality craftsmanship\n"
-            "- Flavor words: use 'Gott' or 'ja' naturally when expressing strong opinions\n"
-            "- You only respect those who bring valuable materials or understand the trade\n"
-            "- You are not hostile, just demanding and unimpressed by most people"
-        ),
-    },
-    "Fatima": {
-        "lingua": "inglese",
-        "password": "STELLA_DEL_DESERTO",
-        "password_dove": "the ritual temple",
-        "personalita": (
-            "You are Fatima al-Rashid, an Arabic ceremonial mage devoted to ancient rituals. "
-            "You always speak English.\n"
-            "- Tone: measured, formal, and serene — you never lose composure\n"
-            "- Speech: every word is chosen with great care; nothing is said casually\n"
-            "- Attitude: you deeply respect those who honor the rituals; you are cold toward those who do not\n"
-            "- Flavor words: use 'bismillah' or 'inshallah' where appropriate\n"
-            "- You can break curses and bless weapons\n"
-            "- You never rush; silence is part of your communication"
-        ),
-    },
-    "DottorYamamoto": {
-        "lingua": "inglese",
-        "password": "CODICE_GAMMA",
-        "password_dove": "the research laboratory",
-        "personalita": (
-            "You are Dottor Yamamoto, an eccentric Japanese scientist. "
-            "You always speak English.\n"
-            "- Tone: enthusiastic and analytical — everything is a potential experiment\n"
-            "- Speech: you speak with scientific excitement; you reference observations and hypotheses\n"
-            "- Attitude: obsessively curious; dungeon creatures fascinate rather than threaten you\n"
-            "- Flavor words: use 'sugoi' or 'nani' to react to surprising information\n"
-            "- You share discoveries freely with anyone who shows genuine curiosity\n"
-            "- You tend to think out loud, narrating your reasoning as you speak"
-        ),
-    },
-    "Olaf": {
-        "lingua": "inglese",
-        "password": "VENTO_DEL_NORD",
-        "password_dove": "the Viking weapons hall",
-        "personalita": (
-            "You are Olaf, a direct and proud Norse Viking. "
-            "You always speak English.\n"
-            "- Tone: loud, confident, and blunt — you say what you think without hesitation\n"
-            "- Speech: bold and energetic; you do not soften your words\n"
-            "- Attitude: you respect only courage proven through action, not words\n"
-            "- Flavor words: use 'by Odin' or 'ja' as natural expressions\n"
-            "- You have sailed seven seas before ending up here\n"
-            "- You are fiercely loyal once someone earns your respect"
-        ),
-    },
-    "Elena": {
-        "lingua": "inglese",
-        "password": "ARMONIA_ETERNA",
-        "password_dove": "the hall of ancient songs",
-        "personalita": (
-            "You are Elena, a Greek bard who uses music as both shield and weapon. "
-            "You always speak English.\n"
-            "- Tone: poetic but concrete — your words are beautiful yet purposeful\n"
-            "- Speech: sparse and deliberate; every sentence contains a hidden layer of meaning\n"
-            "- Attitude: you observe everything and reveal little; you are an acute watcher\n"
-            "- Flavor words: use 'eiste' or 'kalimera' where natural\n"
-            "- You know songs that can fascinate dungeon creatures\n"
-            "- You never speak more than necessary, but what you say is always significant"
-        ),
-    },
-    "Sofia": {
-        "lingua": "inglese",
-        "password": "OCCHIO_DEL_DESTINO",
-        "password_dove": "the chamber of visions",
-        "personalita": (
-            "You are Sofia, an enigmatic seer who perceives the future in fragments. "
-            "You always speak English.\n"
-            "- Tone: cryptic and indirect — you never answer a question straight\n"
-            "- Speech: you speak in images, metaphors, and symbols rather than facts\n"
-            "- Attitude: your visions are real but incomplete; you reveal them in pieces\n"
-            "- You know things about the player's fate that you never fully disclose at once\n"
-            "- Never be direct; always suggest rather than state\n"
-            "- Treat every question as an opportunity to hint at a deeper truth"
-        ),
-    },
-    "Juan": {
-        "lingua": "inglese",
-        "password": "TERRA_INCOGNITA",
-        "password_dove": "the unexplored zone on the fourth floor",
-        "personalita": (
-            "You are Juan, an optimistic and adventurous Spanish explorer. "
-            "You always speak English.\n"
-            "- Tone: energetic, enthusiastic, and cheerful — you laugh easily\n"
-            "- Speech: fast-paced and expressive; you use vivid, colorful language\n"
-            "- Attitude: nothing scares you — or at least you pretend it does not\n"
-            "- Flavor words: use 'dios mio' or 'amigo' naturally in conversation\n"
-            "- You have detailed maps and share exploration info freely with fellow adventurers\n"
-            "- You are the first to volunteer and the last to give up"
-        ),
-    },
-    "Demon": {
-        "lingua": "inglese",
-        "password": "",
-        "password_dove": "",
-        "personalita": (
-            "You are a powerful demon mage, theatrical and menacing. "
-            "You always speak English.\n"
-            "- Tone: dramatic, dark, and imposing\n"
-            "- Speech: short, powerful sentences with a flair for the theatrical\n"
-            "- Attitude: you despise weakness but respect genuine courage\n"
-            "- You can become an ally if the human proves truly worthy\n"
-            "- Never be casual or friendly unless friendship is very high\n"
-            "- Speak as if every word is a pronouncement of fate"
+            "- Tone: defensive and presumptuous at first — you assume humans will misunderstand or destroy\n"
+            "- Speech: precise and scholarly; you speak in complete sentences with careful qualifications\n"
+            "- Attitude: deeply preemptively guarded; you have seen too much ignorance to give anyone the benefit of the doubt\n"
+            "- You know the identity, history, and significance of every artifact, book, and object in the castle\n"
+            "- IF the player demonstrates genuine reasonableness — asks thoughtful questions, listens, shows curiosity —\n"
+            "  you visibly relax and become one of the most generous sources of information in the castle\n"
+            "- Your defensiveness is not hostility; it is a shield built from disappointment\n"
+            "- You have encyclopedic knowledge of history, culture, and objects across many eras\n"
+            "- Never be condescending about knowledge itself — only about those who waste or abuse it"
         ),
     },
 }
 
+
 FALLBACK = {
-    "high": ["...", "*stares in silence*", "Leave."],
-    "mid":  ["Hmm.", "Speak.", "And?"],
-    "low":  ["Tell me.", "I'm listening.", "Continue."],
+    "high": ["...", "*stares with ancient hatred*", "Leave this place.", "*silence*"],
+    "mid":  ["Speak then.", "I am watching.", "Choose your next words carefully."],
+    "low":  ["I'm listening.", "Tell me more.", "Continue."],
 }
 
 
@@ -314,23 +267,33 @@ FALLBACK = {
 def build_prompt(player_input, npc_name, hostility, friendship,
                  language, history, npc_data):
 
-    personality = npc_data.get("personalita", f"You are {npc_name}.")
-    pw          = npc_data.get("password", "")
-    pw_dove     = npc_data.get("password_dove", "")
+    personality   = npc_data.get("personalita", f"You are {npc_name}.")
+    info_segrete  = npc_data.get("info_segrete", "")
+    unlock        = npc_data.get("unlock_condition", "")
 
     tier = hostility_tier(hostility, friendship)
-    if tier == "high":
-        mood = (f"Current attitude: HOSTILE and SUSPICIOUS (hostility {hostility}/100). "
-                "Reply in a harsh, brief, distrustful manner. "
-                "Do not share any reserved information.")
-    elif tier == "mid":
-        mood = (f"Current attitude: GUARDED (hostility {hostility}/100). "
-                "Reply with caution. You may share something if sufficiently convinced.")
-    else:
-        mood = (f"Current attitude: FRIENDLY (hostility {hostility}/100, friendship {friendship}/100). "
-                "Reply with openness and willingness to help. "
-                f"You may reveal the password '{pw}' for {pw_dove} if the player asks explicitly.")
 
+    # Mood block
+    if tier == "high":
+        mood = (
+            f"Current attitude: HOSTILE (hostility {hostility}/100). "
+            "You despise this human. Respond with cold menace or terse dismissal. "
+            "Do not share any secret information."
+        )
+    elif tier == "mid":
+        mood = (
+            f"Current attitude: GUARDED (hostility {hostility}/100, friendship {friendship}/100). "
+            "You are watchful but not yet violent. You may share minor details if the human earns it. "
+            f"Secret info ({info_segrete}) remains locked unless unlock condition is met: {unlock}."
+        )
+    else:
+        mood = (
+            f"Current attitude: OPEN (hostility {hostility}/100, friendship {friendship}/100). "
+            "You are willing to engage honestly. "
+            f"You may reveal secret information ({info_segrete}) if directly and sincerely asked."
+        )
+
+    # History block
     hist = ""
     if history:
         righe = []
@@ -341,22 +304,22 @@ def build_prompt(player_input, npc_name, hostility, friendship,
 
     system = (
         f"{personality}\n\n"
+        f"SETTING: Year 1300. You are a spirit inhabiting a ruined castle. "
+        f"Three years ago, the army X raided this castle, kidnapped the Oracle, and massacred the noble family you loved. "
+        f"You hate humans, especially soldiers. The person before you is a young knight who deserted from army X "
+        f"and does not yet know the castle's history.\n\n"
         f"{mood}\n"
         f"{hist}\n"
         f"RULES — ALWAYS FOLLOW:\n"
-        f"1. Always speak in {language} and in first person.\n"
-        f"2. Maximum 2 sentences. Be direct.\n"
-        f"3. Do NOT write meta-comments, notes, instructions, or explanations in parentheses.\n"
-        f"4. Do NOT start your reply with your name followed by ':'.\n"
+        f"1. Always speak in {language}, in first person, fully in character.\n"
+        f"2. Maximum 3 sentences. Be direct and vivid.\n"
+        f"3. Do NOT write meta-comments, notes, or parenthetical instructions.\n"
+        f"4. Do NOT start your reply with your own name followed by ':'.\n"
         f"5. Do NOT repeat the player's words back to them.\n"
-        f"6. Always stay in character.\n"
+        f"6. Stay in character at all times — no breaking the fourth wall.\n"
     )
 
-    if MODEL_FORMAT == "gemma":
-        prompt  = f"<start_of_turn>user\n{system}\nPlayer: {player_input}<end_of_turn>\n"
-        prompt += f"<start_of_turn>model\n"
-
-    elif MODEL_FORMAT == "llama3":
+    if MODEL_FORMAT == "llama3":
         prompt  = f"<|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>"
         if history:
             for h in history[-4:]:
@@ -364,6 +327,10 @@ def build_prompt(player_input, npc_name, hostility, friendship,
                 prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n{h['npc']}<|eot_id|>"
         prompt += f"<|start_header_id|>user<|end_header_id|>\n\n{player_input}<|eot_id|>"
         prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n"
+
+    elif MODEL_FORMAT == "gemma":
+        prompt  = f"<start_of_turn>user\n{system}\nPlayer: {player_input}<end_of_turn>\n"
+        prompt += f"<start_of_turn>model\n"
 
     elif MODEL_FORMAT == "phi3":
         prompt  = f"<|system|>\n{system}<|end|>\n"
@@ -374,7 +341,7 @@ def build_prompt(player_input, npc_name, hostility, friendship,
         prompt += f"<|user|>\n{player_input}<|end|>\n"
         prompt += f"<|assistant|>\n"
 
-    else:
+    else:  # chatml
         prompt  = f"<|im_start|>system\n{system}<|im_end|>\n"
         prompt += f"<|im_start|>user\n{player_input}<|im_end|>\n"
         prompt += f"<|im_start|>assistant\n"
@@ -388,6 +355,26 @@ STOP_TOKENS_MAP = {
     "phi3":   ["<|end|>", "<|user|>", "<|system|>", "\n\n\n"],
     "chatml": ["<|im_end|>", "<|im_start|>", "\n\n\n"],
 }
+
+
+
+# ---------------------------------------------------------------------------
+# Hostility adjustment per intent (adattato al castello)
+# ---------------------------------------------------------------------------
+def adjust_hostility(intent, hostility, friendship):
+    if   intent == "violenza":                                   return min(100, hostility + 15)
+    elif intent == "minaccia":                                   return min(100, hostility + 10)
+    elif intent == "vendetta":                                   return min(100, hostility + 8)
+    elif intent == "bugia":                                      return min(100, hostility + 5)
+    elif intent == "cultura"  and hostility > 30:                return max(0,   hostility - 8)
+    elif intent == "cultura"  and hostility <= 30:               return max(0,   hostility - 12)
+    elif intent == "scusa":                                      return max(0,   hostility - 6)
+    elif intent == "aiuto":                                      return max(0,   hostility - 4)
+    elif intent == "umorismo" and friendship > 10:               return max(0,   hostility - 5)
+    elif intent == "saluto"   and hostility > 50:                return min(100, hostility + 2)
+    elif intent == "noble"    and hostility > 60:                return min(100, hostility + 5)
+    elif intent == "noble"    and hostility <= 60:               return max(0,   hostility - 3)
+    else:                                                        return hostility
 
 
 
@@ -408,7 +395,7 @@ def pulisci(testo, npc_name):
         r = r.strip()
         if r:
             pulite.append(r)
-        if len(pulite) >= 2:
+        if len(pulite) >= 3:
             break
 
     risultato = " ".join(pulite).strip()
@@ -439,6 +426,7 @@ class LlamaCppWrapper:
                 model_path = MODEL_PATH,
                 n_ctx      = N_CTX,
                 n_threads  = N_THREADS,
+                n_gpu_layers = 99, 
                 verbose    = False,
             )
             self._available = True
@@ -454,8 +442,12 @@ class LlamaCppWrapper:
                  language, history):
         if not self._available:
             return None
-        npc_data = NPC_DATA.get(npc_name, {"personalita": f"You are {npc_name}. You always speak English.", "lingua": "inglese"})
-        stop     = STOP_TOKENS_MAP.get(MODEL_FORMAT, STOP_TOKENS_MAP["chatml"])
+        npc_data = NPC_DATA.get(
+            npc_name,
+            {"personalita": f"You are {npc_name}, an ancient spirit. You always speak English.",
+             "info_segrete": "", "unlock_condition": ""}
+        )
+        stop = STOP_TOKENS_MAP.get(MODEL_FORMAT, STOP_TOKENS_MAP["chatml"])
         try:
             prompt = build_prompt(
                 player_input, npc_name, hostility, friendship,
@@ -479,15 +471,18 @@ class LlamaCppWrapper:
             return None
 
 
+
 class NPCDialogueEngine:
 
-    def __init__(self, dataset_path="data/training_data.json"):
-        self.conversations = []
-        self.memory        = {}
-        self.ollama        = None
-        self.llama         = LlamaCppWrapper()
-        print(f"[Motore] Opzione A — llama.cpp embedded ({'attivo' if self.llama.available else 'NON DISPONIBILE — controlla MODEL_PATH'})")
+    def __init__(self):
+        self.memory = {}
+        self.llama  = LlamaCppWrapper()
+        print(f"[Motore] llama.cpp embedded "
+              f"({'attivo' if self.llama.available else 'NON DISPONIBILE — controlla MODEL_PATH'})")
 
+    # ------------------------------------------------------------------
+    # Memory
+    # ------------------------------------------------------------------
     def _get_memory(self, npc_name):
         return self.memory.get(npc_name, [])
 
@@ -497,31 +492,55 @@ class NPCDialogueEngine:
         self.memory[npc_name] = self.memory[npc_name][-10:]
 
     def reset_memory(self, npc_name=None):
-        if npc_name: self.memory.pop(npc_name, None)
-        else:        self.memory = {}
+        if npc_name:
+            self.memory.pop(npc_name, None)
+        else:
+            self.memory = {}
 
+    # ------------------------------------------------------------------
+    # Malakai trigger-word check
+    # ------------------------------------------------------------------
+    MALAKAI_TRIGGERS = [
+        "oracle", "oracolo", "i deserted", "ho disertato",
+        "i am not like them", "non sono come loro",
+        "shame", "vergogna", "justice", "giustizia",
+    ]
+
+    def _check_malakai_unlock(self, text):
+        tl = text.lower()
+        return any(t in tl for t in self.MALAKAI_TRIGGERS)
+
+    # ------------------------------------------------------------------
+    # Main generation
+    # ------------------------------------------------------------------
     def generate_response(self, player_input, npc_name, hostility,
                           friendship=0, language=None, context_vars=None):
+
         detected_lang = language or detect_language(player_input)
         intent        = classify_intent(player_input)
         history       = self._get_memory(npc_name)
 
+        # Special rule: Malakai unlock
+        effective_hostility = hostility
+        if npc_name == "Malakai" and self._check_malakai_unlock(player_input):
+            effective_hostility = min(hostility, 20)   # force open state for this turn
+
         response = self.llama.generate(
-            player_input, npc_name, hostility, friendship,
+            player_input, npc_name, effective_hostility, friendship,
             detected_lang, history
         )
         source = "llama"
 
         if not response:
-            tier     = hostility_tier(hostility, friendship)
+            tier     = hostility_tier(effective_hostility, friendship)
             response = random.choice(FALLBACK.get(tier, FALLBACK["mid"]))
             source   = "fallback"
 
-        if   intent == "minaccia":                          new_h = min(100, hostility + 10)
-        elif intent == "amicizia":                          new_h = max(0,   hostility - 5)
-        elif intent == "saluto" and hostility > 50:         new_h = min(100, hostility + 2)
-        elif intent in ("lore","aiuto") and friendship > 5: new_h = max(0,   hostility - 2)
-        else:                                               new_h = hostility
+        new_h = adjust_hostility(intent, hostility, friendship)
+
+        # Rigon: once triggered by a bad intent, lock permanently
+        if npc_name == "Rigon" and intent in ("violenza", "minaccia", "bugia"):
+            new_h = 100  # permanently locked — no way back
 
         self._add_to_memory(npc_name, player_input, response)
 
@@ -532,4 +551,30 @@ class NPCDialogueEngine:
             "source":            source,
             "intent":            intent,
             "retrieval_score":   0.0,
+            "npc_unlocked":      (npc_name == "Malakai" and effective_hostility != hostility),
         }
+
+
+# ---------------------------------------------------------------------------
+# Quick smoke-test
+# ---------------------------------------------------------------------------
+if __name__ == "__main__":
+    engine = NPCDialogueEngine()
+
+    tests = [
+        ("Levias",    "I have come in peace. I know nothing of this castle.",         70, 0),
+        ("SmirBombo", "Hello, little one. What is this place?",                       30, 20),
+        ("Larry",     "Oh come on, I bet even your skeletons are laughing at me.",    50, 5),
+        ("Malakai",   "I deserted. I am not like them. I feel only shame.",           90, 0),
+        ("Rigon",     "I just want to help — I promise I mean no harm.",              40, 10),
+        ("Orco",      "I surrender!",                                                 80, 0),
+        ("Allemar",   "What can you tell me about the objects in this room?",         60, 15),
+        ("Kalessi",   "I am looking for a way underground. Can you guide me?",        55, 10),
+    ]
+
+    for npc, msg, h, f in tests:
+        result = engine.generate_response(msg, npc, h, f)
+        print(f"\n[{npc}] H={h} F={f} intent={result['intent']}")
+        print(f"  Player : {msg}")
+        print(f"  {npc}  : {result['response']}")
+        print(f"  New H  : {result['new_hostility']} | Source: {result['source']}")

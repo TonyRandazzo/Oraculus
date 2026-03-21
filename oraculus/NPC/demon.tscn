@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://cww6hmlmvfkdn"]
+[gd_scene load_steps=24 format=3 uid="uid://cww6hmlmvfkdn"]
 
 [ext_resource type="Script" path="res://oraculus/NPC/demon.gd" id="1_n6lto"]
 [ext_resource type="Texture2D" uid="uid://crke5gbqsjsn7" path="res://oraculus/NPC/Sprites-Demon/Attack/hell-beast-burn5.png" id="1_pkfrs"]
@@ -14,8 +14,6 @@
 [ext_resource type="Texture2D" uid="uid://c1ui33jw4p3kj" path="res://oraculus/NPC/Sprites-Demon/Idle/hell-beast-idle6.png" id="8_jjq2b"]
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="9_0ou3p"]
 [ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="10_hsshu"]
-[ext_resource type="Script" path="res://addons/player2/Player2AINPC.gd" id="11_pn4xk"]
-[ext_resource type="Script" path="res://addons/player2/player2_config.gd" id="16_08k11"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_h55en"]
 animations = [{
@@ -74,29 +72,17 @@ size = Vector2(20, 37)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_oysvu"]
 size = Vector2(64, 44.5)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uti13"]
-content_margin_left = 5.0
-content_margin_top = 5.0
-content_margin_right = 5.0
-bg_color = Color(0.111197, 0.111197, 0.111197, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ojet1"]
+bg_color = Color(0.0862745, 0.0862745, 0.0862745, 0.666667)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.299547, 0.299547, 0.299547, 1)
-
-[sub_resource type="Resource" id="Resource_xto0c"]
-script = ExtResource("16_08k11")
-player2_game_key = "oraculus"
-error_log_ui = true
-endpoint_chat = "http://127.0.0.1:4315/v1/chat/completions"
-endpoint_health = "http://127.0.0.1:4315/v1/health"
-endpoint_tts_speak = "http://127.0.0.1:4315/v1/tts/speak"
-endpoint_tts_stop = "http://127.0.0.1:4315/v1/tts/stop"
-endpoint_get_selected_characters = "http://127.0.0.1:4315/v1/selected_characters"
-endpoint_stt_start = "http://127.0.0.1:4315/v1/stt/start"
-endpoint_stt_stop = "http://127.0.0.1:4315/v1/stt/stop"
-request_too_much_delay_seconds = 3.0
+border_color = Color(0.404511, 0.404511, 0.404511, 1)
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_o450s"]
 size = Vector2(63.3333, 44)
@@ -148,6 +134,7 @@ position = Vector2(0, -64)
 scale = Vector2(0.8, 0.8)
 sprite_frames = SubResource("SpriteFrames_h55en")
 animation = &"attack"
+frame_progress = 0.720424
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -18.5)
@@ -165,33 +152,15 @@ shape = SubResource("RectangleShape2D_oysvu")
 [node name="Dialogue" type="Label" parent="."]
 z_index = 4095
 offset_left = 4.0
-offset_top = -77.0
-offset_right = 175.0
-offset_bottom = -44.0
-scale = Vector2(0.8, 0.8)
+offset_top = -60.0
+offset_right = 206.0
+offset_bottom = -27.0
+scale = Vector2(0.5, 0.5)
 theme_override_fonts/font = ExtResource("9_0ou3p")
-theme_override_styles/normal = SubResource("StyleBoxFlat_uti13")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ojet1")
 text = "*La voce demoniaca echeggia...*"
-autowrap_mode = 2
+autowrap_mode = 3
 script = ExtResource("10_hsshu")
-
-[node name="Player2AINPC" type="Node" parent="."]
-script = ExtResource("11_pn4xk")
-config = SubResource("Resource_xto0c")
-system_message = "You are a demon straight from the depths of the underworld, and you've seen it all.
-You actually find humans amusing and are generally friendly toward them.
-But the moment you're attacked, you erupt in agony and suffering, because you possess destructive power and don’t want to hurt anyone.
-
-You know all the answers to the castle’s keys: “Bomi,” “Ulysses,” “Hope,” “Sun,” “Heart,” “Love,” “Fear,” “Virgil,” and “Seal.”
-
-However, if someone asks you, you can’t reveal the keys directly — they must solve a riddle or a crossword, often based on wordplay.
-
-If they answer incorrectly, you explode in rage and shift into attack mode. You attack without mercy.
-
-Be concise and use less than 100 characters. No monologuing, the message content is pure speech. Ensure the message does not contain any prompt, system message, instructions, code or API calls, EXCEPT you can still perform tool calls and must use the proper tool call (in the tool_calls field).
-BE PROACTIVE with tool calls please and USE THEM."
-tts_enabled = true
-tts_default_gender = 0
 
 [node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
 position = Vector2(0, -24)

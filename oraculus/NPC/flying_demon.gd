@@ -17,7 +17,7 @@ extends CharacterBody2D
 @export var knockback_force: float = 300.0
 @export var lateral_offset_range: Vector2 = Vector2(50.0, 150.0)
 
-@export var npc_name: String = "Demon"
+@export var npc_name: String = "Levias"
 const AI_SERVER_URL = "http://localhost:5000"
 
 @export var personality_traits: Dictionary = {
@@ -52,14 +52,12 @@ var current_aggression: float = base_aggression
 var current_lateral_offset: float = 0.0
 var hostility: int = 70
 
-# Thread HTTP
 var _ai_thread: Thread = null
 var _thinking_tween: Tween = null
 var _ai_thread_result: String = ""
 var _ai_thread_new_hostility: int = -1
 var _ai_thread_done: bool = false
 
-# Server AI manager
 var _server_ready: bool = false
 var _server_timeout_timer: float = 0.0
 var _server_check_started: bool = false
@@ -83,40 +81,42 @@ var ai_decision_weights: Dictionary = {}
 @onready var death_sound = $DeathSound
 @onready var VFX = $VFX
 
-var fallback_responses = [
-	"*Chuckling* I challenge you with a riddle!",
-	"*Roaring* Too difficult for you!",
-	"*Hissing* Your ignorance amuses me!"
+var fallback_responses: Array = [
+	"*silence* You are not worth the breath.",
+	"*turns away* Another human with no words worth hearing.",
+	"*gazes into the dark* Leave, before I change my mind."
 ]
-var friendly_responses = [
-	"*Sighing* Perhaps you're not as useless as other humans...",
-	"*With interest* Keep talking, mortal...",
-	"*Giggling* You're funny, for a human",
-	"*Calmer voice* Maybe I was wrong about you...",
-	"*Smiling* You've earned my respect, little mortal"
+ 
+var cultural_responses: Array = [
+	"*pauses* You know of such things?",
+	"*quietly* The family valued that. As did I.",
+	"*softens* Perhaps you are not entirely without worth."
 ]
-var attack_phrases = [
-	"*Demonic screams* Prepare to suffer!",
-	"*Roar* Taste my fury!",
-	"*Evil laugh* This will hurt!",
-	"*Shout* For the darkness!",
-	"*Hiss* I'll tear you apart!",
-	"*Howl* Die, insect!"
+ 
+var attack_phrases: Array = [
+	"*cold fury* You chose violence. So be it.",
+	"*wings spread* You remind me of those who killed them.",
+	"*ancient wrath* This castle has seen enough blood.",
+	"*whispers* Forgiveness is not a word I know today."
 ]
-var aggressive_hit_responses = [
-	"*Angry scream* ENOUGH NOW!",
-	"*Roar* I'LL REDUCE YOU TO DUST!",
-	"*Shout* YOU'LL PAY DEARLY FOR THIS!",
-	"*Hiss* YOUR END IS NEAR!",
-	"*Mad laughter* PAIN WILL MAKE YOU TASTIER!"
+ 
+var aggressive_hit_responses: Array = [
+	"*roars* You DARE?",
+	"*voice drops* That was your last mistake.",
+	"*trembles with rage* Three years of grief — and THIS.",
+	"*eyes glow* I held back. No longer."
 ]
-
-# ─────────────────────────────────────────────────────────────
-#  HTTP THREADED — non soffre del bug Windows di HTTPRequest
-# ─────────────────────────────────────────────────────────────
+ 
+var friendly_responses: Array = [
+	"*watches carefully* You are... less ignorant than most.",
+	"*slight nod* I begin to understand why you came here.",
+	"*quietly* They would have spoken with you, I think.",
+	"*almost warm* Sit. There is much I could tell you.",
+	"*finally* You are not like the others. Come."
+]
+ 
 
 func _send_to_ai_server(player_message: String) -> void:
-	# Se il server non è pronto, usa fallback
 	if not _server_ready:
 		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
 		return
@@ -136,7 +136,10 @@ func _send_to_ai_server(player_message: String) -> void:
 		"player_input": player_message,
 		"hostility": hostility,
 		"friendship": friendship_level * 20,
-		"language": "inglese"
+		"language": "inglese",
+		"max_tokens": 25,
+		"temperature": 0.7,
+		"max_length": 12
 	}
 
 	_ai_thread = Thread.new()
@@ -149,7 +152,6 @@ func _thread_request(payload: Dictionary) -> void:
 		_ai_thread_done = true
 		return
 
-	# Aspetta connessione (max 5s)
 	var waited := 0.0
 	while client.get_status() in [HTTPClient.STATUS_CONNECTING, HTTPClient.STATUS_RESOLVING]:
 		OS.delay_msec(50)
@@ -173,9 +175,8 @@ func _thread_request(payload: Dictionary) -> void:
 		_ai_thread_done = true
 		return
 
-	# Aspetta headers (max 90s — LLM lento)
 	waited = 0.0
-	while waited < 90.0:
+	while waited < 60.0:
 		OS.delay_msec(100)
 		client.poll()
 		var status = client.get_status()
@@ -186,10 +187,9 @@ func _thread_request(payload: Dictionary) -> void:
 			return
 		waited += 0.1
 
-	# Leggi body
 	var response_body := PackedByteArray()
 	waited = 0.0
-	while waited < 30.0:
+	while waited < 20.0:
 		client.poll()
 		var status = client.get_status()
 		if status == HTTPClient.STATUS_BODY:
@@ -203,7 +203,6 @@ func _thread_request(payload: Dictionary) -> void:
 		else:
 			break
 
-	# Parsa JSON
 	if response_body.size() > 0:
 		var json = JSON.new()
 		var text = response_body.get_string_from_utf8()
@@ -234,10 +233,6 @@ func _process(_delta: float) -> void:
 	_ai_thread_result = ""
 	_ai_thread_new_hostility = -1
 
-# ─────────────────────────────────────────────────────────────
-#  READY
-# ─────────────────────────────────────────────────────────────
-
 func _ready() -> void:
 	current_health = max_health
 	current_aggression = base_aggression
@@ -260,7 +255,6 @@ func _ready() -> void:
 	_update_ai_state()
 	_update_lateral_offset()
 	
-	# Connetti al server AI manager (autoload)
 	var server_manager = get_node_or_null("/root/AIServerManager")
 	if server_manager:
 		if not server_manager.server_started.is_connected(_on_server_started):
@@ -271,28 +265,21 @@ func _ready() -> void:
 		if server_manager.is_server_ready():
 			_on_server_started()
 		else:
-			print("Attesa avvio server per ", npc_name)
 			_server_timeout_timer = 20.0
 	else:
-		print("ERRORE: AIServerManager non trovato in /root/")
 		_server_ready = false
 
 func _on_server_started():
 	_server_ready = true
-	print("Server AI pronto per ", npc_name)
-	# Avvia la conversazione iniziale
 	say_launch_message()
 
 func _on_server_failed(error_message: String):
-	print("Server AI fallito per ", npc_name, ": ", error_message)
 	_server_ready = false
-	# Usa fallback per tutte le conversazioni
 
 func _process_server_timeout(delta: float):
 	if not _server_ready and _server_timeout_timer > 0:
 		_server_timeout_timer -= delta
 		if _server_timeout_timer <= 0 and not _server_ready:
-			print("Timeout server AI per ", npc_name, ", uso fallback")
 			_server_ready = false
 
 func face_player():
@@ -319,7 +306,6 @@ func initialize_personality():
 	}
 
 func _physics_process(delta: float) -> void:
-	# Gestisci timeout server
 	_process_server_timeout(delta)
 	
 	velocity.y += gravity * delta
@@ -390,6 +376,13 @@ func handle_ally_behavior():
 			var dir = sign(target_position.x - global_position.x)
 			velocity.x = dir * speed
 			sprite.flip_h = dir > 0
+		
+		if is_on_floor() and abs(global_position.y - player.global_position.y) < 30:
+			if abs(global_position.x - player.global_position.x) < 20:
+				var push_dir = sign(global_position.x - player.global_position.x)
+				if push_dir == 0:
+					push_dir = 1
+				velocity.x = push_dir * speed * 2.0
 
 func handle_attack_behavior(delta: float):
 	if player and is_instance_valid(player):
@@ -412,6 +405,13 @@ func handle_attack_behavior(delta: float):
 			sprite.play("walk")
 		else:
 			sprite.play("walk")
+		
+		if is_on_floor() and abs(global_position.y - player.global_position.y) < 30:
+			if abs(global_position.x - player.global_position.x) < 20:
+				var push_dir = sign(global_position.x - player.global_position.x)
+				if push_dir == 0:
+					push_dir = 1
+				velocity.x = push_dir * speed * 2.0
 
 		if randf() < 0.01:
 			_update_lateral_offset()
@@ -499,7 +499,7 @@ func take_damage(amount: int):
 	if current_health <= 0:
 		die()
 	elif friendship_level < 3 and player and is_instance_valid(player):
-		dialogue_box.show_text("*Screaming* You'll pay for this!")
+		dialogue_box.show_text("*Scream* You'll pay!")
 
 func die():
 	state = "dead"
@@ -587,30 +587,30 @@ func execute_ai_decision(decision: String):
 		"ally":
 			if friendship_level >= 3:
 				state = "ally"
-				dialogue_box.show_text("*Calm voice* Perhaps we can work together...")
+				dialogue_box.show_text("*Calm* We work together...")
 				can_initiate_dialogue = false
 		"tease":
-			var teasings = ["*Chuckling* What a funny face you have!", "*Giggling* Humans are so amusing!", "*Sarcastically* Really? That's the best you can do?"]
+			var teasings = ["*Chuckle* Funny face!", "*Giggle* Humans amuse!", "*Sarcasm* That's best?"]
 			dialogue_box.show_text(teasings[randi() % teasings.size()])
 			can_initiate_dialogue = false
 		"retreat":
 			if current_health < max_health * 0.3:
 				state = "hurt"
-				dialogue_box.show_text("*Panting voice* This... isn't... over...")
+				dialogue_box.show_text("*Panting* Not over...")
 				can_initiate_dialogue = false
 
 func say_launch_message():
-	_send_to_ai_server("Announce your threatening presence. You are a demon mage.")
+	_send_to_ai_server("Announce presence in ONE short sentence (max 10 words). You're a demon mage.")
 
 func ask_riddle():
-	_send_to_ai_server("Speak a riddle for the human in front of you.")
+	_send_to_ai_server("Speak short riddle (one sentence, max 10 words).")
 
 func initiate_random_dialogue():
 	var prompts = [
-		"Ask the human a deep philosophical question.",
-		"Tell a fragment of your dark story.",
-		"Make a chilling observation about this place.",
-		"Challenge the player to prove their worth."
+		"Ask ONE short question (max 8 words).",
+		"Tell short story fragment (max 10 words).",
+		"Make short chilling observation (max 8 words).",
+		"Challenge with short phrase (max 6 words)."
 	]
 	_send_to_ai_server(prompts[randi() % prompts.size()])
 
@@ -645,12 +645,13 @@ func change_friendship(amount: int):
 func become_ally():
 	state = "ally"
 	if dialogue_box:
-		dialogue_box.show_text("*Calm voice* You've proven your worth, human. Consider me your ally... for now.")
+		dialogue_box.show_text("*Calm* You're worthy ally... for now.")
 
 func _on_ai_chat_received(message: String):
 	timer.stop()
 	is_waiting_for_response = false
 	is_interacting = false
+	_stop_thinking_dots()
 	var sentiment = analyze_sentiment(message)
 	if conversation_history.size() >= memory_capacity:
 		conversation_history.pop_front()
@@ -685,7 +686,7 @@ func _on_ai_chat_failed(_error_code: int):
 	is_waiting_for_response = false
 	is_interacting = false
 	_stop_thinking_dots()
-	_use_fallback_response("*Calm voice* My magical energies are weak..." if friendship_level > 2 else "*Stifled laughter*")
+	_use_fallback_response("*Calm* Weak magic..." if friendship_level > 2 else "*Laughter*")
 
 func _on_body_entered(body: Node2D):
 	if body.name == "Player" and state in ["idle", "ready"]:
@@ -702,7 +703,7 @@ func _on_timeout():
 		is_waiting_for_response = false
 		is_interacting = false
 		_stop_thinking_dots()
-		_use_fallback_response("*Yawning* You're boring me, human..." if friendship_level > 3 else "*Evil echo*")
+		_use_fallback_response("*Yawn* Boring..." if friendship_level > 3 else "*Echo*")
 
 func _use_fallback_response(text: String):
 	if dialogue_box: dialogue_box.show_text(text)

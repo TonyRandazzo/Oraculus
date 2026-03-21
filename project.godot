@@ -17,8 +17,6 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-Player2ErrorHelper="res://addons/player2/helpers/error_helper.tscn"
-Player2WebHelper="res://addons/player2/helpers/web_helper.gd"
 AIServerManager="*res://AIServerManager.gd"
 
 [display]

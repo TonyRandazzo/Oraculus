@@ -1,28 +1,12 @@
+# Godot editor data
 .godot/editor/
-# Modelli LLM (troppi grandi per Git)
+
+# Models (AI/LLM files - too large for git)
 models/
 
-# Ambiente virtuale Python
-python_venv/
-venv/
-env/
-__pycache__/
-*.pyc
+# Godot build exports
+export/
 
-# File di sistema
+# OS files
 .DS_Store
 Thumbs.db
-
-# File di Godot
-.godot/
-export_presets.cfg
-
-# Backup
-*.backup
-*.tmp
-*.bak
-
-# IDE
-.vscode/
-.idea/
-*.user

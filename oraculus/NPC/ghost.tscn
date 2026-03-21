@@ -78,7 +78,7 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_278uc"]
 size = Vector2(66, 66)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hejxd"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8ekql"]
 content_margin_left = 5.0
 content_margin_top = 5.0
 content_margin_right = 5.0
@@ -155,11 +155,11 @@ shape = SubResource("RectangleShape2D_278uc")
 z_index = 4095
 offset_left = 4.0
 offset_top = -53.0
-offset_right = 175.0
-offset_bottom = -20.0
+offset_right = 123.0
+offset_bottom = -18.0
 scale = Vector2(0.8, 0.8)
 theme_override_fonts/font = ExtResource("14_n8nj7")
-theme_override_styles/normal = SubResource("StyleBoxFlat_hejxd")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8ekql")
 text = "*La voce demoniaca echeggia...*"
 autowrap_mode = 2
 script = ExtResource("15_aix3s")

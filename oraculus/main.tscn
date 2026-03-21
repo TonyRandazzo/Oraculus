@@ -1,4 +1,4 @@
-[gd_scene load_steps=471 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=470 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -231,7 +231,6 @@
 [ext_resource type="PackedScene" uid="uid://varw07yxqmlf" path="res://oraculus/item.tscn" id="228_1xmu5"]
 [ext_resource type="PackedScene" uid="uid://crtr2grxvjgnb" path="res://oraculus/item_2.tscn" id="229_0elpl"]
 [ext_resource type="PackedScene" uid="uid://bwvlw1cwv1dl0" path="res://oraculus/NPC/ogre.tscn" id="230_jkjru"]
-[ext_resource type="PackedScene" uid="uid://djumvnhy4g2hs" path="res://oraculus/door.tscn" id="232_jv66n"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_tlipm"]
 animations = [{
@@ -18525,10 +18524,6 @@ position = Vector2(1958, 17)
 
 [node name="Ogre4" parent="." instance=ExtResource("230_jkjru")]
 position = Vector2(2088, 17)
-
-[node name="Door" parent="." instance=ExtResource("232_jv66n")]
-position = Vector2(75, -94)
-scale = Vector2(1, 1.255)
 
 [connection signal="area_entered" from="PrimaStanza/Area2D" to="PrimaStanza/ParallaxBackground/ParallaxLayer8/Dragon" method="_on_area_2d_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D2" to="Music" method="_on_area_2d_2_area_entered"]

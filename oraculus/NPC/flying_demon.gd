@@ -59,6 +59,11 @@ var _ai_thread_result: String = ""
 var _ai_thread_new_hostility: int = -1
 var _ai_thread_done: bool = false
 
+# Server AI manager
+var _server_ready: bool = false
+var _server_timeout_timer: float = 0.0
+var _server_check_started: bool = false
+
 var conversation_history: Array = []
 var personality_state: Dictionary = {}
 var current_mood: String = "neutral"
@@ -111,6 +116,11 @@ var aggressive_hit_responses = [
 # ─────────────────────────────────────────────────────────────
 
 func _send_to_ai_server(player_message: String) -> void:
+	# Se il server non è pronto, usa fallback
+	if not _server_ready:
+		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
+		return
+	
 	if is_waiting_for_response:
 		return
 	if _ai_thread != null and _ai_thread.is_alive():
@@ -244,13 +254,46 @@ func _ready() -> void:
 	sprite.connect("animation_finished", _on_animation_finished)
 
 	sprite.play("idle")
-	await get_tree().create_timer(1.0).timeout
-	say_launch_message()
 	attack_box.disabled = true
 
 	initialize_personality()
 	_update_ai_state()
 	_update_lateral_offset()
+	
+	# Connetti al server AI manager (autoload)
+	var server_manager = get_node_or_null("/root/AIServerManager")
+	if server_manager:
+		if not server_manager.server_started.is_connected(_on_server_started):
+			server_manager.server_started.connect(_on_server_started)
+		if not server_manager.server_failed.is_connected(_on_server_failed):
+			server_manager.server_failed.connect(_on_server_failed)
+		
+		if server_manager.is_server_ready():
+			_on_server_started()
+		else:
+			print("Attesa avvio server per ", npc_name)
+			_server_timeout_timer = 20.0
+	else:
+		print("ERRORE: AIServerManager non trovato in /root/")
+		_server_ready = false
+
+func _on_server_started():
+	_server_ready = true
+	print("Server AI pronto per ", npc_name)
+	# Avvia la conversazione iniziale
+	say_launch_message()
+
+func _on_server_failed(error_message: String):
+	print("Server AI fallito per ", npc_name, ": ", error_message)
+	_server_ready = false
+	# Usa fallback per tutte le conversazioni
+
+func _process_server_timeout(delta: float):
+	if not _server_ready and _server_timeout_timer > 0:
+		_server_timeout_timer -= delta
+		if _server_timeout_timer <= 0 and not _server_ready:
+			print("Timeout server AI per ", npc_name, ", uso fallback")
+			_server_ready = false
 
 func face_player():
 	if player and is_instance_valid(player):
@@ -276,6 +319,9 @@ func initialize_personality():
 	}
 
 func _physics_process(delta: float) -> void:
+	# Gestisci timeout server
+	_process_server_timeout(delta)
+	
 	velocity.y += gravity * delta
 
 	if player and not is_instance_valid(player):

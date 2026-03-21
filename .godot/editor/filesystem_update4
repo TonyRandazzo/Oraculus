@@ -10,3 +10,9 @@ res://oraculus/NPC/flying_demon.tscn
 res://oraculus/menu.tscn
 res://backup.tscn
 res://oraculus/door.tscn
+res://oraculus/NPC/flying_demon.gd
+res://scripts/ai/AIServer.gd
+res://scripts/ai/LlamaCppWrapper.gd
+res://scripts/ai/NPCDialogueEngine.gd
+res://data/npc_data.json
+res://AIServerManager.gd

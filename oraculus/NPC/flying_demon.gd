@@ -600,7 +600,7 @@ func execute_ai_decision(decision: String):
 				can_initiate_dialogue = false
 
 func say_launch_message():
-	_send_to_ai_server("Announce presence in ONE short sentence (max 10 words). You're a demon mage.")
+	_send_to_ai_server("Announce presence in ONE short sentence (max 10 words). You're Levias, guardian of the castle.")
 
 func ask_riddle():
 	_send_to_ai_server("Speak short riddle (one sentence, max 10 words).")

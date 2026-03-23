@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=4 uid="uid://cvaiohgq560rm"]
+[gd_scene load_steps=24 format=4 uid="uid://cvaiohgq560rm"]
 
 [ext_resource type="Script" path="res://oraculus/hud.gd" id="1_6ijqs"]
 [ext_resource type="Texture2D" uid="uid://bwlb8odq8pf4i" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/HUD/bar_background.png" id="1_qwiu7"]
@@ -17,7 +17,6 @@
 [ext_resource type="Script" path="res://oraculus/item_6.gd" id="9_7h448"]
 [ext_resource type="Script" path="res://oraculus/item_7.gd" id="10_xc2fw"]
 [ext_resource type="Script" path="res://oraculus/item_8.gd" id="11_0n24v"]
-[ext_resource type="Texture2D" uid="uid://ckj30gmrjqssj" path="res://oraculus/HUD/ItemsIcons_24x24.png" id="12_vcm47"]
 
 [sub_resource type="Image" id="Image_cbrk3"]
 data = {
@@ -865,7 +864,7 @@ texture = ExtResource("2_763o3")
 [node name="Buttons" type="Node2D" parent="Inventory"]
 
 [node name="Item1" type="TouchScreenButton" parent="Inventory/Buttons"]
-position = Vector2(437.857, -391.714)
+position = Vector2(457.143, -374.286)
 scale = Vector2(2, 2)
 script = ExtResource("4_ork80")
 
@@ -904,10 +903,9 @@ position = Vector2(402.857, -307.714)
 scale = Vector2(2, 2)
 script = ExtResource("11_0n24v")
 
-[node name="SelectedItem" type="Sprite2D" parent="Inventory/Buttons"]
-position = Vector2(577.143, -305.714)
+[node name="SelectedItem" type="TouchScreenButton" parent="Inventory/Buttons"]
+position = Vector2(544.286, -330)
 scale = Vector2(4, 4)
-texture = ExtResource("12_vcm47")
 
 [node name="ItemName" type="Label" parent="Inventory"]
 z_index = 4096
@@ -1006,4 +1004,5 @@ placeholder_text = "Talk..."
 [connection signal="pressed" from="Inventory/Buttons/Item6" to="." method="_on_item_6_pressed"]
 [connection signal="pressed" from="Inventory/Buttons/Item7" to="." method="_on_item_7_pressed"]
 [connection signal="pressed" from="Inventory/Buttons/Item8" to="." method="_on_item_8_pressed"]
+[connection signal="pressed" from="Inventory/Buttons/SelectedItem" to="." method="_on_selected_item_pressed"]
 [connection signal="pressed" from="Interact/Interact" to="." method="_on_interact_pressed"]

@@ -16,50 +16,174 @@ func _on_interact_pressed() -> void:
 func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("item"):
 		$Inventory.visible = !$Inventory.visible
-		$Inventory/Buttons/SelectedItem.texture = $Inventory/Buttons/Item1.texture_normal
+		$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item1.texture_normal
 		item_name = $Inventory/Buttons/Item1.item_name
 		item_description = $Inventory/Buttons/Item1.item_description
-	if $Inventory/Buttons/SelectedItem.texture != null:
+	if $Inventory/Buttons/SelectedItem.texture_normal != null:
+		$Inventory/ItemName.text = item_name
+		$Inventory/ItemDescription.text = item_description
+	else:
+		item_name = "no item"
+		item_description = "there are no item in your inventory"
 		$Inventory/ItemName.text = item_name
 		$Inventory/ItemDescription.text = item_description
 
 
+
 func _on_item_1_pressed() -> void:
-	$Inventory/Buttons/SelectedItem.texture = $Inventory/Buttons/Item1.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item1.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_pressed = $Inventory/Buttons/Item1.texture_normal
 	item_name = $Inventory/Buttons/Item1.item_name
 	item_description = $Inventory/Buttons/Item1.item_description
 
+
+
 func _on_item_2_pressed() -> void:
-	$Inventory/Buttons/SelectedItem.texture = $Inventory/Buttons/Item2.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item2.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_pressed = $Inventory/Buttons/Item2.texture_normal
 	item_name = $Inventory/Buttons/Item2.item_name
 	item_description = $Inventory/Buttons/Item2.item_description
 
 func _on_item_3_pressed() -> void:
-	$Inventory/Buttons/SelectedItem.texture = $Inventory/Buttons/Item3.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item3.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_pressed = $Inventory/Buttons/Item3.texture_normal
 	item_name = $Inventory/Buttons/Item3.item_name
 	item_description = $Inventory/Buttons/Item3.item_description
 
 func _on_item_4_pressed() -> void:
-	$Inventory/Buttons/SelectedItem.texture = $Inventory/Buttons/Item4.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item4.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_pressed = $Inventory/Buttons/Item4.texture_normal
 	item_name = $Inventory/Buttons/Item4.item_name
 	item_description = $Inventory/Buttons/Item4.item_description
 
 func _on_item_5_pressed() -> void:
-	$Inventory/Buttons/SelectedItem.texture = $Inventory/Buttons/Item5.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item5.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_pressed = $Inventory/Buttons/Item5.texture_normal
 	item_name = $Inventory/Buttons/Item5.item_name
 	item_description = $Inventory/Buttons/Item5.item_description
 
 func _on_item_6_pressed() -> void:
-	$Inventory/Buttons/SelectedItem.texture = $Inventory/Buttons/Item6.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item6.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_pressed = $Inventory/Buttons/Item6.texture_normal
 	item_name = $Inventory/Buttons/Item6.item_name
 	item_description = $Inventory/Buttons/Item6.item_description
 
 func _on_item_7_pressed() -> void:
-	$Inventory/Buttons/SelectedItem.texture = $Inventory/Buttons/Item7.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item7.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_pressed = $Inventory/Buttons/Item7.texture_normal
 	item_name = $Inventory/Buttons/Item7.item_name
 	item_description = $Inventory/Buttons/Item7.item_description
 
 func _on_item_8_pressed() -> void:
-	$Inventory/Buttons/SelectedItem.texture = $Inventory/Buttons/Item8.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item8.texture_normal
+	$Inventory/Buttons/SelectedItem.texture_pressed = $Inventory/Buttons/Item8.texture_normal
 	item_name = $Inventory/Buttons/Item8.item_name
 	item_description = $Inventory/Buttons/Item8.item_description
+
+
+func _on_selected_item_pressed() -> void:
+	if $Inventory/Buttons/Item1.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
+		$"../..".current_health = $"../..".max_health
+		$"../..".update_health()
+		$Inventory/Buttons/SelectedItem.texture_normal = null
+		$Inventory/Buttons/SelectedItem.texture_pressed = null
+		$Inventory/Buttons/Item1.remove_from_group("life potion")
+		$Inventory/Buttons/Item1.texture_normal = null
+		$Inventory/Buttons/Item1.texture_pressed = null
+		$Inventory/Buttons/Item1.item_name = "no item"
+		$Inventory/Buttons/Item1.item_description = "there are no item in your inventory"
+	if $Inventory/Buttons/Item1.is_in_group("defense potion"):
+		$"../..".defense_potion_active = true
+		$"../..".defense_potion_timer.start(15.0)
+		print("Timer exists: ", $"../..".defense_potion_timer != null)
+		$"../../VFX2".play("defense")
+		$Inventory/Buttons/SelectedItem.texture_normal = null
+		$Inventory/Buttons/SelectedItem.texture_pressed = null
+		$Inventory/Buttons/Item1.remove_from_group("defense potion")
+		$Inventory/Buttons/Item1.texture_normal = null
+		$Inventory/Buttons/Item1.texture_pressed = null
+		$Inventory/Buttons/Item1.item_name = "no item"
+		$Inventory/Buttons/Item1.item_description = "there are no item in your inventory"
+
+	if $Inventory/Buttons/Item2.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
+		$"../..".current_health = $"../..".max_health
+		$"../..".update_health()
+		$Inventory/Buttons/SelectedItem.texture_normal = null
+		$Inventory/Buttons/SelectedItem.texture_pressed = null
+		$Inventory/Buttons/Item2.texture_normal = null
+		$Inventory/Buttons/Item2.texture_pressed = null
+		$Inventory/Buttons/Item2.remove_from_group("life potion")
+		$Inventory/Buttons/Item2.item_name = "no item"
+		$Inventory/Buttons/Item2.item_description = "there are no item in your inventory"
+
+
+	if $Inventory/Buttons/Item3.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
+		$"../..".current_health = $"../..".max_health
+		$"../..".update_health()
+		$Inventory/Buttons/SelectedItem.texture_normal = null
+		$Inventory/Buttons/SelectedItem.texture_pressed = null
+		$Inventory/Buttons/Item3.texture_normal = null
+		$Inventory/Buttons/Item3.texture_pressed = null
+		$Inventory/Buttons/Item3.remove_from_group("life potion")
+		$Inventory/Buttons/Item3.item_name = "no item"
+		$Inventory/Buttons/Item3.item_description = "there are no item in your inventory"
+
+
+	if $Inventory/Buttons/Item4.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
+		$"../..".current_health = $"../..".max_health
+		$"../..".update_health()
+		$Inventory/Buttons/SelectedItem.texture_normal = null
+		$Inventory/Buttons/SelectedItem.texture_pressed = null
+		$Inventory/Buttons/Item4.texture_normal = null
+		$Inventory/Buttons/Item4.texture_pressed = null
+		$Inventory/Buttons/Item4.remove_from_group("life potion")
+		$Inventory/Buttons/Item4.item_name = "no item"
+		$Inventory/Buttons/Item4.item_description = "there are no item in your inventory"
+
+
+	if $Inventory/Buttons/Item5.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
+		$"../..".current_health = $"../..".max_health
+		$"../..".update_health()
+		$Inventory/Buttons/SelectedItem.texture_normal = null
+		$Inventory/Buttons/SelectedItem.texture_pressed = null
+		$Inventory/Buttons/Item5.texture_normal = null
+		$Inventory/Buttons/Item5.texture_pressed = null
+		$Inventory/Buttons/Item5.remove_from_group("life potion")
+		$Inventory/Buttons/Item5.item_name = "no item"
+		$Inventory/Buttons/Item5.item_description = "there are no item in your inventory"
+
+
+	if $Inventory/Buttons/Item6.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
+		$"../..".current_health = $"../..".max_health
+		$"../..".update_health()
+		$Inventory/Buttons/SelectedItem.texture_normal = null
+		$Inventory/Buttons/SelectedItem.texture_pressed = null
+		$Inventory/Buttons/Item6.texture_normal = null
+		$Inventory/Buttons/Item6.texture_pressed = null
+		$Inventory/Buttons/Item6.remove_from_group("life potion")
+		$Inventory/Buttons/Item6.item_name = "no item"
+		$Inventory/Buttons/Item6.item_description = "there are no item in your inventory"
+
+
+	if $Inventory/Buttons/Item7.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
+		$"../..".current_health = $"../..".max_health
+		$"../..".update_health()
+		$Inventory/Buttons/SelectedItem.texture_normal = null
+		$Inventory/Buttons/SelectedItem.texture_pressed = null
+		$Inventory/Buttons/Item7.texture_normal = null
+		$Inventory/Buttons/Item7.texture_pressed = null
+		$Inventory/Buttons/Item7.remove_from_group("life potion")
+		$Inventory/Buttons/Item7.item_name = "no item"
+		$Inventory/Buttons/Item7.item_description = "there are no item in your inventory"
+
+
+	if $Inventory/Buttons/Item8.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
+		$"../..".current_health = $"../..".max_health
+		$"../..".update_health()
+		$Inventory/Buttons/SelectedItem.texture_normal = null
+		$Inventory/Buttons/SelectedItem.texture_pressed = null
+		$Inventory/Buttons/Item8.texture_normal = null
+		$Inventory/Buttons/Item8.texture_pressed = null
+		$Inventory/Buttons/Item8.remove_from_group("life potion")
+		$Inventory/Buttons/Item8.item_name = "no item"
+		$Inventory/Buttons/Item8.item_description = "there are no item in your inventory"

@@ -18,6 +18,7 @@ var last_input_time: Dictionary = {"move_left": 0.0, "move_right": 0.0}
 @export var double_tap_time: float = 0.3
 var crouching: bool = false
 var jumps_left: int = 0
+var defense_potion_timer: Timer
 var attacking: bool = false
 var sprite: AnimatedSprite2D
 var was_on_floor: bool = true
@@ -25,6 +26,7 @@ var current_health: int
 var can_take_damage: bool = true
 var invincibility_timer: Timer
 var can_interact: bool = false
+var defense_potion_active: bool
 var current_demon: Node2D = null
 var climbing: bool = false
 var current_stairs: Node = null
@@ -97,6 +99,16 @@ func _ready() -> void:
 	wall_jump_lock_timer.one_shot = true
 	add_child(wall_jump_lock_timer)
 	wall_jump_lock_timer.timeout.connect(_on_wall_jump_lock_timeout)
+
+	defense_potion_timer = Timer.new()
+	defense_potion_timer.one_shot = true
+	add_child(defense_potion_timer)
+	defense_potion_timer.timeout.connect(_on_defense_potion_timeout)
+
+func _on_defense_potion_timeout() -> void:
+	defense_potion_active = false
+	print("ciao")
+	$VFX2.play("default")
 
 func _physics_process(delta: float) -> void:
 	if $CanvasLayer/Options.visible == true:
@@ -206,9 +218,14 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("parry") and not attacking and not sliding and not parrying and not parry_active:
 		parry_active = true
 		parrying = true
-		parry_timer.start(parry_window)
 		sprite.play("parry")
 		velocity.x = 0
+		
+		if not defense_potion_active:
+			parry_timer.start(parry_window)
+		# se defense_potion_active, non avviare il timer — parry_active resta true
+		# fino a fine animazione
+		
 		move_and_slide()
 		return
 
@@ -296,6 +313,8 @@ func _physics_process(delta: float) -> void:
 
 	health_bar.value += 2 * delta
 
+
+
 func _on_wall_jump_lock_timeout() -> void:
 	wall_jumping = false
 
@@ -372,7 +391,7 @@ func _on_animation_finished() -> void:
 		attacking = false
 	if sprite.animation == "parry":
 		parrying = false
-		parry_active = false
+		parry_active = false    # si spegne sempre a fine animazione
 		can_take_damage = true
 
 func _on_hit_box_area_entered(area: Area2D) -> void:
@@ -431,6 +450,8 @@ func _on_invincibility_timeout():
 	sprite.modulate = Color(1, 1, 1, 1)
 
 func _on_parry_timeout() -> void:
+	if defense_potion_active:
+		return
 	parry_active = false
 	if not parrying:
 		sprite.play("idle")

@@ -1,4 +1,4 @@
 extends TouchScreenButton
 
-var item_name = "armor"
-var item_description = "shiny armor that you may use in some specific occasion"
+var item_name = "no item"
+var item_description = "there's no item"

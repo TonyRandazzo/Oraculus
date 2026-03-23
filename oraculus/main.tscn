@@ -1,4 +1,4 @@
-[gd_scene load_steps=450 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=451 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -220,9 +220,10 @@
 [ext_resource type="AudioStream" uid="uid://bm30ft0e4gq" path="res://oraculus/Level/Sounds/Labyrinth Of Lost Dreams MP3.mp3" id="173_nfyyl"]
 [ext_resource type="Texture2D" uid="uid://by5encafep7u4" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Cattivone teschio enigma/Bones_shadow2_3.png" id="192_lcl6s"]
 [ext_resource type="Script" path="res://oraculus/stair.gd" id="223_l5xqp"]
-[ext_resource type="PackedScene" uid="uid://varw07yxqmlf" path="res://oraculus/item.tscn" id="228_1xmu5"]
-[ext_resource type="PackedScene" uid="uid://crtr2grxvjgnb" path="res://oraculus/item_2.tscn" id="229_0elpl"]
-[ext_resource type="PackedScene" uid="uid://cww6hmlmvfkdn" path="res://oraculus/NPC/demon.tscn" id="232_qxc2j"]
+[ext_resource type="PackedScene" uid="uid://bglcquetgjaby" path="res://oraculus/NPC/flying_demon.tscn" id="223_s8sn3"]
+[ext_resource type="PackedScene" uid="uid://bo2fieohoisx" path="res://oraculus/NPC/potion.tscn" id="224_xe1aw"]
+[ext_resource type="PackedScene" uid="uid://cq0x1x5u0yhl5" path="res://oraculus/NPC/defense_oil.tscn" id="225_hxa72"]
+[ext_resource type="PackedScene" uid="uid://crtr2grxvjgnb" path="res://oraculus/scroll.tscn" id="229_0elpl"]
 [ext_resource type="PackedScene" uid="uid://ys1qoe2vjc5g" path="res://oraculus/NPC/skeletons.tscn" id="234_tcwrm"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_tlipm"]
@@ -18372,9 +18373,6 @@ volume_db = -10.0
 
 [node name="stanza 4" type="Node2D" parent="."]
 
-[node name="Item" parent="." instance=ExtResource("228_1xmu5")]
-position = Vector2(741, -152)
-
 [node name="Item2" parent="." instance=ExtResource("229_0elpl")]
 position = Vector2(805, -103)
 
@@ -18384,8 +18382,14 @@ position = Vector2(1696, 1279)
 [node name="skeletons2" parent="." instance=ExtResource("234_tcwrm")]
 position = Vector2(1814, 1262)
 
-[node name="Demon" parent="." instance=ExtResource("232_qxc2j")]
-position = Vector2(-144, 2)
+[node name="FlyingDemon" parent="." instance=ExtResource("223_s8sn3")]
+position = Vector2(-161, -27)
+
+[node name="potion" parent="." instance=ExtResource("224_xe1aw")]
+position = Vector2(739, -149)
+
+[node name="defense_oil" parent="." instance=ExtResource("225_hxa72")]
+position = Vector2(-242, -7)
 
 [connection signal="area_entered" from="PrimaStanza/Area2D" to="PrimaStanza/ParallaxBackground/ParallaxLayer8/Dragon" method="_on_area_2d_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D2" to="Music" method="_on_area_2d_2_area_entered"]

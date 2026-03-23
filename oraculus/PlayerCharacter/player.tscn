@@ -1,4 +1,4 @@
-[gd_scene load_steps=86 format=3 uid="uid://cf67gkg04ayra"]
+[gd_scene load_steps=93 format=3 uid="uid://cf67gkg04ayra"]
 
 [ext_resource type="Texture2D" uid="uid://dqv11xtytfj82" path="res://oraculus/PlayerCharacter/Attack/0.png" id="1_0m1v8"]
 [ext_resource type="Script" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
@@ -74,7 +74,77 @@
 [ext_resource type="Texture2D" uid="uid://c6k2ecfdchowi" path="res://oraculus/VFX/Vanishing/0.png" id="69_hv3xc"]
 [ext_resource type="Texture2D" uid="uid://b88ci5vkqqg8y" path="res://oraculus/VFX/Vanishing/1.png" id="70_r4iyg"]
 [ext_resource type="Texture2D" uid="uid://cv4vy2v6ie3mx" path="res://oraculus/VFX/Vanishing/2.png" id="71_85uej"]
+[ext_resource type="Texture2D" uid="uid://dtx8mle1g5h3q" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame1.png" id="72_elmk5"]
 [ext_resource type="Texture2D" uid="uid://j6mnd52qu5su" path="res://oraculus/VFX/Vanishing/3.png" id="72_gm24a"]
+[ext_resource type="Texture2D" uid="uid://mgytfpeyvnt8" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame2.png" id="73_8cye5"]
+[ext_resource type="Texture2D" uid="uid://brukhr4hd45tc" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame3.png" id="74_sbef0"]
+[ext_resource type="Texture2D" uid="uid://c75j0lar1id7u" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame4.png" id="75_owq46"]
+[ext_resource type="Texture2D" uid="uid://gj64l1cn7qvg" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame5.png" id="76_bxodk"]
+[ext_resource type="Texture2D" uid="uid://lotcvrx5iiaj" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame6.png" id="77_xb5k8"]
+[ext_resource type="Texture2D" uid="uid://db011n1amylyx" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame7.png" id="78_unurj"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_rhs7m"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": null
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("72_elmk5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("73_8cye5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("74_sbef0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("75_owq46")
+}, {
+"duration": 1.0,
+"texture": ExtResource("76_bxodk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("77_xb5k8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("78_unurj")
+}],
+"loop": true,
+"name": &"defense",
+"speed": 30.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": null
+}, {
+"duration": 1.0,
+"texture": ExtResource("69_hv3xc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("70_r4iyg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("69_hv3xc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("71_85uej")
+}, {
+"duration": 1.0,
+"texture": ExtResource("72_gm24a")
+}, {
+"duration": 1.0,
+"texture": null
+}],
+"loop": false,
+"name": &"vanishing",
+"speed": 16.0
+}]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_npq8g"]
 animations = [{
@@ -444,43 +514,20 @@ _data = {
 "hit_flash": SubResource("Animation_3ufcn")
 }
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_rhs7m"]
-animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": null
-}, {
-"duration": 1.0,
-"texture": ExtResource("69_hv3xc")
-}, {
-"duration": 1.0,
-"texture": ExtResource("70_r4iyg")
-}, {
-"duration": 1.0,
-"texture": ExtResource("69_hv3xc")
-}, {
-"duration": 1.0,
-"texture": ExtResource("71_85uej")
-}, {
-"duration": 1.0,
-"texture": ExtResource("72_gm24a")
-}, {
-"duration": 1.0,
-"texture": null
-}],
-"loop": false,
-"name": &"vanishing",
-"speed": 16.0
-}]
-
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_rsi7j")
 jump_force = 300.0
 
+[node name="VFX2" type="AnimatedSprite2D" parent="."]
+modulate = Color(0, 1, 1, 1)
+position = Vector2(2, -1)
+sprite_frames = SubResource("SpriteFrames_rhs7m")
+frame_progress = 0.452319
+
 [node name="Player" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_npq8g")
 animation = &"sprint"
-frame_progress = 0.938394
+frame_progress = 0.367275
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_bl8he")
@@ -537,10 +584,8 @@ bus = &"SFX"
 
 [node name="VFX" type="AnimatedSprite2D" parent="."]
 modulate = Color(0, 1, 1, 1)
-position = Vector2(14, -3)
-scale = Vector2(1.93529, 1.91305)
+position = Vector2(14, -10)
 sprite_frames = SubResource("SpriteFrames_rhs7m")
-animation = &"vanishing"
 
 [connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]
 [connection signal="area_entered" from="AttackBox" to="." method="_on_attack_box_area_entered"]

@@ -28,12 +28,22 @@ func _check_and_setup_python():
 	_python_thread = Thread.new()
 	_python_thread.start(_setup_and_run_server.bind(script_path))
 
+func _kill_existing_server():
+	if OS.get_name() == "Windows":
+		# trova e termina il processo su porta 5000
+		var output = []
+		OS.execute("cmd", ["/c", "for /f \"tokens=5\" %a in ('netstat -aon ^| findstr :5000 ^| findstr LISTENING') do taskkill /F /PID %a"], output, true)
+	else:
+		var output = []
+		OS.execute("bash", ["-c", "fuser -k 5000/tcp"], output, true)
+
 func _setup_and_run_server(script_path: String):
 
 	# Ottieni il percorso assoluto della directory del progetto
 	var project_dir = ProjectSettings.globalize_path("res://")
 	var venv_dir = project_dir + "python_venv"
 
+	_kill_existing_server()
 	# Crea directory nella cartella del progetto
 	var dir = DirAccess.open(project_dir)
 	if not dir.dir_exists("python_venv"):

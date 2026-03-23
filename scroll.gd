@@ -1,7 +1,7 @@
 extends Node2D
 
-var item_name = "armor"
-var item_description = "shiny armor that you may use in some specific occasion"
+var item_name = "Scroll"
+var item_description = "it contains the password for a gate."
 
 
 func _on_area_2d_area_entered(area: Area2D) -> void:

@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://bo2fieohoisx"]
+
+[ext_resource type="Script" path="res://potion.gd" id="1_j0mwb"]
+[ext_resource type="Texture2D" uid="uid://ckr8gyuhh6111" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/potion_1.png" id="2_qv853"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ynyth"]
+
+[node name="potion" type="Node2D"]
+script = ExtResource("1_j0mwb")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-2, -1)
+shape = SubResource("RectangleShape2D_ynyth")
+
+[node name="Sprite2D" type="Sprite2D" parent="Area2D"]
+texture = ExtResource("2_qv853")
+
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]

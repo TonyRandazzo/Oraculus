@@ -92,6 +92,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item1.texture_pressed = null
 		$Inventory/Buttons/Item1.item_name = "no item"
 		$Inventory/Buttons/Item1.item_description = "there are no item in your inventory"
+		return
 	if $Inventory/Buttons/Item1.is_in_group("defense potion"):
 		$"../..".defense_potion_active = true
 		$"../..".defense_potion_timer.start(15.0)
@@ -104,6 +105,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item1.texture_pressed = null
 		$Inventory/Buttons/Item1.item_name = "no item"
 		$Inventory/Buttons/Item1.item_description = "there are no item in your inventory"
+		return
 
 	if $Inventory/Buttons/Item2.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
 		$"../..".current_health = $"../..".max_health
@@ -115,6 +117,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item2.remove_from_group("life potion")
 		$Inventory/Buttons/Item2.item_name = "no item"
 		$Inventory/Buttons/Item2.item_description = "there are no item in your inventory"
+		return
 
 
 	if $Inventory/Buttons/Item3.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -127,6 +130,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item3.remove_from_group("life potion")
 		$Inventory/Buttons/Item3.item_name = "no item"
 		$Inventory/Buttons/Item3.item_description = "there are no item in your inventory"
+		return
 
 
 	if $Inventory/Buttons/Item4.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -139,6 +143,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item4.remove_from_group("life potion")
 		$Inventory/Buttons/Item4.item_name = "no item"
 		$Inventory/Buttons/Item4.item_description = "there are no item in your inventory"
+		return
 
 
 	if $Inventory/Buttons/Item5.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -151,6 +156,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item5.remove_from_group("life potion")
 		$Inventory/Buttons/Item5.item_name = "no item"
 		$Inventory/Buttons/Item5.item_description = "there are no item in your inventory"
+		return
 
 
 	if $Inventory/Buttons/Item6.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -163,6 +169,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item6.remove_from_group("life potion")
 		$Inventory/Buttons/Item6.item_name = "no item"
 		$Inventory/Buttons/Item6.item_description = "there are no item in your inventory"
+		return
 
 
 	if $Inventory/Buttons/Item7.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -175,6 +182,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item7.remove_from_group("life potion")
 		$Inventory/Buttons/Item7.item_name = "no item"
 		$Inventory/Buttons/Item7.item_description = "there are no item in your inventory"
+		return
 
 
 	if $Inventory/Buttons/Item8.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -187,3 +195,4 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item8.remove_from_group("life potion")
 		$Inventory/Buttons/Item8.item_name = "no item"
 		$Inventory/Buttons/Item8.item_description = "there are no item in your inventory"
+		return

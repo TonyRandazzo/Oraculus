@@ -1,4 +1,4 @@
-[gd_scene load_steps=451 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=450 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -222,7 +222,6 @@
 [ext_resource type="Script" path="res://oraculus/stair.gd" id="223_l5xqp"]
 [ext_resource type="PackedScene" uid="uid://bglcquetgjaby" path="res://oraculus/NPC/flying_demon.tscn" id="223_s8sn3"]
 [ext_resource type="PackedScene" uid="uid://bo2fieohoisx" path="res://oraculus/NPC/potion.tscn" id="224_xe1aw"]
-[ext_resource type="PackedScene" uid="uid://cq0x1x5u0yhl5" path="res://oraculus/NPC/defense_oil.tscn" id="225_hxa72"]
 [ext_resource type="PackedScene" uid="uid://crtr2grxvjgnb" path="res://oraculus/scroll.tscn" id="229_0elpl"]
 [ext_resource type="PackedScene" uid="uid://ys1qoe2vjc5g" path="res://oraculus/NPC/skeletons.tscn" id="234_tcwrm"]
 
@@ -481,7 +480,7 @@ corner_radius_top_left = 100
 anti_aliasing_size = 10.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2k2oe"]
-size = Vector2(998.237, 369)
+size = Vector2(1085.44, 999.764)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hrjbn"]
 texture = ExtResource("24_56c8i")
@@ -4542,7 +4541,7 @@ player_path = NodePath("../../Player")
 metadata/_edit_group_ = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SecondaStanza/CameraDistance2"]
-position = Vector2(-41.8751, -71.7849)
+position = Vector2(-75.7959, -364.711)
 shape = SubResource("RectangleShape2D_2k2oe")
 
 [node name="Fogne" type="Node2D" parent="."]
@@ -4739,7 +4738,8 @@ autoplay = "default"
 frame_progress = 0.734436
 
 [node name="CameraDistance" type="Area2D" parent="Fogne"]
-position = Vector2(1905, 1208)
+position = Vector2(1901, 1231)
+scale = Vector2(1, 2.56)
 script = ExtResource("139_2gq08")
 camera_path = NodePath("../../Player/Camera2D")
 player_path = NodePath("../../Player")
@@ -18300,6 +18300,10 @@ autowrap_mode = 2
 position = Vector2(50, -43.5)
 zoom = Vector2(3.5, 3.5)
 
+[node name="Left" type="TouchScreenButton" parent="Player"]
+
+[node name="Right" type="TouchScreenButton" parent="Player"]
+
 [node name="Enemies" type="Node2D" parent="."]
 
 [node name="Studio2" type="TileMapLayer" parent="."]
@@ -18388,8 +18392,17 @@ position = Vector2(-161, -27)
 [node name="potion" parent="." instance=ExtResource("224_xe1aw")]
 position = Vector2(739, -149)
 
-[node name="defense_oil" parent="." instance=ExtResource("225_hxa72")]
-position = Vector2(-242, -7)
+[node name="potion2" parent="." instance=ExtResource("224_xe1aw")]
+position = Vector2(-248, -7)
+
+[node name="potion3" parent="." instance=ExtResource("224_xe1aw")]
+position = Vector2(774, 10)
+
+[node name="potion4" parent="." instance=ExtResource("224_xe1aw")]
+position = Vector2(693, 12)
+
+[node name="potion5" parent="." instance=ExtResource("224_xe1aw")]
+position = Vector2(643, 12)
 
 [connection signal="area_entered" from="PrimaStanza/Area2D" to="PrimaStanza/ParallaxBackground/ParallaxLayer8/Dragon" method="_on_area_2d_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D2" to="Music" method="_on_area_2d_2_area_entered"]

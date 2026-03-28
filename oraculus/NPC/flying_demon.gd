@@ -115,15 +115,27 @@ var friendly_responses: Array = [
 	"*finally* You are not like the others. Come."
 ]
  
-
 func _send_to_ai_server(player_message: String) -> void:
 	if not _server_ready:
 		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
 		return
-	
-	if is_waiting_for_response:
+	if is_waiting_for_response or (_ai_thread != null and _ai_thread.is_alive()):
 		return
-	if _ai_thread != null and _ai_thread.is_alive():
+
+	var server_manager = get_node_or_null("/root/AIServerManager")
+	if not server_manager:
+		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
+		return
+
+	if server_manager.is_using_remote():
+		_do_remote_request(player_message)
+	else:
+		_do_local_request(player_message)
+
+func _do_local_request(player_message: String):
+	var server_manager = get_node_or_null("/root/AIServerManager")  
+	if not server_manager:
+		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
 		return
 
 	is_waiting_for_response = true
@@ -143,73 +155,66 @@ func _send_to_ai_server(player_message: String) -> void:
 	}
 
 	_ai_thread = Thread.new()
-	_ai_thread.start(_thread_request.bind(payload))
+	_ai_thread.start(_thread_request.bind(payload, server_manager)) 
 
-func _thread_request(payload: Dictionary) -> void:
-	var client = HTTPClient.new()
-	var err = client.connect_to_host("localhost", 5000)
-	if err != OK:
+func _do_remote_request(player_message: String):
+	print("Esecuzione richiesta remota")
+	var server_manager = get_node_or_null("/root/AIServerManager")
+	if not server_manager:
+		_use_fallback_response("Connection error...")
+		return
+	
+	is_waiting_for_response = true
+	is_interacting = true
+	_start_thinking_dots()
+	
+	var payload = {
+		"npc_name": npc_name,
+		"player_input": player_message,
+		"hostility": hostility,
+		"friendship": friendship_level * 20,
+		"language": "inglese",
+		"max_tokens": 25,
+		"temperature": 0.7,
+		"max_length": 12
+	}
+	
+	var response = await server_manager.make_request("chat", payload)
+	
+	_stop_thinking_dots()
+	
+	if response == null or response.has("error"):
+		print("Errore richiesta remota: ", response.get("error", "Unknown error") if response else "Null response")
+		_use_fallback_response("The connection falters...")
+		is_waiting_for_response = false
+		is_interacting = false
+		return
+	
+	var ai_response = response.get("response", "")
+	var new_hostility = int(response.get("new_hostility", hostility))
+	
+	if new_hostility >= 0:
+		hostility = new_hostility
+		friendship_level = clamp(5 - int(hostility / 20.0), 0, max_friendship)
+	
+	_on_ai_chat_received(ai_response)
+
+
+func _thread_request(payload: Dictionary, server_manager: Node) -> void:
+	print("[AI Thread] Avvio connessione locale")
+
+	# Nessuna chiamata all'albero della scena — usa solo il ref già ottenuto
+	var response = server_manager.make_request_sync("chat", payload)
+
+	if response.has("error"):
+		print("[AI Thread] ERRORE: ", response["error"])
 		_ai_thread_done = true
 		return
 
-	var waited := 0.0
-	while client.get_status() in [HTTPClient.STATUS_CONNECTING, HTTPClient.STATUS_RESOLVING]:
-		OS.delay_msec(50)
-		client.poll()
-		waited += 0.05
-		if waited > 5.0:
-			_ai_thread_done = true
-			return
-
-	if client.get_status() != HTTPClient.STATUS_CONNECTED:
-		_ai_thread_done = true
-		return
-
-	var body_str = JSON.stringify(payload)
-	var headers = [
-		"Content-Type: application/json",
-		"Content-Length: " + str(body_str.length())
-	]
-	err = client.request(HTTPClient.METHOD_POST, "/chat", headers, body_str)
-	if err != OK:
-		_ai_thread_done = true
-		return
-
-	waited = 0.0
-	while waited < 60.0:
-		OS.delay_msec(100)
-		client.poll()
-		var status = client.get_status()
-		if status == HTTPClient.STATUS_BODY or status == HTTPClient.STATUS_CONNECTED:
-			break
-		elif status == HTTPClient.STATUS_DISCONNECTED:
-			_ai_thread_done = true
-			return
-		waited += 0.1
-
-	var response_body := PackedByteArray()
-	waited = 0.0
-	while waited < 20.0:
-		client.poll()
-		var status = client.get_status()
-		if status == HTTPClient.STATUS_BODY:
-			var chunk = client.read_response_body_chunk()
-			if chunk.size() > 0:
-				response_body.append_array(chunk)
-				waited = 0.0
-			else:
-				OS.delay_msec(50)
-				waited += 0.05
-		else:
-			break
-
-	if response_body.size() > 0:
-		var json = JSON.new()
-		var text = response_body.get_string_from_utf8()
-		if json.parse(text) == OK:
-			var data = json.get_data()
-			_ai_thread_result = data.get("response", "")
-			_ai_thread_new_hostility = int(data.get("new_hostility", hostility))
+	_ai_thread_result = response.get("response", "")
+	_ai_thread_new_hostility = int(response.get("new_hostility", hostility))
+	print("[AI Thread] Response ricevuta: ", _ai_thread_result)
+	print("[AI Thread] New hostility: ", _ai_thread_new_hostility)
 
 	_ai_thread_done = true
 
@@ -582,7 +587,6 @@ func execute_ai_decision(decision: String):
 				can_initiate_dialogue = false
 		"talk":
 			if randf() < 0.7: ask_riddle()
-			else: initiate_random_dialogue()
 			can_initiate_dialogue = false
 		"ally":
 			if friendship_level >= 3:
@@ -604,15 +608,6 @@ func say_launch_message():
 
 func ask_riddle():
 	_send_to_ai_server("Speak short riddle (one sentence, max 10 words).")
-
-func initiate_random_dialogue():
-	var prompts = [
-		"Ask ONE short question (max 8 words).",
-		"Tell short story fragment (max 10 words).",
-		"Make short chilling observation (max 8 words).",
-		"Challenge with short phrase (max 6 words)."
-	]
-	_send_to_ai_server(prompts[randi() % prompts.size()])
 
 func receive_player_answer(answer: String):
 	if state == "attacking": state = "conversing"
@@ -692,8 +687,6 @@ func _on_body_entered(body: Node2D):
 	if body.name == "Player" and state in ["idle", "ready"]:
 		player = body
 		face_player()
-		state = "riddle"
-		ask_riddle()
 	elif body.name == "Player" and state in ["conversing", "waiting"]:
 		player = body
 		face_player()

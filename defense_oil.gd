@@ -1,7 +1,7 @@
 extends Node2D
 
-var item_name = "Potion"
-var item_description = "this potion restore your health"
+var item_name = "Defense Oil"
+var item_description = "this oil gives a boost to your defence"
 
 
 func _on_area_2d_area_entered(area: Area2D) -> void:

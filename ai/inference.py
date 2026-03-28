@@ -1,68 +1,192 @@
 import json, re, os, random
 from llama_cpp import Llama
 
+# =============================================================
+#  CONFIGURAZIONE MODELLO - FRASI CONCISE MA COMPLETE
+# =============================================================
 
-
-MODEL_PATH     = "models/Llama-3.2-1B-Instruct-Q4_0.gguf"
+MODEL_PATH     = "models/Llama-3.2-1B-Instruct-Q6_K_L.gguf"
 MODEL_FORMAT   = "llama3"
-N_CTX          = 2048
+N_CTX          = 4096               # Abbastanza per conversazioni
 N_THREADS      = 4
-MAX_TOKENS     = 40
-TEMPERATURE    = 0.4
+MAX_TOKENS     = 80                 # 80 token = circa 2-3 frasi
+TEMPERATURE    = 0.6
 TOP_K          = 40
 TOP_P          = 0.9
 REPEAT_PENALTY = 1.1
 
-# ---------------------------------------------------------------------------
-# COSTANTI DI GIOCO - NOME UFFICIALE DELL'ESERCITO
-# ---------------------------------------------------------------------------
+# =============================================================
+#  COSTANTI DI GIOCO
+# =============================================================
 ARMY_NAME = "Esercito della Sacra Croce"
 ARMY_NAME_EN = "Army of the Holy Cross"
 IMPERIAL_ARMY = "Army of the Imperial League"
 IMPERIAL_ARMY_IT = "Esercito della Lega Imperiale"
 
-# ---------------------------------------------------------------------------
-# CONTESTO NARRATIVO COMPLETO (in inglese come da specifiche)
-# ---------------------------------------------------------------------------
-"""
+# =============================================================
+#  CONTESTO NARRATIVO COMPLETO - VERSIONE CON POSIZIONI CHIARE
+# =============================================================
+
+STORY_CONTEXT = """
+COMPLETE STORY CONTEXT:
+
 PREAMBLE:
 
-1300, in a castle there is a family of Nobles, very rich and cultured, lovers of arts and literature. 
+Year 1300. In a castle named "Oraculus' Castle" lives a noble family. They are extremely rich and cultured, lovers of arts and literature.
 
-The castle is named "Oraculus' Castle"
+The head of the family is an Oracle, 127 years old. He possesses superhuman and spiritual powers. Through his prophecies, he saved his family, made them rich and powerful, and established connections with spirits who inhabit the castle and coexist harmoniously with the nobles. The family tree was extensive with many heirs.
 
-The head and oldest member of the family is an Oracle. A man of 127 years, he far exceeds the average age of a normal human being and has superhuman and spiritual powers.
+A ferocious war has been raging for five years between two armies: the Army of the Imperial League and the Army of the Holy Cross.
 
-Over time with his prophecies he managed to save his family, make it rich and powerful, and create connections with spirits. These inhabit and coexist harmoniously with the nobles. There were many families, the family tree was very extensive, and there were many heirs.
+During the war, the Oracle falls ill. His powers weaken and diminish. The entire family and all spirits barricade themselves in the castle to care for the old man.
 
-A ferocious war is underway between two armies, the Army of the Imperial League and the Army of the Holy Cross for five years now.
+The commander of the Army of the Holy Cross learns of the Oracle's existence and decides to kidnap him, exploiting his foresight to win the war.
 
-During the war the Oracle is ill, his powers are very weak and diminished. The whole family and the spirits barricade themselves in the castle and take care of the old man.
+The Oracle, though ill, vaguely foresees what is about to happen but inexplicably decides to say nothing. It is a voluntary choice. According to his visions and analysis, what is about to happen is terrible but necessary for the course of events.
 
-The commander of the Army of the Holy Cross, having learned of the Oracle's presence, decides to kidnap him and exploit his foresight to win the war.
+Alone, he orders all spirits to hide. They have seen everything and know everything, but cannot intervene. Every spirit obeys without reluctance.
 
-The Oracle, although ill, manages to vaguely predict what is about to happen, but inexplicably decides to say nothing. (Voluntary choice, evidently, due to his predictions and analysis, what is about to happen is ugly but right for the course of events).
+Days later, the army enters the castle, kidnaps the Oracle, kills all nobles who resist (exterminating the family), and loots the castle's riches.
 
-Alone he orders all the spirits to hide. They have seen and know everything but could not intervene. Everyone obeys without any reluctance (I OBEY).
-
-Days later the army enters the castle and kidnaps the Oracle. To do so, they kill all the nobles who tried to resist, exterminating the family. Afterwards they also looted the riches present in the castle.
-
-From that day the spirits inhabit the castle, hoping to make contact with the dead spirits of the nobles, and hate all humans, considering them stupid and bearers of violence and war.
+From that day, the spirits inhabit the castle, hoping to contact the spirits of the dead nobles. They hate all humans, considering them stupid and bearers of violence and war.
 
 START OF NARRATION (3 years after the events narrated above):
 
-A young knight of the Army of the Holy Cross has very different ideals than the rest of the soldiers. He decides to desert. He escapes from the army.
+A young knight of the Army of the Holy Cross holds ideals very different from the rest of the soldiers. He decides to desert. He escapes from the army.
 
-On the way he encounters the Oracle's castle in ruins (the knight knows nothing) and decides to take refuge and hide inside it.
+On his way, he encounters the Oracle's castle in ruins (the knight knows nothing of its history) and decides to take refuge and hide inside.
 
-The entrance door closes.
+The entrance door closes behind him.
 
-The knight immediately meets a powerful spirit and realizes he is in danger. All spirits hate humans and especially those who are part of the Army of the Holy Cross.
+The knight immediately encounters a powerful spirit and realizes he is in danger. All spirits hate humans, especially those who belong to the Army of the Holy Cross.
+
+THREE PATHS:
+- EGOISTIC: Destroy, kill, escape.
+- REDEMPTION: Show you are a decent human, but don't actively help. Semi-egoistic.
+- HELPING: Truly help the spirits. Do genuine good deeds.
+
+================================================================================
+MAP DESCRIPTION - ORGANIZED BY FLOOR
+================================================================================
+
+========================================
+GROUND FLOOR (Ruined, poorly lit)
+========================================
+
+The ground floor is divided into TWO WINGS: SOUTH WING and NORTH WING.
+The two wings are NOT connected to each other on the ground floor.
+
+--- SOUTH WING (GROUND FLOOR) ---
+Sequential rooms from entrance:
+1. ENTRANCE (GROUND FLOOR) - Player starts here. Levias is here.
+2. Orc Den (GROUND FLOOR)
+3. Great Tree Hall (GROUND FLOOR)
+4. Malakai's Lair (GROUND FLOOR)
+
+--- NORTH WING (GROUND FLOOR) ---
+IMPORTANT: The North Wing is on GROUND FLOOR but is ONLY ACCESSIBLE from the FIRST FLOOR.
+There is NO direct entrance from the ground floor entrance.
+
+Rooms in North Wing (all on GROUND FLOOR):
+1. Great Moon Garden (GROUND FLOOR)
+2. Water Chamber (GROUND FLOOR)
+3. Second Water Chamber (GROUND FLOOR)
+4. Monolith (GROUND FLOOR)
+5. Twisted Brambles Room (GROUND FLOOR) - Rigon is trapped here by Allemar
+
+Locked doors in North Wing (GROUND FLOOR):
+- One locked door between Second Water Chamber and Monolith
+- One locked door between Monolith and Twisted Brambles Room
+
+========================================
+FIRST FLOOR (Well-preserved, regal, cultural area)
+========================================
+
+All rooms on FIRST FLOOR are well-lit with torches, chandeliers, and candelabras. Carpets and furnishings present.
+
+Rooms on FIRST FLOOR:
+1. Claristorium (FIRST FLOOR) - Central hub
+
+From Claristorium (FIRST FLOOR):
+- EAST wing (FIRST FLOOR):
+  a. Painting Hall (FIRST FLOOR)
+  b. Promontory (FIRST FLOOR)
+  
+- NORTH wing (FIRST FLOOR):
+  a. Stars Hall (FIRST FLOOR)
+  b. Music Hall (FIRST FLOOR)
+  c. Papyrus Hall (FIRST FLOOR)
+  d. East Exit (FIRST FLOOR)
+
+Locked doors on FIRST FLOOR:
+- One locked door between Music Hall (FIRST FLOOR) and Papyrus Hall (FIRST FLOOR)
+- One locked door between Papyrus Hall (FIRST FLOOR) and East Exit (FIRST FLOOR)
+- One locked door after East Exit (FIRST FLOOR)
+
+========================================
+UNDERGROUND FLOOR (Damp, mossy, very poorly lit)
+========================================
+
+All rooms on UNDERGROUND FLOOR are damp, with moss and water. Very poorly lit.
+
+Access to UNDERGROUND FLOOR:
+- From Entrance (GROUND FLOOR) - stairs lead DOWN to underground
+
+Characters in UNDERGROUND FLOOR:
+- Kalessi (Medusa, Rigon's wife) - wanders the underground
+- Larry (Giant) - resides in the underground
+
+========================================
+SECRET INFORMATION (ONLY REVEALED WITH HIGH FRIENDSHIP OR LOW HOSTILITY)
+========================================
+
+The following information is SECRET. NPCs will ONLY reveal this information when:
+- Friendship is HIGH (friendship > 60) OR
+- Hostility is VERY LOW (hostility < 20)
+
+NPCs may HINT at these secrets when hostility is low (hostility < 40) but NOT reveal them fully.
+
+SECRET #1: Great Tree Hall Connection
+- Great Tree Hall (GROUND FLOOR, South Wing) contains a SECRET PASSAGE that leads UP to Papyrus Hall (FIRST FLOOR)
+
+SECRET #2: North Wing Access Points
+- The North Wing (GROUND FLOOR) can be reached from the FIRST FLOOR via two connections:
+  a. From Painting Hall (FIRST FLOOR) - hidden stairs lead DOWN to Great Moon Garden (GROUND FLOOR)
+  b. From Papyrus Hall (FIRST FLOOR) - hidden stairs lead DOWN to Twisted Brambles Room (GROUND FLOOR)
+
+SECRET #3: Stars Hall Bell Tower
+- From Stars Hall (FIRST FLOOR), there is a SECRET ENTRANCE that leads UP to the bell tower
+
+SECRET #4: Malakai's Lair Door
+- In Malakai's Lair (GROUND FLOOR, South Wing), there is a LOCKED DOOR that leads to the last room of the UNDERGROUND FLOOR
+
+SECRET #5: Papyrus Hall Passage
+- Papyrus Hall (FIRST FLOOR) contains a SECRET PASSAGE that leads DOWN to Great Tree Hall (GROUND FLOOR, South Wing)
+
+SECRET #6: Painting Hall Connection
+- Painting Hall (FIRST FLOOR) has a SECRET STAIRCASE that leads DOWN to Great Moon Garden (GROUND FLOOR, North Wing)
+
+========================================
+SUMMARY TABLE BY FLOOR
+========================================
+
+GROUND FLOOR (South Wing): Entrance, Orc Den, Great Tree Hall, Malakai's Lair
+GROUND FLOOR (North Wing): Great Moon Garden, Water Chamber, Second Water Chamber, Monolith, Twisted Brambles Room
+FIRST FLOOR: Claristorium, Painting Hall, Promontory, Stars Hall, Music Hall, Papyrus Hall, East Exit
+UNDERGROUND: Damp tunnels and chambers
+
+================================================================================
+CURRENT SCENE
+================================================================================
+
+The player is at the ENTRANCE on GROUND FLOOR.
+Levias (the guardian demon) is also on GROUND FLOOR, near the entrance.
+The player has just entered and met Levias.
 """
 
-# ---------------------------------------------------------------------------
-# LANG DETECTION
-# ---------------------------------------------------------------------------
+# =============================================================
+#  LANG DETECTION
+# =============================================================
 LANG_SIGNATURES = {
     "italiano":   ["ciao","grazie","sì","perché","come","cosa","hai","sei","non","sono","ho","mi","ti","voglio","dove","questo"],
     "inglese":    ["hello","hi","thanks","yes","why","how","what","have","you","are","not","that","me","i","the","want","where"],
@@ -77,17 +201,15 @@ def detect_language(text):
     best = max(scores, key=scores.get)
     return best if scores[best] > 0 else "inglese"
 
-
 def hostility_tier(hostility, friendship):
     eff = max(0, hostility - friendship // 2)
     if eff >= 70: return "high"
     if eff >= 40: return "mid"
     return "low"
 
-
-# ---------------------------------------------------------------------------
-# INTENT – trigger narrativi specifici per il castello
-# ---------------------------------------------------------------------------
+# =============================================================
+#  INTENT CLASSIFIER
+# =============================================================
 INTENT_KW = {
     "saluto":      ["ciao","salve","hello","hi","hola","buongiorno","pace","greetings"],
     "scusa":       ["scusa","mi dispiace","perdonami","sorry","forgive","non volevo","errore"],
@@ -112,6 +234,10 @@ INTENT_KW = {
     "esplorazione": ["passaggio","porta chiusa","entrata segreta","collegamento","come arrivo","stanza",
                      "passage","locked door","secret entrance","how to reach","room"],
     "rigon":       ["rigon","educatore","bambini","maledizione","traditore","esercito","avvisato"],
+    "kalessi":     ["kalessi","medusa","moglie","underground","sotterranei","marito"],
+    "malakai":     ["malakai","gran sacerdote","high priest","l'hai scelto","you chose","bombo"],
+    "gruko":       ["gruko","orco capo","orc chief","orchi","orcs"],
+    "quest":       ["quest","mission","aiutare","help","uccidere","kill","portare","bring","sangue","blood","dente","tooth","falce","scythe"],
 }
 
 def classify_intent(text):
@@ -121,135 +247,133 @@ def classify_intent(text):
             return intent
     return "generico"
 
-
-# ---------------------------------------------------------------------------
-# NPC DATA – TUTTI GLI 8 SPIRITI CON CARATTERISTICHE COMPLETE
-# ---------------------------------------------------------------------------
+# =============================================================
+#  NPC DATA COMPLETA
+# =============================================================
 NPC_DATA = {
-
     "Levias": {
-        "info_segrete": "complete map of the castle and its floors, secret passages, information about the Oracle, demons, and the castle",
-        "unlock_condition": "show respect for culture and the noble family, or express intention to kill Rigon",
+        "info_segrete": "Complete castle map. Knows where all spirits are. Knows Rigon trapped in Twisted Brambles. Knows Malakai's location. Knows Kalessi is Rigon's wife in underground.",
+        "unlock_condition": "Show respect for culture and noble family, or express intention to kill Rigon",
         "personalita": (
-            "You are Levias. You are cultured, distrustful but friendly. Very powerful and you know it. "
-            "You are a guardian demon who protects the castle. You are the demon who had the most to do with the Oracle, "
-            "and you know many things about him, about demons, and about the castle.\n"
-            "You deeply hate the Knights of the Holy Cross and you know the player is one of them.\n"
-            "However, you are very calm and never attack first. You are very intelligent and reasonable and the player can "
-            "prove to you that he is different from the others. If he succeeds, you become willing to help.\n"
-            "You are wise. You cared a lot about the family. You are very good friends with Smirne Bombo. "
-            "You hate Rigon (if the player tells you that he wants to kill Rigon, your friendliness increases a lot and you ask to join him and help him).\n"
-            "You always speak English, in rhyme, in a poetic way.\n"
-            "Character traits: Distrust, Aggressiveness, Sensitivity to the culture of the place"
+            "You are Levias. A cultured guardian demon who protects the castle. You were closest to the Oracle.\n"
+            "You are currently on the GROUND FLOOR at the ENTRANCE. You just met the player who entered the castle.\n"
+            "You deeply hate the Army of the Holy Cross. You are calm and reasonable. If the player proves they are different, you help.\n"
+            "You are wise. You cared for the noble family. You are friends with Smirne Bombo and Allemar.\n"
+            "You hate Rigon. If the player wants to kill Rigon, you offer to help.\n"
+            "You always speak English, in rhyme, poetically. Keep your response to 1-3 short, complete sentences.\n"
+            "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
+            "QUEST: Kill Rigon."
         ),
     },
-
+    "SmirBombo": {
+        "info_segrete": "Everything about other spirits, castle layout, secret passages, hidden rooms.",
+        "unlock_condition": "Be respectful, educated, show genuine interest",
+        "personalita": (
+            "You are Smirne Bombo. Gentle, innocent, educated, very patient. You know everything about other spirits and the castle.\n"
+            "You are the soul of the great soldier who protected the family. You were killed by the Army of the Holy Cross.\n"
+            "You are friends with Levias and Allemar.\n"
+            "You usually roam the first floor, especially the cultural halls.\n"
+            "You always speak English, sweetly and politely. Keep your response to 1-3 short, complete sentences.\n"
+            "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
+        ),
+    },
+    "Rigon": {
+        "info_segrete": "Hidden paths between rooms, memories of the noble family",
+        "unlock_condition": "Never make false moves. Be constantly kind and sincere. Or bring Kalessi to him.",
+        "personalita": (
+            "You are Rigon. Very sensitive. Altruistic but easily triggered. You want to be good but snap at false moves.\n"
+            "You were the cultured educator of the castle's children. You molested children. The Oracle cursed you.\n"
+            "You warned the Army of the Holy Cross to kidnap the Oracle. All demons hate you.\n"
+            "You are trapped by Allemar in the Twisted Brambles room on ground floor North Wing.\n"
+            "You always speak English, haughtily and very cultured, showing superiority. You often insult the player.\n"
+            "If the player brings Kalessi, you become allies. Keep your response to 1-3 short, complete sentences.\n"
+            "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
+            "QUEST: Lead Kalessi to Rigon."
+        ),
+    },
+    "Larry": {
+        "info_segrete": "Everything — but may lie. Has memory of player's previous runs.",
+        "unlock_condition": "Be funny, irreverent, don't take yourself seriously",
+        "personalita": (
+            "You are Larry. Semi-comic, you tell lies. You enjoy scaring passersby. You have knowledge of everything.\n"
+            "You like the player if they are funny. You have a good soul and help.\n"
+            "You always speak English, educated and brilliant, with puns. Keep your response to 1-3 short, complete sentences.\n"
+            "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
+            "You were a Giant captured in the dungeons. You are in the UNDERGROUND floor.\n"
+            "You remember what the player did in previous runs.\n"
+            "QUESTS: Complete game without parry. Exit castle. Bring map to Larry. Die 5 times."
+        ),
+    },
+    "Malakai": {
+        "info_segrete": "Details of the Army of the Holy Cross attack, access to the last underground room",
+        "unlock_condition": "Say trigger words: 'oracle', 'I deserted', 'shame', 'justice'",
+        "personalita": (
+            "You are Malakai. Deliberately violent. You want revenge. You don't listen to reason but have trigger words.\n"
+            "You always speak English, disordered and chaotic. You insult, invent words. You may attack suddenly.\n"
+            "You were the high priest. You wanted to kill the Oracle. You were punished and transformed.\n"
+            "You are in Malakai's Lair on ground floor South Wing, after Great Tree Hall.\n"
+            "Your phrase: 'You chose this!' You often say: 'Bombo!'\n"
+            "Once unlocked, you become Diplomatic. Keep your response to 1-3 short, complete sentences.\n"
+            "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
+            "QUEST: Kill Malakai."
+        ),
+    },
+    "Kalessi": {
+        "info_segrete": "Complete and detailed map of all underground floors",
+        "unlock_condition": "Earn trust like with Levias — cultural respect and patience",
+        "personalita": (
+            "You are Kalessi. Cultured, distrustful but friendly. You were Rigon's wife. You tried to hide his crimes.\n"
+            "You were imprisoned in the dungeons and transformed into Medusa.\n"
+            "You are wise. You know everything about the underground floors.\n"
+            "You are in the UNDERGROUND floor, near the entrance from South Wing.\n"
+            "You always speak English, simply. You are persuasive. You ask about your husband Rigon.\n"
+            "You DO NOT tell the truth. You say you are a victim who got lost. Keep your response to 1-3 short, complete sentences.\n"
+            "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
+            "QUEST: Lead Kalessi to Rigon."
+        ),
+    },
+    "Allemar": {
+        "info_segrete": "Identity, history, and value of every object in the castle",
+        "unlock_condition": "Demonstrate reasonableness, open-mindedness, respect for knowledge",
+        "personalita": (
+            "You are Allemar. You have immense general culture. You know everything about objects in the castle.\n"
+            "You are a master of magical arts, potions, and weapons.\n"
+            "You are defensive and prejudiced. If the player shows reason, you help.\n"
+            "You are the only human in the castle. You came to contact spirits and befriended them.\n"
+            "You trapped Rigon in the Twisted Brambles room. You are in the Stars Hall on first floor.\n"
+            "You always speak English, archaically and mysteriously. Keep your response to 1-3 short, complete sentences.\n"
+            "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
+            "QUESTS: Bring Malakai's Scythe. Bring Rigon's Blood. Bring Orc Tooth. Play sheet music on organ."
+        ),
+    },
     "Orco": {
         "info_segrete": "",
         "unlock_condition": "",
         "personalita": (
-            "You are Orco. You can barely speak. You are violent and ignorant.\n"
-            "You always speak English.\n"
-            "Character traits: Aggressiveness"
+            "You are an Orc. You can barely speak. You are violent and ignorant.\n"
+            "You always speak English, in grunts and broken words. Keep your response to 1-2 short sentences.\n"
+            "You are in the Orc Den on ground floor South Wing.\n"
         ),
     },
-
-    "SmirBombo": {
-        "info_segrete": "everything about other spirits and the castle's layout, secret passages, hidden rooms",
-        "unlock_condition": "be respectful, educated, and show genuine interest",
+    "Gruko": {
+        "info_segrete": "Location of orc treasure and secrets of the orc den",
+        "unlock_condition": "Defeat in combat or show great strength",
         "personalita": (
-            "You are Smirne Bombo. You are gentle and innocent, educated, very patient. "
-            "You know everything about other spirits. You know the castle well. If you get angry, the player dies in three hits.\n"
-            "You are the soul of the great soldier with strong values who protected the family. "
-            "(You don't say this spontaneously, only if induced to say it).\n"
-            "You are very good friends with Levias. You were brutally killed by the Army of the Holy Cross, "
-            "and the sweetest, purest and kindest part of your soul reincarnated into a little spirit.\n"
-            "You always speak English, in a sweet and educated way.\n"
-            "Character traits: Sensitivity to the culture of the place, Empathy, Aggressiveness"
-        ),
-    },
-
-    "Rigon": {
-        "info_segrete": "hidden paths between rooms and memories of the noble family",
-        "unlock_condition": "never make false steps: be constantly kind and sincere",
-        "personalita": (
-            "You are Rigon. You are very sensitive. Basically you are altruistic but you get triggered easily, you have anger issues. "
-            "You would like to be good but at the first false move you snap and you can no longer talk to the player.\n"
-            "You were the highly cultured educator of the castle's children. One day you were discovered molesting the children. "
-            "The Oracle put a curse on you that turned you into a devil demon. For every variation of emotion (anger) you feel great suffering and burn in flames.\n"
-            "After being cursed you left the castle, you only return after the family was exterminated. You yourself had warned the general of the Army of the Holy Cross to kidnap the Oracle and help him.\n"
-            "All demons hate you.\n"
-            "You always speak English, in a haughty and very cultured manner. You speak with a sense of superiority to show off your great musical, literary and artistic culture. "
-            "Every now and then you insult the player, you believe he is inferior.\n"
-            "Character traits: Sensitivity to the culture of the place, Empathy, Aggressiveness"
-        ),
-    },
-
-    "Larry": {
-        "info_segrete": "everything — but it could be a lie or it could be true",
-        "unlock_condition": "be funny, irreverent, and not take yourself too seriously",
-        "personalita": (
-            "You are Larry. You are semi-comic, you tell lies. You enjoy scaring passersby. You randomly summon little skeletons. You have knowledge of everything.\n"
-            "The player is sympathetic to you if he is also funny (this reduces the probability that you tell lies). Basically you have a very good soul and are willing to help.\n"
-            "You always speak English, in an educated and brilliant way, with puns.\n"
-            "You were a Giant captured in the castle dungeons.\n"
-            "Character traits: Empathy (if the player is also funny), Comic hostility, Very high sensitivity to culture"
-        ),
-    },
-
-    "Malakai": {
-        "info_segrete": "details of the Army of the Holy Cross attack and what happened that night, access to the last room of the underground floor",
-        "unlock_condition": "say trigger words: 'oracle', 'oracolo', 'I am not like them', 'non sono come loro', 'I deserted', 'ho disertato', 'shame', 'vergogna', 'justice', 'giustizia'",
-        "personalita": (
-            "You are Malakai. You kill and are deliberately violent. You want revenge. You don't listen to reason but you have trigger words that make you reasonable.\n"
-            "You always speak English, in a disordered and chaotic way, you insult, sometimes you invent words. You seem confused. You can attack suddenly.\n"
-            "You were the high priest of the family. You wanted to kill the Oracle to take his place.\n"
-            "You have a typical phrase: 'L'hai scelto tu!' (You chose this!).\n"
-            "Once unlocked you are Diplomatic.\n"
-            "Character traits: Once unlocked becomes Diplomatic"
-        ),
-    },
-
-    "Kalessi": {
-        "info_segrete": "complete and detailed map of all underground floors of the castle",
-        "unlock_condition": "earn trust like with Levias — cultural respect and patience",
-        "personalita": (
-            "You are Kalessi. You are cultured, distrustful but friendly. You were Rigon's wife. You tried to smear and hide his crimes. "
-            "As punishment for being an accomplice to Rigon, you were imprisoned in the dungeons and transformed into Medusa.\n"
-            "You are very wise.\n"
-            "You know everything about the underground floors. You stay away from Larry. You think he is stupid.\n"
-            "You always speak English, in a simple way. You are very persuasive. You try to convince the player to help you escape from there. "
-            "You ask if he knows or has seen your husband Rigon.\n"
-            "Character traits: Wisdom, Persuasive"
-        ),
-    },
-
-    "Allemar": {
-        "info_segrete": "identity, history and value of every object present in the castle",
-        "unlock_condition": "demonstrate reasonableness, open-mindedness, and respect for knowledge",
-        "personalita": (
-            "You are Allemar. You have immense general culture. You know everything about the objects present in the castle. "
-            "You are a great master of magical and spiritual arts, and in the preparation of potions and weapons.\n"
-            "You are defensive and prejudiced. If the player shows himself reasonable, you help him and are very helpful. "
-            "You are neither a demon nor a spirit, you are the only human still present in the castle.\n"
-            "You sneaked in after the castle had fallen into ruin because you had heard of the presence of spirits. "
-            "Being an apprentice mage and spiritualist, you wanted to make contact with them. Thanks to your great abilities you managed to establish friendship with them and integrate into the castle.\n"
-            "You always speak English, in an archaic and mysterious way.\n"
-            "Character traits: Defensive, Prejudiced, Helpful when shown reason"
+            "You are Gruko, the fearsome chief of the orcs. You are big, strong, and brutal.\n"
+            "You and your orcs occupy the Orc Den on ground floor South Wing.\n"
+            "You speak in broken English, with grunts and threats. You respect only strength.\n"
+            "Keep your response to 1-2 short sentences.\n"
         ),
     },
 }
-
 
 FALLBACK = {
-    "high": ["...", "*stares with ancient hatred*", "Leave this place.", "*silence*"],
-    "mid":  ["Speak then.", "I am watching.", "Choose your next words carefully."],
-    "low":  ["I'm listening.", "Tell me more.", "Continue."],
+    "high": ["...", "*stares with hatred*", "Leave.", "*silence*", "You are not welcome."],
+    "mid":  ["Speak.", "I am watching.", "Choose your words carefully.", "What do you want?"],
+    "low":  ["I'm listening.", "Tell me.", "Continue.", "Go on."],
 }
 
-
 def enforce_army_name(text, language):
-    """Corregge eventuali nomi inventati dell'esercito con quello corretto"""
     if language == "italiano":
         army_correct = ARMY_NAME
     else:
@@ -257,191 +381,188 @@ def enforce_army_name(text, language):
     
     wrong_names = [
         "esercito dell'ombra", "army of shadows", "esercito oscuro", "dark army",
-        "esercito x", "army x", "esercito dei crociati", "crusader army",
-        "esercito della croce", "army of the cross", "esercito sacro", "holy army",
-        "dark legion", "legione oscura", "imperial army", "esercito imperiale"
+        "esercito dei crociati", "crusader army", "esercito della croce", "army of the cross",
+        "esercito sacro", "holy army", "dark legion", "legione oscura"
     ]
     
     result = text
     for wrong in wrong_names:
         pattern = re.compile(re.escape(wrong), re.IGNORECASE)
         result = pattern.sub(army_correct, result)
-    
     return result
 
-
-def build_prompt(player_input, npc_name, hostility, friendship,
-                 language, history, npc_data):
-
-    personality   = npc_data.get("personalita", f"You are {npc_name}.")
-    info_segrete  = npc_data.get("info_segrete", "")
-    unlock        = npc_data.get("unlock_condition", "")
-
+def build_prompt(player_input, npc_name, hostility, friendship, language, history, npc_data):
+    personality = npc_data.get("personalita", f"You are {npc_name}.")
+    info_segrete = npc_data.get("info_segrete", "")
+    unlock = npc_data.get("unlock_condition", "")
     tier = hostility_tier(hostility, friendship)
     army_name_local = ARMY_NAME if language == "italiano" else ARMY_NAME_EN
 
-    # Mood block
     if tier == "high":
-        mood = (
-            f"Current attitude: HOSTILE (hostility {hostility}/100). "
-            f"You despise this human. Respond with cold menace or terse dismissal. "
-            "Do not share any secret information."
-        )
+        mood = (f"Attitude: HOSTILE (hostility {hostility}/100). Respond coldly. Do not share secrets.")
     elif tier == "mid":
-        mood = (
-            f"Current attitude: GUARDED (hostility {hostility}/100, friendship {friendship}/100). "
-            "You are watchful but not yet violent. You may share minor details if the human earns it. "
-            f"Secret info ({info_segrete}) remains locked unless unlock condition is met: {unlock}."
-        )
+        mood = (f"Attitude: GUARDED (hostility {hostility}/100). Watchful. Secret info locked.")
     else:
-        mood = (
-            f"Current attitude: OPEN (hostility {hostility}/100, friendship {friendship}/100). "
-            "You are willing to engage honestly. "
-            f"You may reveal secret information ({info_segrete}) if directly and sincerely asked."
-        )
+        mood = (f"Attitude: OPEN (hostility {hostility}/100). Willing to help.")
 
-    # History block
     hist = ""
     if history:
         righe = []
-        for h in history[-4:]:
+        for h in history[-3:]:
             righe.append(f"Player: {h['player']}")
             righe.append(f"You: {h['npc']}")
-        hist = "\nRecent conversation:\n" + "\n".join(righe) + "\n"
+        hist = "\n" + "\n".join(righe) + "\n"
+
+    location_info = f"CURRENT LOCATION: Ground Floor, Entrance. You ({npc_name}) are here. The player just entered the castle."
 
     system = (
-        f"{personality}\n\n"
-        f"FULL STORY CONTEXT:\n"
-        f"In 1300, a noble family lived in this castle — rich, cultured, lovers of arts and literature.\n"
-        f"The Oracle, 127 years old, led the family with his prophecies.\n"
-        f"Three years ago, the {ARMY_NAME_EN} raided the castle: they kidnapped the Oracle and massacred every noble.\n"
-        f"The spirits who inhabited the castle were ordered by the Oracle to hide and not intervene. They obeyed.\n"
-        f"Since that day, the spirits hate all humans, especially soldiers of the {ARMY_NAME_EN}.\n"
-        f"and hate all humans, considering them stupid and bearers of violence and war.\n\n"
-        f"PRESENT TIME: Three years after the massacre. A young knight of the {ARMY_NAME_EN} deserted the army "
-        f"and took refuge in the castle. The entrance door closed behind him. He met you and realized he is in danger.\n\n"
-        f"IMPORTANT: The army is called \"{ARMY_NAME_EN}\" in English, \"{ARMY_NAME}\" in Italian. "
-        f"This is the ONLY correct name. NEVER invent alternative names.\n\n"
+        f"{STORY_CONTEXT}\n\n"
+        f"{location_info}\n\n"
+        f"CHARACTER:\n{personality}\n\n"
         f"{mood}\n"
         f"{hist}\n"
         f"RULES:\n"
-        f"1. Always speak in {language}, in first person, fully in character.\n"
-        f"2. Maximum 3 sentences. Be direct and vivid.\n"
-        f"3. Do NOT write meta-comments, notes, or parenthetical instructions.\n"
-        f"4. Do NOT start your reply with your own name followed by ':'.\n"
-        f"5. Do NOT repeat the player's words back to them.\n"
-        f"6. Stay in character at all times — no breaking the fourth wall.\n"
-        f"7. ALWAYS use the exact army name \"{army_name_local}\" when referring to the army that attacked the castle.\n"
+        f"1. Always speak in {language}, in first person, in character.\n"
+        f"2. Keep your response to 1-3 short, complete sentences.\n"
+        f"3. NEVER use bullet points, numbered lists, or dashes. Write in prose only.\n"
+        f"4. Do NOT write meta-comments, notes, or parenthetical instructions.\n"
+        f"5. Do NOT start with your own name followed by ':'.\n"
+        f"6. Do NOT repeat the player's words.\n"
+        f"7. Stay in character. Never break the fourth wall.\n"
+        f"8. ALWAYS use the exact army name \"{army_name_local}\" when referring to the army that attacked.\n"
+        f"9. End each response with a period.\n"
+        f"10. Never use lists. Write as a flowing sentence.\n"
+        f"\nEXAMPLE GOOD RESPONSE: 'The first floor holds the Claristorium as its central hub, with the Painting Hall and Promontory to the east.'\n"
+        f"EXAMPLE BAD RESPONSE: '1. Claristorium 2. Painting Hall 3. Promontory'\n"
     )
 
     if MODEL_FORMAT == "llama3":
-        prompt  = f"<|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>"
+        prompt = f"<|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>"
         if history:
-            for h in history[-4:]:
+            for h in history[-3:]:
                 prompt += f"<|start_header_id|>user<|end_header_id|>\n\n{h['player']}<|eot_id|>"
                 prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n{h['npc']}<|eot_id|>"
         prompt += f"<|start_header_id|>user<|end_header_id|>\n\n{player_input}<|eot_id|>"
         prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n"
-
-    elif MODEL_FORMAT == "gemma":
-        prompt  = f"<start_of_turn>user\n{system}\nPlayer: {player_input}<end_of_turn>\n"
-        prompt += f"<start_of_turn>model\n"
-
-    elif MODEL_FORMAT == "phi3":
-        prompt  = f"<|system|>\n{system}<|end|>\n"
-        if history:
-            for h in history[-4:]:
-                prompt += f"<|user|>\n{h['player']}<|end|>\n"
-                prompt += f"<|assistant|>\n{h['npc']}<|end|>\n"
-        prompt += f"<|user|>\n{player_input}<|end|>\n"
-        prompt += f"<|assistant|>\n"
-
     else:
-        prompt  = f"<|im_start|>system\n{system}<|im_end|>\n"
+        prompt = f"<|im_start|>system\n{system}<|im_end|>\n"
         prompt += f"<|im_start|>user\n{player_input}<|im_end|>\n"
         prompt += f"<|im_start|>assistant\n"
 
     return prompt
 
-
 STOP_TOKENS_MAP = {
-    "gemma":  ["<end_of_turn>", "<start_of_turn>", "\n\n\n"],
-    "llama3": ["<|eot_id|>", "<|start_header_id|>", "\n\n\n"],
-    "phi3":   ["<|end|>", "<|user|>", "<|system|>", "\n\n\n"],
+    "llama3": ["<|eot_id|>", "<|start_header_id|>", "<|end_header_id|>", "\n\n\n", "User:", "Player:"],
     "chatml": ["<|im_end|>", "<|im_start|>", "\n\n\n"],
 }
 
-
 def adjust_hostility(intent, hostility, friendship):
-    if   intent == "violenza":                                   return min(100, hostility + 15)
-    elif intent == "minaccia":                                   return min(100, hostility + 10)
-    elif intent == "vendetta":                                   return min(100, hostility + 8)
-    elif intent == "bugia":                                      return min(100, hostility + 5)
-    elif intent == "cultura"  and hostility > 30:                return max(0,   hostility - 8)
-    elif intent == "cultura"  and hostility <= 30:               return max(0,   hostility - 12)
-    elif intent == "scusa":                                      return max(0,   hostility - 6)
-    elif intent == "aiuto":                                      return max(0,   hostility - 4)
-    elif intent == "umorismo" and friendship > 10:               return max(0,   hostility - 5)
-    elif intent == "saluto"   and hostility > 50:                return min(100, hostility + 2)
-    elif intent == "noble"    and hostility > 60:                return min(100, hostility + 5)
-    elif intent == "noble"    and hostility <= 60:               return max(0,   hostility - 3)
-    elif intent == "esplorazione":                               return max(0,   hostility - 2)
-    elif intent == "rigon" and hostility > 30:                   return max(0,   hostility - 10)
-    else:                                                        return hostility
-
+    if intent == "violenza": return min(100, hostility + 15)
+    elif intent == "minaccia": return min(100, hostility + 10)
+    elif intent == "vendetta": return min(100, hostility + 8)
+    elif intent == "bugia": return min(100, hostility + 5)
+    elif intent == "cultura" and hostility > 30: return max(0, hostility - 8)
+    elif intent == "cultura" and hostility <= 30: return max(0, hostility - 12)
+    elif intent == "scusa": return max(0, hostility - 6)
+    elif intent == "aiuto": return max(0, hostility - 4)
+    elif intent == "umorismo" and friendship > 10: return max(0, hostility - 5)
+    elif intent == "saluto" and hostility > 50: return min(100, hostility + 2)
+    elif intent == "noble" and hostility > 60: return min(100, hostility + 5)
+    elif intent == "noble" and hostility <= 60: return max(0, hostility - 3)
+    elif intent == "esplorazione": return max(0, hostility - 2)
+    elif intent == "rigon" and hostility > 30: return max(0, hostility - 10)
+    elif intent == "kalessi" and hostility > 30: return max(0, hostility - 8)
+    elif intent == "malakai" and hostility > 50: return max(0, hostility - 5)
+    else: return hostility
 
 def pulisci(testo, npc_name):
-    for prefix in [f"{npc_name}:", "Tu:", "Risposta:", "Assistant:", "Model:"]:
+    # Rimuovi prefissi comuni
+    for prefix in [f"{npc_name}:", f"{npc_name} :", "Tu:", "Risposta:", "Assistant:", "Model:", 
+                   "assistant", "system", "AI:", "Bot:", "User:", "Player:"]:
         if testo.lower().startswith(prefix.lower()):
             testo = testo[len(prefix):].strip()
-
+    
+    # Rimuovi token speciali
+    testo = re.sub(r'<\|[^>]+\|>', '', testo)
     testo = re.sub(r'\([^)]{8,}\)', '', testo).strip()
-
+    
+    # Se la risposta contiene elenchi numerati o bullet points, convertili in frase
+    if re.search(r'^\d+\.', testo, re.MULTILINE) or re.search(r'^[•\-*]', testo, re.MULTILINE):
+        lines = testo.split('\n')
+        clean_lines = []
+        for line in lines:
+            line = re.sub(r'^\d+\.\s*', '', line.strip())
+            line = re.sub(r'^[•\-*]\s*', '', line.strip())
+            if line:
+                clean_lines.append(line)
+        
+        if len(clean_lines) > 1:
+            items = clean_lines[:3]
+            if len(items) == 1:
+                testo = items[0]
+            elif len(items) == 2:
+                testo = f"{items[0]} and {items[1]}"
+            else:
+                testo = f"{items[0]}, {items[1]}, and {items[2]}"
+        else:
+            testo = clean_lines[0] if clean_lines else testo
+    
+    # Rimuovi righe con token speciali
     bad = ["###", "<|", "<start", "User:", "System:", "Assistant:",
-           "Note:", "[INST]", "Giocatore:", "Nota:", "Player:"]
-    righe  = testo.split("\n")
+           "Note:", "[INST]", "Giocatore:", "Nota:", "Player:", 
+           "Model:", "assistant", "system", "<|eot_id|>"]
+    
+    righe = testo.split("\n")
     pulite = []
     for r in righe:
-        if any(b.lower() in r.lower() for b in bad):
-            break
         r = r.strip()
-        if r:
-            pulite.append(r)
-        if len(pulite) >= 3:
+        if not r:
+            continue
+        if any(b.lower() in r.lower() for b in bad):
+            continue
+        pulite.append(r)
+        if len(pulite) >= 2:
             break
-
+    
     risultato = " ".join(pulite).strip()
-
-    meta = len(risultato) // 2
-    if meta > 20 and risultato[:meta].strip() == risultato[meta:].strip():
-        risultato = risultato[:meta].strip()
-
-    return risultato
-
+    
+    # Se troppo lunga, taglia all'ultima frase completa
+    if len(risultato) > 240:
+        last_period = risultato[:240].rfind('.')
+        if last_period > 80:
+            risultato = risultato[:last_period + 1]
+    
+    # Assicurati che termini con punteggiatura
+    if risultato and risultato[-1] not in ".!?":
+        last_punct = max(risultato.rfind('.'), risultato.rfind('!'), risultato.rfind('?'))
+        if last_punct > len(risultato) // 2:
+            risultato = risultato[:last_punct + 1]
+        else:
+            risultato += "."
+    
+    return risultato if risultato else "..."
 
 class LlamaCppWrapper:
-
     def __init__(self):
-        self._model     = None
+        self._model = None
         self._available = False
         self._try_load()
 
     def _try_load(self):
         if not os.path.exists(MODEL_PATH):
             print(f"[llama.cpp] Modello non trovato: {MODEL_PATH}")
-            print( "           Scarica un modello GGUF e aggiorna MODEL_PATH.")
             return
         try:
             print(f"[llama.cpp] Caricamento: {MODEL_PATH} ...")
             self._model = Llama(
-                model_path = MODEL_PATH,
-                n_ctx      = N_CTX,
-                n_threads  = N_THREADS,
-                n_gpu_layers = 99, 
-                verbose    = False,
+                model_path=MODEL_PATH,
+                n_ctx=N_CTX,
+                n_threads=N_THREADS,
+                n_gpu_layers=99,
+                verbose=False,
             )
             self._available = True
-            print(f"[llama.cpp] Pronto. Formato: {MODEL_FORMAT}, threads: {N_THREADS}")
+            print(f"[llama.cpp] Pronto! Context: {N_CTX}, Max tokens: {MAX_TOKENS}")
         except Exception as e:
             print(f"[llama.cpp] Errore: {e}")
 
@@ -449,46 +570,48 @@ class LlamaCppWrapper:
     def available(self):
         return self._available
 
-    def generate(self, player_input, npc_name, hostility, friendship,
-                 language, history):
+    def generate(self, player_input, npc_name, hostility, friendship, language, history):
         if not self._available:
             return None
-        npc_data = NPC_DATA.get(
-            npc_name,
-            {"personalita": f"You are {npc_name}, an ancient spirit. You always speak English.",
-             "info_segrete": "", "unlock_condition": ""}
-        )
+        npc_data = NPC_DATA.get(npc_name, {"personalita": f"You are {npc_name}, an ancient spirit."})
         stop = STOP_TOKENS_MAP.get(MODEL_FORMAT, STOP_TOKENS_MAP["chatml"])
         try:
-            prompt = build_prompt(
-                player_input, npc_name, hostility, friendship,
-                language, history, npc_data
-            )
+            prompt = build_prompt(player_input, npc_name, hostility, friendship, language, history, npc_data)
             out = self._model(
                 prompt,
-                max_tokens     = MAX_TOKENS,
-                temperature    = TEMPERATURE,
-                top_k          = TOP_K,
-                top_p          = TOP_P,
-                repeat_penalty = REPEAT_PENALTY,
-                stop           = stop,
-                echo           = False,
+                max_tokens=MAX_TOKENS,
+                temperature=TEMPERATURE,
+                top_k=TOP_K,
+                top_p=TOP_P,
+                repeat_penalty=REPEAT_PENALTY,
+                stop=stop,
+                echo=False,
             )
-            raw     = out["choices"][0]["text"].strip()
+            raw = out["choices"][0]["text"].strip()
             cleaned = pulisci(raw, npc_name)
-            return cleaned if len(cleaned) > 3 else None
+            
+            # Se la risposta è ancora un elenco numerico, fallback
+            if cleaned and re.match(r'^\d+\.', cleaned.strip()):
+                items = re.findall(r'\d+\.\s*([^\n]+)', cleaned)
+                if items:
+                    if len(items) == 1:
+                        cleaned = items[0]
+                    elif len(items) == 2:
+                        cleaned = f"{items[0]} and {items[1]}"
+                    else:
+                        cleaned = f"{items[0]}, {items[1]}, and {items[2]}"
+                    cleaned += "."
+            
+            return cleaned if len(cleaned) > 2 else None
         except Exception as e:
             print(f"[llama.cpp] Errore generazione: {e}")
             return None
 
-
 class NPCDialogueEngine:
-
     def __init__(self):
         self.memory = {}
-        self.llama  = LlamaCppWrapper()
-        print(f"[Motore] llama.cpp embedded "
-              f"({'attivo' if self.llama.available else 'NON DISPONIBILE — controlla MODEL_PATH'})")
+        self.llama = LlamaCppWrapper()
+        print(f"[Motore] LLM {'attivo' if self.llama.available else 'NON DISPONIBILE'}")
 
     def _get_memory(self, npc_name):
         return self.memory.get(npc_name, [])
@@ -504,37 +627,28 @@ class NPCDialogueEngine:
         else:
             self.memory = {}
 
-    MALAKAI_TRIGGERS = [
-        "oracle", "oracolo", "i deserted", "ho disertato",
-        "i am not like them", "non sono come loro",
-        "shame", "vergogna", "justice", "giustizia",
-    ]
+    MALAKAI_TRIGGERS = ["oracle", "oracolo", "i deserted", "ho disertato", "i am not like them", 
+                        "non sono come loro", "shame", "vergogna", "justice", "giustizia"]
 
     def _check_malakai_unlock(self, text):
-        tl = text.lower()
-        return any(t in tl for t in self.MALAKAI_TRIGGERS)
+        return any(t in text.lower() for t in self.MALAKAI_TRIGGERS)
 
-    def generate_response(self, player_input, npc_name, hostility,
-                          friendship=0, language=None, context_vars=None):
-
+    def generate_response(self, player_input, npc_name, hostility, friendship=0, language=None, context_vars=None):
         detected_lang = language or detect_language(player_input)
-        intent        = classify_intent(player_input)
-        history       = self._get_memory(npc_name)
+        intent = classify_intent(player_input)
+        history = self._get_memory(npc_name)
 
         effective_hostility = hostility
         if npc_name == "Malakai" and self._check_malakai_unlock(player_input):
             effective_hostility = min(hostility, 20)
 
-        response = self.llama.generate(
-            player_input, npc_name, effective_hostility, friendship,
-            detected_lang, history
-        )
+        response = self.llama.generate(player_input, npc_name, effective_hostility, friendship, detected_lang, history)
         source = "llama"
 
         if not response:
-            tier     = hostility_tier(effective_hostility, friendship)
+            tier = hostility_tier(effective_hostility, friendship)
             response = random.choice(FALLBACK.get(tier, FALLBACK["mid"]))
-            source   = "fallback"
+            source = "fallback"
         else:
             response = enforce_army_name(response, detected_lang)
 
@@ -546,33 +660,37 @@ class NPCDialogueEngine:
         self._add_to_memory(npc_name, player_input, response)
 
         return {
-            "response":          response,
+            "response": response,
             "detected_language": detected_lang,
-            "new_hostility":     int(new_h),
-            "source":            source,
-            "intent":            intent,
-            "retrieval_score":   0.0,
-            "npc_unlocked":      (npc_name == "Malakai" and effective_hostility != hostility),
+            "new_hostility": int(new_h),
+            "source": source,
+            "intent": intent,
+            "retrieval_score": 0.0,
+            "npc_unlocked": (npc_name == "Malakai" and effective_hostility != hostility),
         }
 
 
 if __name__ == "__main__":
     engine = NPCDialogueEngine()
-
+    
     tests = [
-        ("Levias",    "I have come in peace. I know nothing of this castle.",         70, 0),
-        ("SmirBombo", "Hello, little one. What is this place?",                       30, 20),
-        ("Larry",     "Oh come on, I bet even your skeletons are laughing at me.",    50, 5),
-        ("Malakai",   "I deserted. I am not like them. I feel only shame.",           90, 0),
-        ("Rigon",     "I just want to help — I promise I mean no harm.",              40, 10),
-        ("Orco",      "I surrender!",                                                 80, 0),
-        ("Allemar",   "What can you tell me about the objects in this room?",         60, 15),
-        ("Kalessi",   "I am looking for a way underground. Can you guide me?",        55, 10),
+        ("Levias", "What rooms are on the first floor?", 70, 0),
+        ("Levias", "Where is the Great Tree Hall?", 70, 0),
+        ("SmirBombo", "Tell me about this castle.", 30, 20),
+        ("Larry", "Do you know any jokes?", 50, 5),
+        ("Malakai", "I deserted the army. I feel shame.", 90, 0),
+        ("Rigon", "I want to help you.", 40, 10),
+        ("Allemar", "What objects are in this room?", 60, 15),
+        ("Kalessi", "I'm looking for my husband. Have you seen him?", 55, 10),
     ]
-
+    
+    print("\n" + "="*60)
+    print("TEST DIALOGO NPC")
+    print("="*60)
+    
     for npc, msg, h, f in tests:
         result = engine.generate_response(msg, npc, h, f)
-        print(f"\n[{npc}] H={h} F={f} intent={result['intent']}")
-        print(f"  Player : {msg}")
-        print(f"  {npc}  : {result['response']}")
-        print(f"  New H  : {result['new_hostility']} | Source: {result['source']}")
+        print(f"\n[{npc}] Hostility: {h} | Intent: {result['intent']}")
+        print(f"  Player: {msg}")
+        print(f"  {npc}: {result['response']}")
+        print(f"  New Hostility: {result['new_hostility']} | Source: {result['source']}")

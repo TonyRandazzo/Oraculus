@@ -57,6 +57,8 @@ var _thinking_tween: Tween = null
 var _ai_thread_result: String = ""
 var _ai_thread_new_hostility: int = -1
 var _ai_thread_done: bool = false
+var player_input_buffer: String = ""
+
 
 var _server_ready: bool = false
 var _server_timeout_timer: float = 0.0
@@ -115,7 +117,7 @@ var friendly_responses: Array = [
 	"*finally* You are not like the others. Come."
 ]
  
-func _send_to_ai_server(player_message: String) -> void:
+func _send_to_ai_server(player_message: String):
 	if not _server_ready:
 		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
 		return
@@ -151,7 +153,8 @@ func _do_local_request(player_message: String):
 		"language": "inglese",
 		"max_tokens": 25,
 		"temperature": 0.7,
-		"max_length": 12
+		"max_length": 12,
+		"conversation_history": conversation_history
 	}
 
 	_ai_thread = Thread.new()
@@ -176,7 +179,8 @@ func _do_remote_request(player_message: String):
 		"language": "inglese",
 		"max_tokens": 25,
 		"temperature": 0.7,
-		"max_length": 12
+		"max_length": 12,
+		"conversation_history": conversation_history
 	}
 	
 	var response = await server_manager.make_request("chat", payload)
@@ -199,24 +203,45 @@ func _do_remote_request(player_message: String):
 	
 	_on_ai_chat_received(ai_response)
 
-
 func _thread_request(payload: Dictionary, server_manager: Node) -> void:
 	print("[AI Thread] Avvio connessione locale")
-
-	# Nessuna chiamata all'albero della scena — usa solo il ref già ottenuto
 	var response = server_manager.make_request_sync("chat", payload)
-
 	if response.has("error"):
 		print("[AI Thread] ERRORE: ", response["error"])
 		_ai_thread_done = true
 		return
-
 	_ai_thread_result = response.get("response", "")
 	_ai_thread_new_hostility = int(response.get("new_hostility", hostility))
 	print("[AI Thread] Response ricevuta: ", _ai_thread_result)
 	print("[AI Thread] New hostility: ", _ai_thread_new_hostility)
-
 	_ai_thread_done = true
+
+func _on_ai_chat_received(message: String):
+	timer.stop()
+	is_waiting_for_response = false
+	is_interacting = false
+	_stop_thinking_dots()
+	var sentiment = analyze_sentiment(message)
+	if conversation_history.size() >= memory_capacity:
+		conversation_history.pop_front()
+	conversation_history.append({"player": player_input_buffer, "npc": message, "sentiment": sentiment, "time": Time.get_unix_time_from_system()})
+	update_personality_from_response(message, sentiment)
+	if dialogue_box:
+		dialogue_box.show_text(message)
+	match state:
+		"riddle", "waiting": state = "conversing"
+		_: state = "ready"
+
+func receive_player_answer(answer: String):
+	player_input_buffer = answer
+	if state == "attacking": state = "conversing"
+	if state != "waiting" and state != "conversing" and state != "ready": return
+	if is_waiting_for_response: return
+	face_player()
+	state = "waiting"
+	analyze_answer_for_friendship(answer)
+	_send_to_ai_server(answer)
+
 
 func _process(_delta: float) -> void:
 	if not _ai_thread_done or _ai_thread == null:
@@ -609,14 +634,6 @@ func say_launch_message():
 func ask_riddle():
 	_send_to_ai_server("Speak short riddle (one sentence, max 10 words).")
 
-func receive_player_answer(answer: String):
-	if state == "attacking": state = "conversing"
-	if state != "waiting" and state != "conversing" and state != "ready": return
-	if is_waiting_for_response: return
-	face_player()
-	state = "waiting"
-	analyze_answer_for_friendship(answer)
-	_send_to_ai_server(answer)
 
 func analyze_answer_for_friendship(answer: String):
 	var lower = answer.to_lower()
@@ -642,21 +659,7 @@ func become_ally():
 	if dialogue_box:
 		dialogue_box.show_text("*Calm* You're worthy ally... for now.")
 
-func _on_ai_chat_received(message: String):
-	timer.stop()
-	is_waiting_for_response = false
-	is_interacting = false
-	_stop_thinking_dots()
-	var sentiment = analyze_sentiment(message)
-	if conversation_history.size() >= memory_capacity:
-		conversation_history.pop_front()
-	conversation_history.append({"message": message, "sentiment": sentiment, "time": Time.get_unix_time_from_system()})
-	update_personality_from_response(message, sentiment)
-	if dialogue_box:
-		dialogue_box.show_text(message)
-	match state:
-		"riddle", "waiting": state = "conversing"
-		_: state = "ready"
+
 
 func analyze_sentiment(text: String) -> float:
 	var pos = ["ally", "friend", "wise", "powerful", "respect"]

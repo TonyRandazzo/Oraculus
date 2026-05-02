@@ -203,59 +203,6 @@ func make_request(endpoint: String, data: Dictionary = {}) -> Variant:
 
 	return json.get_data()
 
-func _make_request_web(url: String, json_data: String) -> Variant:
-	var safe_body = json_data \
-		.replace("\\", "\\\\") \
-		.replace("`", "\\`") \
-		.replace("$", "\\$")
-
-	JavaScriptBridge.eval("window._gd_done = false; window._gd_result = null;")
-
-	JavaScriptBridge.eval("""
-		(async () => {
-			try {
-				const r = await fetch('%s', {
-					method: 'POST',
-					headers: {'Content-Type': 'application/json'},
-					body: `%s`
-				});
-				const t = await r.text();
-				window._gd_result = JSON.stringify({ok: r.ok, status: r.status, body: t});
-			} catch(e) {
-				window._gd_result = JSON.stringify({ok: false, status: 0, body: String(e)});
-			}
-			window._gd_done = true;
-		})();
-	""" % [url, safe_body])
-
-	var elapsed = 0.0
-	while elapsed < 90.0:
-		await get_tree().process_frame
-		var done = JavaScriptBridge.eval("window._gd_done ? 1 : 0")  # ritorna int, non bool
-		if done == 1:
-			break
-		elapsed += get_process_delta_time()
-
-	if elapsed >= 90.0:
-		return {"error": "Timeout WebGL fetch (90s)"}
-
-	var raw = str(JavaScriptBridge.eval("window._gd_result"))
-	print("[WebGL] Raw response: ", raw)
-
-	var outer = JSON.new()
-	if outer.parse(raw) != OK:
-		return {"error": "JSON esterno non valido: " + raw}
-	var obj = outer.get_data()
-
-	if not obj.get("ok", false):
-		return {"error": "HTTP " + str(obj.get("status", 0)) + ": " + str(obj.get("body", ""))}
-
-	var inner = JSON.new()
-	if inner.parse(str(obj.get("body", ""))) != OK:
-		return {"error": "JSON risposta AI non valido"}
-
-	return inner.get_data()
-
 func make_request_sync(endpoint: String, data: Dictionary = {}) -> Variant:
 	var url = get_api_url() + "/" + endpoint
 	var headers = ["Content-Type: application/json"]
@@ -347,6 +294,59 @@ func make_request_sync(endpoint: String, data: Dictionary = {}) -> Variant:
 			return {"error": "Errore parsing JSON: " + text}
 	else:
 		return {"error": "Nessuna risposta ricevuta"}
+
+func _make_request_web(url: String, json_data: String) -> Variant:
+	var safe_body = json_data \
+		.replace("\\", "\\\\") \
+		.replace("`", "\\`") \
+		.replace("$", "\\$")
+
+	JavaScriptBridge.eval("window._gd_done = false; window._gd_result = null;")
+
+	JavaScriptBridge.eval("""
+		(async () => {
+			try {
+				const r = await fetch('%s', {
+					method: 'POST',
+					headers: {'Content-Type': 'application/json'},
+					body: `%s`
+				});
+				const t = await r.text();
+				window._gd_result = JSON.stringify({ok: r.ok, status: r.status, body: t});
+			} catch(e) {
+				window._gd_result = JSON.stringify({ok: false, status: 0, body: String(e)});
+			}
+			window._gd_done = true;
+		})();
+	""" % [url, safe_body])
+
+	var elapsed = 0.0
+	while elapsed < 90.0:
+		await get_tree().process_frame
+		var done = JavaScriptBridge.eval("window._gd_done ? 1 : 0")
+		if done == 1:
+			break
+		elapsed += get_process_delta_time()
+
+	if elapsed >= 90.0:
+		return {"error": "Timeout WebGL fetch (90s)"}
+
+	var raw = str(JavaScriptBridge.eval("window._gd_result"))
+	print("[WebGL] Raw response: ", raw)
+
+	var outer = JSON.new()
+	if outer.parse(raw) != OK:
+		return {"error": "JSON esterno non valido: " + raw}
+	var obj = outer.get_data()
+
+	if not obj.get("ok", false):
+		return {"error": "HTTP " + str(obj.get("status", 0)) + ": " + str(obj.get("body", ""))}
+
+	var inner = JSON.new()
+	if inner.parse(str(obj.get("body", ""))) != OK:
+		return {"error": "JSON risposta AI non valido"}
+
+	return inner.get_data()
 
 func stop_server():
 	_server_ready = false

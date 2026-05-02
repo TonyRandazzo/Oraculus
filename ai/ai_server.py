@@ -5,8 +5,6 @@ import traceback
 import os
 from inference import NPCDialogueEngine
 
-
-
 if os.environ.get("RENDER"):
     HOST = "0.0.0.0"
     PORT = int(os.environ.get("PORT", 10000))
@@ -16,19 +14,15 @@ else:
     PORT = 5000
     print("[ENV] Modalità locale")
 
-
-
 print("=" * 60)
 print("  ORACULUS AI — Server REST per Godot")
 print("=" * 60)
 print()
 
-engine = NPCDialogueEngine()   # dataset_path rimosso — non più necessario
+engine = NPCDialogueEngine()
 
 print(f"\n[SERVER] In ascolto su http://{HOST}:{PORT}")
 print("[SERVER] Premi Ctrl+C per fermare.\n")
-
-
 
 class NPCHandler(BaseHTTPRequestHandler):
 
@@ -67,7 +61,7 @@ class NPCHandler(BaseHTTPRequestHandler):
             self.send_json(200, {
                 "status": "ok",
                 "engine": "llama.cpp+fallback",
-                "llama":  engine.llama.available,
+                "llama": engine.llama.available,
             })
 
         elif path == "/npcs":
@@ -90,11 +84,11 @@ class NPCHandler(BaseHTTPRequestHandler):
 
         elif path.startswith("/history/"):
             npc_name = urllib.parse.unquote(path[9:])
-            history  = engine._get_memory(npc_name)
+            history = engine._get_memory(npc_name)
             self.send_json(200, {
                 "npc_name": npc_name,
-                "history":  history,
-                "count":    len(history),
+                "history": history,
+                "count": len(history),
             })
 
         else:
@@ -115,26 +109,28 @@ class NPCHandler(BaseHTTPRequestHandler):
                 self.send_json(400, {"error": "player_input è obbligatorio"})
                 return
 
-            npc_name     = body.get("npc_name",     "Levias")
-            hostility    = int(body.get("hostility",   70))
-            friendship   = int(body.get("friendship",   0))
-            language     = body.get("language",      None)
-            context_vars = body.get("context_vars",  {})
+            npc_name = body.get("npc_name", "Levias")
+            hostility = int(body.get("hostility", 70))
+            friendship = int(body.get("friendship", 0))
+            language = body.get("language", None)
+            context_vars = body.get("context_vars", {})
+            external_history = body.get("conversation_history", None)
 
-            hostility  = max(0, min(100, hostility))
+            hostility = max(0, min(100, hostility))
             friendship = max(0, min(100, friendship))
 
             try:
                 result = engine.generate_response(
-                    player_input = player_input,
-                    npc_name     = npc_name,
-                    hostility    = hostility,
-                    friendship   = friendship,
-                    language     = language,
-                    context_vars = context_vars,
+                    player_input=player_input,
+                    npc_name=npc_name,
+                    hostility=hostility,
+                    friendship=friendship,
+                    language=language,
+                    context_vars=context_vars,
+                    external_history=external_history,
                 )
 
-                result["history"]  = engine._get_memory(npc_name)
+                result["history"] = engine._get_memory(npc_name)
                 result["npc_name"] = npc_name
 
                 self.send_json(200, result)
@@ -150,21 +146,19 @@ class NPCHandler(BaseHTTPRequestHandler):
             self.send_json(200, {"status": "ok", "message": msg})
 
         elif path == "/set_context":
-            npc_name     = body.get("npc_name", "")
+            npc_name = body.get("npc_name", "")
             context_vars = body.get("context_vars", {})
             if not npc_name:
                 self.send_json(400, {"error": "npc_name è obbligatorio"})
                 return
             self.send_json(200, {
-                "status":       "ok",
-                "npc_name":     npc_name,
+                "status": "ok",
+                "npc_name": npc_name,
                 "context_vars": context_vars,
             })
 
         else:
             self.send_json(404, {"error": f"Endpoint non trovato: {path}"})
-
-
 
 if __name__ == "__main__":
     server = HTTPServer((HOST, PORT), NPCHandler)

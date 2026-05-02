@@ -1,31 +1,20 @@
-import json, re, os, random
+import json, re, os, random, pickle
 from llama_cpp import Llama
-
-# =============================================================
-#  CONFIGURAZIONE MODELLO - FRASI CONCISE MA COMPLETE
-# =============================================================
 
 MODEL_PATH     = "models/Llama-3.2-1B-Instruct-Q6_K_L.gguf"
 MODEL_FORMAT   = "llama3"
-N_CTX          = 4096               # Abbastanza per conversazioni
+N_CTX          = 4096
 N_THREADS      = 4
-MAX_TOKENS     = 80                 # 80 token = circa 2-3 frasi
+MAX_TOKENS     = 80
 TEMPERATURE    = 0.6
 TOP_K          = 40
 TOP_P          = 0.9
 REPEAT_PENALTY = 1.1
 
-# =============================================================
-#  COSTANTI DI GIOCO
-# =============================================================
 ARMY_NAME = "Esercito della Sacra Croce"
 ARMY_NAME_EN = "Army of the Holy Cross"
 IMPERIAL_ARMY = "Army of the Imperial League"
 IMPERIAL_ARMY_IT = "Esercito della Lega Imperiale"
-
-# =============================================================
-#  CONTESTO NARRATIVO COMPLETO - VERSIONE CON POSIZIONI CHIARE
-# =============================================================
 
 STORY_CONTEXT = """
 COMPLETE STORY CONTEXT:
@@ -184,9 +173,6 @@ Levias (the guardian demon) is also on GROUND FLOOR, near the entrance.
 The player has just entered and met Levias.
 """
 
-# =============================================================
-#  LANG DETECTION
-# =============================================================
 LANG_SIGNATURES = {
     "italiano":   ["ciao","grazie","sì","perché","come","cosa","hai","sei","non","sono","ho","mi","ti","voglio","dove","questo"],
     "inglese":    ["hello","hi","thanks","yes","why","how","what","have","you","are","not","that","me","i","the","want","where"],
@@ -207,9 +193,6 @@ def hostility_tier(hostility, friendship):
     if eff >= 40: return "mid"
     return "low"
 
-# =============================================================
-#  INTENT CLASSIFIER
-# =============================================================
 INTENT_KW = {
     "saluto":      ["ciao","salve","hello","hi","hola","buongiorno","pace","greetings"],
     "scusa":       ["scusa","mi dispiace","perdonami","sorry","forgive","non volevo","errore"],
@@ -247,9 +230,6 @@ def classify_intent(text):
             return intent
     return "generico"
 
-# =============================================================
-#  NPC DATA COMPLETA
-# =============================================================
 NPC_DATA = {
     "Levias": {
         "info_segrete": "Complete castle map. Knows where all spirits are. Knows Rigon trapped in Twisted Brambles. Knows Malakai's location. Knows Kalessi is Rigon's wife in underground.",
@@ -399,19 +379,19 @@ def build_prompt(player_input, npc_name, hostility, friendship, language, histor
     army_name_local = ARMY_NAME if language == "italiano" else ARMY_NAME_EN
 
     if tier == "high":
-        mood = (f"Attitude: HOSTILE (hostility {hostility}/100). Respond coldly. Do not share secrets.")
+        mood = f"Attitude: HOSTILE (hostility {hostility}/100). Respond coldly. Do not share secrets."
     elif tier == "mid":
-        mood = (f"Attitude: GUARDED (hostility {hostility}/100). Watchful. Secret info locked.")
+        mood = f"Attitude: GUARDED (hostility {hostility}/100). Watchful. Secret info locked."
     else:
-        mood = (f"Attitude: OPEN (hostility {hostility}/100). Willing to help.")
+        mood = f"Attitude: OPEN (hostility {hostility}/100). Willing to help."
 
     hist = ""
     if history:
         righe = []
-        for h in history[-3:]:
+        for h in history[-10:]:
             righe.append(f"Player: {h['player']}")
             righe.append(f"You: {h['npc']}")
-        hist = "\n" + "\n".join(righe) + "\n"
+        hist = "\nPREVIOUS CONVERSATION (remember this):\n" + "\n".join(righe) + "\n"
 
     location_info = f"CURRENT LOCATION: Ground Floor, Entrance. You ({npc_name}) are here. The player just entered the castle."
 
@@ -432,6 +412,7 @@ def build_prompt(player_input, npc_name, hostility, friendship, language, histor
         f"8. ALWAYS use the exact army name \"{army_name_local}\" when referring to the army that attacked.\n"
         f"9. End each response with a period.\n"
         f"10. Never use lists. Write as a flowing sentence.\n"
+        f"11. Reference previous conversations when relevant.\n"
         f"\nEXAMPLE GOOD RESPONSE: 'The first floor holds the Claristorium as its central hub, with the Painting Hall and Promontory to the east.'\n"
         f"EXAMPLE BAD RESPONSE: '1. Claristorium 2. Painting Hall 3. Promontory'\n"
     )
@@ -439,13 +420,17 @@ def build_prompt(player_input, npc_name, hostility, friendship, language, histor
     if MODEL_FORMAT == "llama3":
         prompt = f"<|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>"
         if history:
-            for h in history[-3:]:
+            for h in history[-10:]:
                 prompt += f"<|start_header_id|>user<|end_header_id|>\n\n{h['player']}<|eot_id|>"
                 prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n{h['npc']}<|eot_id|>"
         prompt += f"<|start_header_id|>user<|end_header_id|>\n\n{player_input}<|eot_id|>"
         prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n"
     else:
         prompt = f"<|im_start|>system\n{system}<|im_end|>\n"
+        if history:
+            for h in history[-10:]:
+                prompt += f"<|im_start|>user\n{h['player']}<|im_end|>\n"
+                prompt += f"<|im_start|>assistant\n{h['npc']}<|im_end|>\n"
         prompt += f"<|im_start|>user\n{player_input}<|im_end|>\n"
         prompt += f"<|im_start|>assistant\n"
 
@@ -476,17 +461,14 @@ def adjust_hostility(intent, hostility, friendship):
     else: return hostility
 
 def pulisci(testo, npc_name):
-    # Rimuovi prefissi comuni
     for prefix in [f"{npc_name}:", f"{npc_name} :", "Tu:", "Risposta:", "Assistant:", "Model:", 
                    "assistant", "system", "AI:", "Bot:", "User:", "Player:"]:
         if testo.lower().startswith(prefix.lower()):
             testo = testo[len(prefix):].strip()
     
-    # Rimuovi token speciali
     testo = re.sub(r'<\|[^>]+\|>', '', testo)
     testo = re.sub(r'\([^)]{8,}\)', '', testo).strip()
     
-    # Se la risposta contiene elenchi numerati o bullet points, convertili in frase
     if re.search(r'^\d+\.', testo, re.MULTILINE) or re.search(r'^[•\-*]', testo, re.MULTILINE):
         lines = testo.split('\n')
         clean_lines = []
@@ -507,7 +489,6 @@ def pulisci(testo, npc_name):
         else:
             testo = clean_lines[0] if clean_lines else testo
     
-    # Rimuovi righe con token speciali
     bad = ["###", "<|", "<start", "User:", "System:", "Assistant:",
            "Note:", "[INST]", "Giocatore:", "Nota:", "Player:", 
            "Model:", "assistant", "system", "<|eot_id|>"]
@@ -526,13 +507,11 @@ def pulisci(testo, npc_name):
     
     risultato = " ".join(pulite).strip()
     
-    # Se troppo lunga, taglia all'ultima frase completa
     if len(risultato) > 240:
         last_period = risultato[:240].rfind('.')
         if last_period > 80:
             risultato = risultato[:last_period + 1]
     
-    # Assicurati che termini con punteggiatura
     if risultato and risultato[-1] not in ".!?":
         last_punct = max(risultato.rfind('.'), risultato.rfind('!'), risultato.rfind('?'))
         if last_punct > len(risultato) // 2:
@@ -590,7 +569,6 @@ class LlamaCppWrapper:
             raw = out["choices"][0]["text"].strip()
             cleaned = pulisci(raw, npc_name)
             
-            # Se la risposta è ancora un elenco numerico, fallback
             if cleaned and re.match(r'^\d+\.', cleaned.strip()):
                 items = re.findall(r'\d+\.\s*([^\n]+)', cleaned)
                 if items:
@@ -608,9 +586,11 @@ class LlamaCppWrapper:
             return None
 
 class NPCDialogueEngine:
-    def __init__(self):
+    def __init__(self, memory_file="npc_memory.pkl"):
         self.memory = {}
+        self.memory_file = memory_file
         self.llama = LlamaCppWrapper()
+        self.load_memory()
         print(f"[Motore] LLM {'attivo' if self.llama.available else 'NON DISPONIBILE'}")
 
     def _get_memory(self, npc_name):
@@ -619,13 +599,32 @@ class NPCDialogueEngine:
     def _add_to_memory(self, npc_name, player, npc_resp):
         self.memory.setdefault(npc_name, [])
         self.memory[npc_name].append({"player": player, "npc": npc_resp})
-        self.memory[npc_name] = self.memory[npc_name][-10:]
+        self.memory[npc_name] = self.memory[npc_name][-50:]
+        self.save_memory()
 
     def reset_memory(self, npc_name=None):
         if npc_name:
             self.memory.pop(npc_name, None)
         else:
             self.memory = {}
+        self.save_memory()
+
+    def save_memory(self):
+        try:
+            with open(self.memory_file, "wb") as f:
+                pickle.dump(self.memory, f)
+        except Exception as e:
+            print(f"[Memoria] Errore salvataggio: {e}")
+
+    def load_memory(self):
+        if os.path.exists(self.memory_file):
+            try:
+                with open(self.memory_file, "rb") as f:
+                    self.memory = pickle.load(f)
+                print(f"[Memoria] Caricata da {self.memory_file}")
+            except Exception as e:
+                print(f"[Memoria] Errore caricamento: {e}")
+                self.memory = {}
 
     MALAKAI_TRIGGERS = ["oracle", "oracolo", "i deserted", "ho disertato", "i am not like them", 
                         "non sono come loro", "shame", "vergogna", "justice", "giustizia"]
@@ -633,10 +632,14 @@ class NPCDialogueEngine:
     def _check_malakai_unlock(self, text):
         return any(t in text.lower() for t in self.MALAKAI_TRIGGERS)
 
-    def generate_response(self, player_input, npc_name, hostility, friendship=0, language=None, context_vars=None):
+    def generate_response(self, player_input, npc_name, hostility, friendship=0, language=None, context_vars=None, external_history=None):
         detected_lang = language or detect_language(player_input)
         intent = classify_intent(player_input)
-        history = self._get_memory(npc_name)
+        
+        if external_history is not None:
+            history = external_history
+        else:
+            history = self._get_memory(npc_name)
 
         effective_hostility = hostility
         if npc_name == "Malakai" and self._check_malakai_unlock(player_input):
@@ -657,7 +660,8 @@ class NPCDialogueEngine:
         if npc_name == "Rigon" and intent in ("violenza", "minaccia", "bugia"):
             new_h = 100
 
-        self._add_to_memory(npc_name, player_input, response)
+        if external_history is None:
+            self._add_to_memory(npc_name, player_input, response)
 
         return {
             "response": response,
@@ -668,29 +672,3 @@ class NPCDialogueEngine:
             "retrieval_score": 0.0,
             "npc_unlocked": (npc_name == "Malakai" and effective_hostility != hostility),
         }
-
-
-if __name__ == "__main__":
-    engine = NPCDialogueEngine()
-    
-    tests = [
-        ("Levias", "What rooms are on the first floor?", 70, 0),
-        ("Levias", "Where is the Great Tree Hall?", 70, 0),
-        ("SmirBombo", "Tell me about this castle.", 30, 20),
-        ("Larry", "Do you know any jokes?", 50, 5),
-        ("Malakai", "I deserted the army. I feel shame.", 90, 0),
-        ("Rigon", "I want to help you.", 40, 10),
-        ("Allemar", "What objects are in this room?", 60, 15),
-        ("Kalessi", "I'm looking for my husband. Have you seen him?", 55, 10),
-    ]
-    
-    print("\n" + "="*60)
-    print("TEST DIALOGO NPC")
-    print("="*60)
-    
-    for npc, msg, h, f in tests:
-        result = engine.generate_response(msg, npc, h, f)
-        print(f"\n[{npc}] Hostility: {h} | Intent: {result['intent']}")
-        print(f"  Player: {msg}")
-        print(f"  {npc}: {result['response']}")
-        print(f"  New Hostility: {result['new_hostility']} | Source: {result['source']}")

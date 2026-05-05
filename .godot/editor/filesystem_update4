@@ -8,5 +8,6 @@ res://oraculus/NPC/flying_demon.tscn
 res://oraculus/NPC/defense_oil.tscn
 res://oraculus/menu.tscn
 res://oraculus/cutscene.tscn
-res://oraculus/astri_camera.gd
 res://backup.tscn
+res://oraculus/astri_camera.gd
+res://oraculus/campanile.tscn

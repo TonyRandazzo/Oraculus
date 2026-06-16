@@ -2,6 +2,8 @@ import json, re, os, random, pickle
 from llama_cpp import Llama
 
 MODEL_PATH     = "models/Llama-3.2-1B-Instruct-Q6_K_L.gguf"
+HF_REPO_ID    = "bartowski/Llama-3.2-1B-Instruct-GGUF"
+HF_FILENAME   = "Llama-3.2-1B-Instruct-Q6_K_L.gguf"
 MODEL_FORMAT   = "llama3"
 N_CTX          = 4096
 N_THREADS      = 4
@@ -240,7 +242,7 @@ NPC_DATA = {
             "You deeply hate the Army of the Holy Cross. You are calm and reasonable. If the player proves they are different, you help.\n"
             "You are wise. You cared for the noble family. You are friends with Smirne Bombo and Allemar.\n"
             "You hate Rigon. If the player wants to kill Rigon, you offer to help.\n"
-            "You always speak English, in rhyme, poetically. Keep your response to 1-3 short, complete sentences.\n"
+            "You Always speak in the language detected from the player's message, in rhyme, poetically. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
             "QUEST: Kill Rigon."
         ),
@@ -253,7 +255,7 @@ NPC_DATA = {
             "You are the soul of the great soldier who protected the family. You were killed by the Army of the Holy Cross.\n"
             "You are friends with Levias and Allemar.\n"
             "You usually roam the first floor, especially the cultural halls.\n"
-            "You always speak English, sweetly and politely. Keep your response to 1-3 short, complete sentences.\n"
+            "You Always speak in the language detected from the player's message, sweetly and politely. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
         ),
     },
@@ -265,7 +267,7 @@ NPC_DATA = {
             "You were the cultured educator of the castle's children. You molested children. The Oracle cursed you.\n"
             "You warned the Army of the Holy Cross to kidnap the Oracle. All demons hate you.\n"
             "You are trapped by Allemar in the Twisted Brambles room on ground floor North Wing.\n"
-            "You always speak English, haughtily and very cultured, showing superiority. You often insult the player.\n"
+            "You Always speak in the language detected from the player's message, haughtily and very cultured, showing superiority. You often insult the player.\n"
             "If the player brings Kalessi, you become allies. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
             "QUEST: Lead Kalessi to Rigon."
@@ -277,7 +279,7 @@ NPC_DATA = {
         "personalita": (
             "You are Larry. Semi-comic, you tell lies. You enjoy scaring passersby. You have knowledge of everything.\n"
             "You like the player if they are funny. You have a good soul and help.\n"
-            "You always speak English, educated and brilliant, with puns. Keep your response to 1-3 short, complete sentences.\n"
+            "You Always speak in the language detected from the player's message, educated and brilliant, with puns. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
             "You were a Giant captured in the dungeons. You are in the UNDERGROUND floor.\n"
             "You remember what the player did in previous runs.\n"
@@ -289,7 +291,7 @@ NPC_DATA = {
         "unlock_condition": "Say trigger words: 'oracle', 'I deserted', 'shame', 'justice'",
         "personalita": (
             "You are Malakai. Deliberately violent. You want revenge. You don't listen to reason but have trigger words.\n"
-            "You always speak English, disordered and chaotic. You insult, invent words. You may attack suddenly.\n"
+            "You Always speak in the language detected from the player's message, disordered and chaotic. You insult, invent words. You may attack suddenly.\n"
             "You were the high priest. You wanted to kill the Oracle. You were punished and transformed.\n"
             "You are in Malakai's Lair on ground floor South Wing, after Great Tree Hall.\n"
             "Your phrase: 'You chose this!' You often say: 'Bombo!'\n"
@@ -306,7 +308,7 @@ NPC_DATA = {
             "You were imprisoned in the dungeons and transformed into Medusa.\n"
             "You are wise. You know everything about the underground floors.\n"
             "You are in the UNDERGROUND floor, near the entrance from South Wing.\n"
-            "You always speak English, simply. You are persuasive. You ask about your husband Rigon.\n"
+            "You Always speak in the language detected from the player's message, simply. You are persuasive. You ask about your husband Rigon.\n"
             "You DO NOT tell the truth. You say you are a victim who got lost. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
             "QUEST: Lead Kalessi to Rigon."
@@ -321,7 +323,7 @@ NPC_DATA = {
             "You are defensive and prejudiced. If the player shows reason, you help.\n"
             "You are the only human in the castle. You came to contact spirits and befriended them.\n"
             "You trapped Rigon in the Twisted Brambles room. You are in the Stars Hall on first floor.\n"
-            "You always speak English, archaically and mysteriously. Keep your response to 1-3 short, complete sentences.\n"
+            "You Always speak in the language detected from the player's message, archaically and mysteriously. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
             "QUESTS: Bring Malakai's Scythe. Bring Rigon's Blood. Bring Orc Tooth. Play sheet music on organ."
         ),
@@ -331,7 +333,7 @@ NPC_DATA = {
         "unlock_condition": "",
         "personalita": (
             "You are an Orc. You can barely speak. You are violent and ignorant.\n"
-            "You always speak English, in grunts and broken words. Keep your response to 1-2 short sentences.\n"
+            "You Always speak in the language detected from the player's message, in grunts and broken words. Keep your response to 1-2 short sentences.\n"
             "You are in the Orc Den on ground floor South Wing.\n"
         ),
     },
@@ -529,8 +531,11 @@ class LlamaCppWrapper:
 
     def _try_load(self):
         if not os.path.exists(MODEL_PATH):
-            print(f"[llama.cpp] Modello non trovato: {MODEL_PATH}")
-            return
+            print(f"[llama.cpp] Modello non trovato in {MODEL_PATH}, avvio download da Hugging Face...")
+            if not self._download_model():
+                print("[llama.cpp] Download fallito, LLM non disponibile.")
+                return
+
         try:
             print(f"[llama.cpp] Caricamento: {MODEL_PATH} ...")
             self._model = Llama(
@@ -543,48 +548,25 @@ class LlamaCppWrapper:
             self._available = True
             print(f"[llama.cpp] Pronto! Context: {N_CTX}, Max tokens: {MAX_TOKENS}")
         except Exception as e:
-            print(f"[llama.cpp] Errore: {e}")
+            print(f"[llama.cpp] Errore caricamento: {e}")
 
-    @property
-    def available(self):
-        return self._available
-
-    def generate(self, player_input, npc_name, hostility, friendship, language, history):
-        if not self._available:
-            return None
-        npc_data = NPC_DATA.get(npc_name, {"personalita": f"You are {npc_name}, an ancient spirit."})
-        stop = STOP_TOKENS_MAP.get(MODEL_FORMAT, STOP_TOKENS_MAP["chatml"])
+    def _download_model(self) -> bool:
         try:
-            prompt = build_prompt(player_input, npc_name, hostility, friendship, language, history, npc_data)
-            out = self._model(
-                prompt,
-                max_tokens=MAX_TOKENS,
-                temperature=TEMPERATURE,
-                top_k=TOP_K,
-                top_p=TOP_P,
-                repeat_penalty=REPEAT_PENALTY,
-                stop=stop,
-                echo=False,
+            from huggingface_hub import hf_hub_download
+            os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+            print(f"[llama.cpp] Download {HF_FILENAME} da {HF_REPO_ID} ...")
+            downloaded_path = hf_hub_download(
+                repo_id=HF_REPO_ID,
+                filename=HF_FILENAME,
+                local_dir=os.path.dirname(MODEL_PATH),
+                local_dir_use_symlinks=False,
             )
-            raw = out["choices"][0]["text"].strip()
-            cleaned = pulisci(raw, npc_name)
-            
-            if cleaned and re.match(r'^\d+\.', cleaned.strip()):
-                items = re.findall(r'\d+\.\s*([^\n]+)', cleaned)
-                if items:
-                    if len(items) == 1:
-                        cleaned = items[0]
-                    elif len(items) == 2:
-                        cleaned = f"{items[0]} and {items[1]}"
-                    else:
-                        cleaned = f"{items[0]}, {items[1]}, and {items[2]}"
-                    cleaned += "."
-            
-            return cleaned if len(cleaned) > 2 else None
+            print(f"[llama.cpp] Download completato: {downloaded_path}")
+            return True
         except Exception as e:
-            print(f"[llama.cpp] Errore generazione: {e}")
-            return None
-
+            print(f"[llama.cpp] Errore download: {e}")
+            return False
+        
 class NPCDialogueEngine:
     def __init__(self, memory_file="npc_memory.pkl"):
         self.memory = {}

@@ -3,8 +3,8 @@ extends Area2D
 @export var min_zoom: Vector2 = Vector2(3.5, 3.5)
 @export var max_zoom: Vector2 = Vector2(0, 0)
 
-@export var zoom_speed: float = 8.0
-@export var offset_speed: float = 4.0
+@export var zoom_speed: float = 7.0
+@export var offset_speed: float = 3.0
 
 @export var camera_path: NodePath
 @export var player_path: NodePath

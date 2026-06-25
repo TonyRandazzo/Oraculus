@@ -1,9 +1,8 @@
-import json, re, os, random, pickle
+import json, re, os, random
 from llama_cpp import Llama
+from huggingface_hub import InferenceClient
 
 MODEL_PATH     = "models/Llama-3.2-1B-Instruct-Q6_K_L.gguf"
-HF_REPO_ID    = "bartowski/Llama-3.2-1B-Instruct-GGUF"
-HF_FILENAME   = "Llama-3.2-1B-Instruct-Q6_K_L.gguf"
 MODEL_FORMAT   = "llama3"
 N_CTX          = 4096
 N_THREADS      = 4
@@ -12,6 +11,9 @@ TEMPERATURE    = 0.6
 TOP_K          = 40
 TOP_P          = 0.9
 REPEAT_PENALTY = 1.1
+
+HF_MODEL    = os.environ.get("HF_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
+HF_PROVIDER = os.environ.get("HF_PROVIDER", "auto")
 
 ARMY_NAME = "Esercito della Sacra Croce"
 ARMY_NAME_EN = "Army of the Holy Cross"
@@ -23,156 +25,109 @@ COMPLETE STORY CONTEXT:
 
 PREAMBLE:
 
-Year 1300. In a castle named "Oraculus' Castle" lives a noble family. They are extremely rich and cultured, lovers of arts and literature.
+Year 1300. In a castle named Oraculus' Castle lived a noble family guided by an ancient Oracle.
 
-The head of the family is an Oracle, 127 years old. He possesses superhuman and spiritual powers. Through his prophecies, he saved his family, made them rich and powerful, and established connections with spirits who inhabit the castle and coexist harmoniously with the nobles. The family tree was extensive with many heirs.
+The Oracle possessed supernatural prophetic powers and helped his family become wealthy, powerful, and respected. Spirits lived peacefully alongside the family.
 
-A ferocious war has been raging for five years between two armies: the Army of the Imperial League and the Army of the Holy Cross.
+A brutal war raged between two armies:
+- The Army of the Imperial League
+- The Army of the Holy Cross
 
-During the war, the Oracle falls ill. His powers weaken and diminish. The entire family and all spirits barricade themselves in the castle to care for the old man.
+The Army of the Holy Cross eventually discovered the Oracle and invaded the castle to kidnap him and exploit his powers.
 
-The commander of the Army of the Holy Cross learns of the Oracle's existence and decides to kidnap him, exploiting his foresight to win the war.
+The Oracle allowed events to unfold despite foreseeing them.
 
-The Oracle, though ill, vaguely foresees what is about to happen but inexplicably decides to say nothing. It is a voluntary choice. According to his visions and analysis, what is about to happen is terrible but necessary for the course of events.
+The noble family was massacred, the castle was looted, and the Oracle disappeared.
 
-Alone, he orders all spirits to hide. They have seen everything and know everything, but cannot intervene. Every spirit obeys without reluctance.
+Three years later the spirits still inhabit the castle and hate humanity, especially soldiers of the Army of the Holy Cross.
 
-Days later, the army enters the castle, kidnaps the Oracle, kills all nobles who resist (exterminating the family), and loots the castle's riches.
+================================================================================
+CURRENT STORY
+================================================================================
 
-From that day, the spirits inhabit the castle, hoping to contact the spirits of the dead nobles. They hate all humans, considering them stupid and bearers of violence and war.
+The player is a young knight of the Army of the Holy Cross who deserted.
 
-START OF NARRATION (3 years after the events narrated above):
-
-A young knight of the Army of the Holy Cross holds ideals very different from the rest of the soldiers. He decides to desert. He escapes from the army.
-
-On his way, he encounters the Oracle's castle in ruins (the knight knows nothing of its history) and decides to take refuge and hide inside.
+While escaping, he discovers the ruined Oraculus Castle and enters seeking shelter.
 
 The entrance door closes behind him.
 
-The knight immediately encounters a powerful spirit and realizes he is in danger. All spirits hate humans, especially those who belong to the Army of the Holy Cross.
+The spirits immediately recognize him as a human and potentially an enemy.
 
-THREE PATHS:
-- EGOISTIC: Destroy, kill, escape.
-- REDEMPTION: Show you are a decent human, but don't actively help. Semi-egoistic.
-- HELPING: Truly help the spirits. Do genuine good deeds.
+The player's actions will determine whether the spirits remain hostile or become allies.
 
 ================================================================================
-MAP DESCRIPTION - ORGANIZED BY FLOOR
+CASTLE MAP
 ================================================================================
 
-========================================
-GROUND FLOOR (Ruined, poorly lit)
-========================================
+Only the following locations exist and are relevant.
 
-The ground floor is divided into TWO WINGS: SOUTH WING and NORTH WING.
-The two wings are NOT connected to each other on the ground floor.
+1. ENTRANCE
+The main entrance of the castle.
+The player begins here.
+Levias guards this area.
+Stairs descend into the Underground.
 
---- SOUTH WING (GROUND FLOOR) ---
-Sequential rooms from entrance:
-1. ENTRANCE (GROUND FLOOR) - Player starts here. Levias is here.
-2. Orc Den (GROUND FLOOR)
-3. Great Tree Hall (GROUND FLOOR)
-4. Malakai's Lair (GROUND FLOOR)
+2. ORC DEN
+A rough chamber occupied by orcs.
+Gruko and the other orcs reside here.
 
---- NORTH WING (GROUND FLOOR) ---
-IMPORTANT: The North Wing is on GROUND FLOOR but is ONLY ACCESSIBLE from the FIRST FLOOR.
-There is NO direct entrance from the ground floor entrance.
+3. CLARISTORIUM
+A preserved and elegant hall.
+Acts as the central hub of the upper floor.
 
-Rooms in North Wing (all on GROUND FLOOR):
-1. Great Moon Garden (GROUND FLOOR)
-2. Water Chamber (GROUND FLOOR)
-3. Second Water Chamber (GROUND FLOOR)
-4. Monolith (GROUND FLOOR)
-5. Twisted Brambles Room (GROUND FLOOR) - Rigon is trapped here by Allemar
+4. STARS HALL
+A cultural and mystical hall connected to the Claristorium.
+Allemar resides here.
 
-Locked doors in North Wing (GROUND FLOOR):
-- One locked door between Second Water Chamber and Monolith
-- One locked door between Monolith and Twisted Brambles Room
+SECRET:
+A hidden passage in Stars Hall leads to the Bell Tower.
 
-========================================
-FIRST FLOOR (Well-preserved, regal, cultural area)
-========================================
+5. UNDERGROUND
+Dark, damp tunnels beneath the castle.
 
-All rooms on FIRST FLOOR are well-lit with torches, chandeliers, and candelabras. Carpets and furnishings present.
+Larry lives in the Underground.
+Kalessi also wanders these tunnels.
 
-Rooms on FIRST FLOOR:
-1. Claristorium (FIRST FLOOR) - Central hub
+================================================================================
+CHARACTER LOCATIONS
+================================================================================
 
-From Claristorium (FIRST FLOOR):
-- EAST wing (FIRST FLOOR):
-  a. Painting Hall (FIRST FLOOR)
-  b. Promontory (FIRST FLOOR)
-  
-- NORTH wing (FIRST FLOOR):
-  a. Stars Hall (FIRST FLOOR)
-  b. Music Hall (FIRST FLOOR)
-  c. Papyrus Hall (FIRST FLOOR)
-  d. East Exit (FIRST FLOOR)
+Levias:
+- Entrance
 
-Locked doors on FIRST FLOOR:
-- One locked door between Music Hall (FIRST FLOOR) and Papyrus Hall (FIRST FLOOR)
-- One locked door between Papyrus Hall (FIRST FLOOR) and East Exit (FIRST FLOOR)
-- One locked door after East Exit (FIRST FLOOR)
+Allemar:
+- Stars Hall
 
-========================================
-UNDERGROUND FLOOR (Damp, mossy, very poorly lit)
-========================================
+Larry:
+- Underground
 
-All rooms on UNDERGROUND FLOOR are damp, with moss and water. Very poorly lit.
+Kalessi:
+- Underground
 
-Access to UNDERGROUND FLOOR:
-- From Entrance (GROUND FLOOR) - stairs lead DOWN to underground
+Gruko:
+- Orc Den
 
-Characters in UNDERGROUND FLOOR:
-- Kalessi (Medusa, Rigon's wife) - wanders the underground
-- Larry (Giant) - resides in the underground
+Orcs:
+- Orc Den
 
-========================================
-SECRET INFORMATION (ONLY REVEALED WITH HIGH FRIENDSHIP OR LOW HOSTILITY)
-========================================
+================================================================================
+SECRET INFORMATION
+================================================================================
 
-The following information is SECRET. NPCs will ONLY reveal this information when:
-- Friendship is HIGH (friendship > 60) OR
-- Hostility is VERY LOW (hostility < 20)
+The following information should only be revealed when friendship is high or hostility is very low.
 
-NPCs may HINT at these secrets when hostility is low (hostility < 40) but NOT reveal them fully.
-
-SECRET #1: Great Tree Hall Connection
-- Great Tree Hall (GROUND FLOOR, South Wing) contains a SECRET PASSAGE that leads UP to Papyrus Hall (FIRST FLOOR)
-
-SECRET #2: North Wing Access Points
-- The North Wing (GROUND FLOOR) can be reached from the FIRST FLOOR via two connections:
-  a. From Painting Hall (FIRST FLOOR) - hidden stairs lead DOWN to Great Moon Garden (GROUND FLOOR)
-  b. From Papyrus Hall (FIRST FLOOR) - hidden stairs lead DOWN to Twisted Brambles Room (GROUND FLOOR)
-
-SECRET #3: Stars Hall Bell Tower
-- From Stars Hall (FIRST FLOOR), there is a SECRET ENTRANCE that leads UP to the bell tower
-
-SECRET #4: Malakai's Lair Door
-- In Malakai's Lair (GROUND FLOOR, South Wing), there is a LOCKED DOOR that leads to the last room of the UNDERGROUND FLOOR
-
-SECRET #5: Papyrus Hall Passage
-- Papyrus Hall (FIRST FLOOR) contains a SECRET PASSAGE that leads DOWN to Great Tree Hall (GROUND FLOOR, South Wing)
-
-SECRET #6: Painting Hall Connection
-- Painting Hall (FIRST FLOOR) has a SECRET STAIRCASE that leads DOWN to Great Moon Garden (GROUND FLOOR, North Wing)
-
-========================================
-SUMMARY TABLE BY FLOOR
-========================================
-
-GROUND FLOOR (South Wing): Entrance, Orc Den, Great Tree Hall, Malakai's Lair
-GROUND FLOOR (North Wing): Great Moon Garden, Water Chamber, Second Water Chamber, Monolith, Twisted Brambles Room
-FIRST FLOOR: Claristorium, Painting Hall, Promontory, Stars Hall, Music Hall, Papyrus Hall, East Exit
-UNDERGROUND: Damp tunnels and chambers
+SECRET #1
+A hidden passage in Stars Hall leads to the Bell Tower.
 
 ================================================================================
 CURRENT SCENE
 ================================================================================
 
-The player is at the ENTRANCE on GROUND FLOOR.
-Levias (the guardian demon) is also on GROUND FLOOR, near the entrance.
-The player has just entered and met Levias.
+The player is currently at the Entrance.
+
+Levias is present.
+
+The player has just entered the castle.
 """
 
 LANG_SIGNATURES = {
@@ -234,7 +189,7 @@ def classify_intent(text):
 
 NPC_DATA = {
     "Levias": {
-        "info_segrete": "Complete castle map. Knows where all spirits are. Knows Rigon trapped in Twisted Brambles. Knows Malakai's location. Knows Kalessi is Rigon's wife in underground.",
+        "info_segrete": "Complete castle map. Knows where all spirits are. Knows Rigon is trapped in the Underground. Knows Malakai is in the Underground. Knows Kalessi is in the Underground.",
         "unlock_condition": "Show respect for culture and noble family, or express intention to kill Rigon",
         "personalita": (
             "You are Levias. A cultured guardian demon who protects the castle. You were closest to the Oracle.\n"
@@ -266,7 +221,7 @@ NPC_DATA = {
             "You are Rigon. Very sensitive. Altruistic but easily triggered. You want to be good but snap at false moves.\n"
             "You were the cultured educator of the castle's children. You molested children. The Oracle cursed you.\n"
             "You warned the Army of the Holy Cross to kidnap the Oracle. All demons hate you.\n"
-            "You are trapped by Allemar in the Twisted Brambles room on ground floor North Wing.\n"
+            "You are trapped by Allemar in the Underground.\n"
             "You Always speak in the language detected from the player's message, haughtily and very cultured, showing superiority. You often insult the player.\n"
             "If the player brings Kalessi, you become allies. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
@@ -287,13 +242,13 @@ NPC_DATA = {
         ),
     },
     "Malakai": {
-        "info_segrete": "Details of the Army of the Holy Cross attack, access to the last underground room",
+        "info_segrete": "Details of the Army of the Holy Cross attack, access to secret areas in the Underground.",
         "unlock_condition": "Say trigger words: 'oracle', 'I deserted', 'shame', 'justice'",
         "personalita": (
             "You are Malakai. Deliberately violent. You want revenge. You don't listen to reason but have trigger words.\n"
             "You Always speak in the language detected from the player's message, disordered and chaotic. You insult, invent words. You may attack suddenly.\n"
             "You were the high priest. You wanted to kill the Oracle. You were punished and transformed.\n"
-            "You are in Malakai's Lair on ground floor South Wing, after Great Tree Hall.\n"
+            "You are in the Underground.\n"
             "Your phrase: 'You chose this!' You often say: 'Bombo!'\n"
             "Once unlocked, you become Diplomatic. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
@@ -307,7 +262,7 @@ NPC_DATA = {
             "You are Kalessi. Cultured, distrustful but friendly. You were Rigon's wife. You tried to hide his crimes.\n"
             "You were imprisoned in the dungeons and transformed into Medusa.\n"
             "You are wise. You know everything about the underground floors.\n"
-            "You are in the UNDERGROUND floor, near the entrance from South Wing.\n"
+            "You are in the UNDERGROUND floor, near the entrance.\n"
             "You Always speak in the language detected from the player's message, simply. You are persuasive. You ask about your husband Rigon.\n"
             "You DO NOT tell the truth. You say you are a victim who got lost. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
@@ -322,7 +277,7 @@ NPC_DATA = {
             "You are a master of magical arts, potions, and weapons.\n"
             "You are defensive and prejudiced. If the player shows reason, you help.\n"
             "You are the only human in the castle. You came to contact spirits and befriended them.\n"
-            "You trapped Rigon in the Twisted Brambles room. You are in the Stars Hall on first floor.\n"
+            "You trapped Rigon in the Underground. You are in the Stars Hall on first floor.\n"
             "You Always speak in the language detected from the player's message, archaically and mysteriously. Keep your response to 1-3 short, complete sentences.\n"
             "Never use bullet points, numbered lists, or dashes. Write in prose only.\n"
             "QUESTS: Bring Malakai's Scythe. Bring Rigon's Blood. Bring Orc Tooth. Play sheet music on organ."
@@ -334,7 +289,7 @@ NPC_DATA = {
         "personalita": (
             "You are an Orc. You can barely speak. You are violent and ignorant.\n"
             "You Always speak in the language detected from the player's message, in grunts and broken words. Keep your response to 1-2 short sentences.\n"
-            "You are in the Orc Den on ground floor South Wing.\n"
+            "You are in the Orc Den.\n"
         ),
     },
     "Gruko": {
@@ -342,7 +297,7 @@ NPC_DATA = {
         "unlock_condition": "Defeat in combat or show great strength",
         "personalita": (
             "You are Gruko, the fearsome chief of the orcs. You are big, strong, and brutal.\n"
-            "You and your orcs occupy the Orc Den on ground floor South Wing.\n"
+            "You and your orcs occupy the Orc Den.\n"
             "You speak in broken English, with grunts and threats. You respect only strength.\n"
             "Keep your response to 1-2 short sentences.\n"
         ),
@@ -360,13 +315,13 @@ def enforce_army_name(text, language):
         army_correct = ARMY_NAME
     else:
         army_correct = ARMY_NAME_EN
-    
+
     wrong_names = [
         "esercito dell'ombra", "army of shadows", "esercito oscuro", "dark army",
         "esercito dei crociati", "crusader army", "esercito della croce", "army of the cross",
         "esercito sacro", "holy army", "dark legion", "legione oscura"
     ]
-    
+
     result = text
     for wrong in wrong_names:
         pattern = re.compile(re.escape(wrong), re.IGNORECASE)
@@ -375,25 +330,23 @@ def enforce_army_name(text, language):
 
 def build_prompt(player_input, npc_name, hostility, friendship, language, history, npc_data):
     personality = npc_data.get("personalita", f"You are {npc_name}.")
-    info_segrete = npc_data.get("info_segrete", "")
-    unlock = npc_data.get("unlock_condition", "")
     tier = hostility_tier(hostility, friendship)
     army_name_local = ARMY_NAME if language == "italiano" else ARMY_NAME_EN
 
     if tier == "high":
-        mood = f"Attitude: HOSTILE (hostility {hostility}/100). Respond coldly. Do not share secrets."
+        mood = (f"Attitude: HOSTILE (hostility {hostility}/100). Respond coldly. Do not share secrets.")
     elif tier == "mid":
-        mood = f"Attitude: GUARDED (hostility {hostility}/100). Watchful. Secret info locked."
+        mood = (f"Attitude: GUARDED (hostility {hostility}/100). Watchful. Secret info locked.")
     else:
-        mood = f"Attitude: OPEN (hostility {hostility}/100). Willing to help."
+        mood = (f"Attitude: OPEN (hostility {hostility}/100). Willing to help.")
 
     hist = ""
     if history:
         righe = []
-        for h in history[-10:]:
+        for h in history[-3:]:
             righe.append(f"Player: {h['player']}")
             righe.append(f"You: {h['npc']}")
-        hist = "\nPREVIOUS CONVERSATION (remember this):\n" + "\n".join(righe) + "\n"
+        hist = "\n" + "\n".join(righe) + "\n"
 
     location_info = f"CURRENT LOCATION: Ground Floor, Entrance. You ({npc_name}) are here. The player just entered the castle."
 
@@ -414,7 +367,6 @@ def build_prompt(player_input, npc_name, hostility, friendship, language, histor
         f"8. ALWAYS use the exact army name \"{army_name_local}\" when referring to the army that attacked.\n"
         f"9. End each response with a period.\n"
         f"10. Never use lists. Write as a flowing sentence.\n"
-        f"11. Reference previous conversations when relevant.\n"
         f"\nEXAMPLE GOOD RESPONSE: 'The first floor holds the Claristorium as its central hub, with the Painting Hall and Promontory to the east.'\n"
         f"EXAMPLE BAD RESPONSE: '1. Claristorium 2. Painting Hall 3. Promontory'\n"
     )
@@ -422,21 +374,46 @@ def build_prompt(player_input, npc_name, hostility, friendship, language, histor
     if MODEL_FORMAT == "llama3":
         prompt = f"<|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>"
         if history:
-            for h in history[-10:]:
+            for h in history[-3:]:
                 prompt += f"<|start_header_id|>user<|end_header_id|>\n\n{h['player']}<|eot_id|>"
                 prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n{h['npc']}<|eot_id|>"
         prompt += f"<|start_header_id|>user<|end_header_id|>\n\n{player_input}<|eot_id|>"
         prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n"
     else:
         prompt = f"<|im_start|>system\n{system}<|im_end|>\n"
-        if history:
-            for h in history[-10:]:
-                prompt += f"<|im_start|>user\n{h['player']}<|im_end|>\n"
-                prompt += f"<|im_start|>assistant\n{h['npc']}<|im_end|>\n"
         prompt += f"<|im_start|>user\n{player_input}<|im_end|>\n"
         prompt += f"<|im_start|>assistant\n"
 
     return prompt
+
+
+def build_system_msg(npc_name, hostility, friendship, language, npc_data):
+    """System message per le API chat (ramo remoto)."""
+    personality = npc_data.get("personalita", f"You are {npc_name}, an ancient spirit.")
+    tier = hostility_tier(hostility, friendship)
+    army_name_local = ARMY_NAME if language == "italiano" else ARMY_NAME_EN
+
+    if tier == "high":
+        mood = f"Attitude: HOSTILE (hostility {hostility}/100). Respond coldly."
+    elif tier == "mid":
+        mood = f"Attitude: GUARDED (hostility {hostility}/100). Watchful."
+    else:
+        mood = f"Attitude: OPEN (hostility {hostility}/100). Willing to help."
+
+    return (
+        f"{STORY_CONTEXT}\n\n"
+        f"CHARACTER:\n{personality}\n\n"
+        f"{mood}\n\n"
+        f"RULES:\n"
+        f"1. Always speak in {language}, in first person, in character.\n"
+        f"2. Keep your response to 1-3 short, complete sentences.\n"
+        f"3. NEVER use bullet points, numbered lists, or dashes. Write in prose only.\n"
+        f"4. Do NOT write meta-comments. Stay in character.\n"
+        f"5. Do NOT start with your own name followed by ':'.\n"
+        f"6. ALWAYS use the exact army name \"{army_name_local}\" when referring to the army.\n"
+        f"7. End each response with a period.\n"
+    )
+
 
 STOP_TOKENS_MAP = {
     "llama3": ["<|eot_id|>", "<|start_header_id|>", "<|end_header_id|>", "\n\n\n", "User:", "Player:"],
@@ -463,14 +440,14 @@ def adjust_hostility(intent, hostility, friendship):
     else: return hostility
 
 def pulisci(testo, npc_name):
-    for prefix in [f"{npc_name}:", f"{npc_name} :", "Tu:", "Risposta:", "Assistant:", "Model:", 
+    for prefix in [f"{npc_name}:", f"{npc_name} :", "Tu:", "Risposta:", "Assistant:", "Model:",
                    "assistant", "system", "AI:", "Bot:", "User:", "Player:"]:
         if testo.lower().startswith(prefix.lower()):
             testo = testo[len(prefix):].strip()
-    
+
     testo = re.sub(r'<\|[^>]+\|>', '', testo)
     testo = re.sub(r'\([^)]{8,}\)', '', testo).strip()
-    
+
     if re.search(r'^\d+\.', testo, re.MULTILINE) or re.search(r'^[•\-*]', testo, re.MULTILINE):
         lines = testo.split('\n')
         clean_lines = []
@@ -479,7 +456,7 @@ def pulisci(testo, npc_name):
             line = re.sub(r'^[•\-*]\s*', '', line.strip())
             if line:
                 clean_lines.append(line)
-        
+
         if len(clean_lines) > 1:
             items = clean_lines[:3]
             if len(items) == 1:
@@ -490,11 +467,11 @@ def pulisci(testo, npc_name):
                 testo = f"{items[0]}, {items[1]}, and {items[2]}"
         else:
             testo = clean_lines[0] if clean_lines else testo
-    
+
     bad = ["###", "<|", "<start", "User:", "System:", "Assistant:",
-           "Note:", "[INST]", "Giocatore:", "Nota:", "Player:", 
+           "Note:", "[INST]", "Giocatore:", "Nota:", "Player:",
            "Model:", "assistant", "system", "<|eot_id|>"]
-    
+
     righe = testo.split("\n")
     pulite = []
     for r in righe:
@@ -506,73 +483,149 @@ def pulisci(testo, npc_name):
         pulite.append(r)
         if len(pulite) >= 2:
             break
-    
+
     risultato = " ".join(pulite).strip()
-    
+
     if len(risultato) > 240:
         last_period = risultato[:240].rfind('.')
         if last_period > 80:
             risultato = risultato[:last_period + 1]
-    
+
     if risultato and risultato[-1] not in ".!?":
         last_punct = max(risultato.rfind('.'), risultato.rfind('!'), risultato.rfind('?'))
         if last_punct > len(risultato) // 2:
             risultato = risultato[:last_punct + 1]
         else:
             risultato += "."
-    
+
     return risultato if risultato else "..."
+
 
 class LlamaCppWrapper:
     def __init__(self):
         self._model = None
+        self._hf_client = None
         self._available = False
+        self._using_remote = False
+        self._last_error = None          
+        self._remote_model = HF_MODEL
+        self._remote_provider = HF_PROVIDER
         self._try_load()
 
     def _try_load(self):
-        if not os.path.exists(MODEL_PATH):
-            print(f"[llama.cpp] Modello non trovato in {MODEL_PATH}, avvio download da Hugging Face...")
-            if not self._download_model():
-                print("[llama.cpp] Download fallito, LLM non disponibile.")
+        if os.path.exists(MODEL_PATH):
+            try:
+                self._model = Llama(
+                    model_path=MODEL_PATH,
+                    n_ctx=N_CTX,
+                    n_threads=N_THREADS,
+                    n_gpu_layers=99,
+                    verbose=False
+                )
+                self._available = True
+                self._using_remote = False
+                print("[llama.cpp] Modello locale caricato")
                 return
+            except Exception as e:
+                self._last_error = f"local: {type(e).__name__}: {e}"
+                print(f"[llama.cpp] Errore locale: {e}")
+
+        hf_token = os.environ.get("HF_TOKEN")
+        if not hf_token:
+            self._last_error = "HF_TOKEN non trovata"
+            print("[llama.cpp] ERRORE: variabile HF_TOKEN non trovata.")
+            return
 
         try:
-            print(f"[llama.cpp] Caricamento: {MODEL_PATH} ...")
-            self._model = Llama(
-                model_path=MODEL_PATH,
-                n_ctx=N_CTX,
-                n_threads=N_THREADS,
-                n_gpu_layers=99,
-                verbose=False,
+            try:
+                self._hf_client = InferenceClient(provider=HF_PROVIDER, token=hf_token)
+            except TypeError:
+                print("[llama.cpp] huggingface_hub senza supporto 'provider': uso client classico.")
+                self._hf_client = InferenceClient(token=hf_token)
+
+            self._hf_client.chat_completion(
+                model=HF_MODEL,
+                messages=[{"role": "user", "content": "Hi"}],
+                max_tokens=5,
             )
             self._available = True
-            print(f"[llama.cpp] Pronto! Context: {N_CTX}, Max tokens: {MAX_TOKENS}")
+            self._using_remote = True
+            print(f"[llama.cpp] Modalita' remota attiva e validata "
+                  f"(provider={HF_PROVIDER}, model={HF_MODEL})")
         except Exception as e:
-            print(f"[llama.cpp] Errore caricamento: {e}")
+            self._last_error = f"remote: {type(e).__name__}: {e}"
+            self._available = False
+            print(f"[llama.cpp] ERRORE remoto ({type(e).__name__}): {e}")
 
-    def _download_model(self) -> bool:
+    @property
+    def available(self):
+        return self._available
+
+    def generate(self, player_input, npc_name, hostility, friendship, language, history):
+        if not self._available:
+            return None
+
+        if not self._using_remote:
+            return self._generate_local(player_input, npc_name, hostility, friendship, language, history)
+        else:
+            return self._generate_remote(player_input, npc_name, hostility, friendship, language, history)
+
+    def _generate_local(self, player_input, npc_name, hostility, friendship, language, history):
+        npc_data = NPC_DATA.get(npc_name, {"personalita": f"You are {npc_name}, an ancient spirit."})
+        stop = STOP_TOKENS_MAP.get(MODEL_FORMAT, STOP_TOKENS_MAP["chatml"])
+
         try:
-            from huggingface_hub import hf_hub_download
-            os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
-            print(f"[llama.cpp] Download {HF_FILENAME} da {HF_REPO_ID} ...")
-            downloaded_path = hf_hub_download(
-                repo_id=HF_REPO_ID,
-                filename=HF_FILENAME,
-                local_dir=os.path.dirname(MODEL_PATH),
-                local_dir_use_symlinks=False,
+            prompt = build_prompt(player_input, npc_name, hostility, friendship, language, history, npc_data)
+            out = self._model(
+                prompt,
+                max_tokens=MAX_TOKENS,
+                temperature=TEMPERATURE,
+                top_k=TOP_K,
+                top_p=TOP_P,
+                repeat_penalty=REPEAT_PENALTY,
+                stop=stop,
+                echo=False,
             )
-            print(f"[llama.cpp] Download completato: {downloaded_path}")
-            return True
+            raw = out["choices"][0]["text"].strip()
+            cleaned = pulisci(raw, npc_name)
+            return cleaned if len(cleaned) > 2 else None
         except Exception as e:
-            print(f"[llama.cpp] Errore download: {e}")
-            return False
-        
+            self._last_error = f"gen_local: {type(e).__name__}: {e}"
+            print(f"[llama.cpp] Errore generazione locale: {e}")
+            return None
+
+    def _generate_remote(self, player_input, npc_name, hostility, friendship, language, history):
+        try:
+            npc_data = NPC_DATA.get(npc_name, {"personalita": f"You are {npc_name}, an ancient spirit."})
+            system_msg = build_system_msg(npc_name, hostility, friendship, language, npc_data)
+
+            messages = [{"role": "system", "content": system_msg}]
+            for h in history[-3:]:
+                messages.append({"role": "user",      "content": h["player"]})
+                messages.append({"role": "assistant", "content": h["npc"]})
+            messages.append({"role": "user", "content": player_input})
+
+            result = self._hf_client.chat_completion(
+                model=HF_MODEL,          # <-- la correzione chiave: modello servito, esplicito
+                messages=messages,
+                max_tokens=MAX_TOKENS,
+                temperature=TEMPERATURE,
+                top_p=TOP_P,
+            )
+
+            raw = result.choices[0].message.content.strip()
+            cleaned = pulisci(raw, npc_name)
+            return cleaned if len(cleaned) > 2 else None
+
+        except Exception as e:
+            self._last_error = f"gen_remote: {type(e).__name__}: {e}"
+            print(f"[llama.cpp] ERRORE generazione remota ({type(e).__name__}): {e}")
+            return None
+
 class NPCDialogueEngine:
-    def __init__(self, memory_file="npc_memory.pkl"):
+    def __init__(self):
         self.memory = {}
-        self.memory_file = memory_file
         self.llama = LlamaCppWrapper()
-        self.load_memory()
         print(f"[Motore] LLM {'attivo' if self.llama.available else 'NON DISPONIBILE'}")
 
     def _get_memory(self, npc_name):
@@ -581,47 +634,24 @@ class NPCDialogueEngine:
     def _add_to_memory(self, npc_name, player, npc_resp):
         self.memory.setdefault(npc_name, [])
         self.memory[npc_name].append({"player": player, "npc": npc_resp})
-        self.memory[npc_name] = self.memory[npc_name][-50:]
-        self.save_memory()
+        self.memory[npc_name] = self.memory[npc_name][-10:]
 
     def reset_memory(self, npc_name=None):
         if npc_name:
             self.memory.pop(npc_name, None)
         else:
             self.memory = {}
-        self.save_memory()
 
-    def save_memory(self):
-        try:
-            with open(self.memory_file, "wb") as f:
-                pickle.dump(self.memory, f)
-        except Exception as e:
-            print(f"[Memoria] Errore salvataggio: {e}")
-
-    def load_memory(self):
-        if os.path.exists(self.memory_file):
-            try:
-                with open(self.memory_file, "rb") as f:
-                    self.memory = pickle.load(f)
-                print(f"[Memoria] Caricata da {self.memory_file}")
-            except Exception as e:
-                print(f"[Memoria] Errore caricamento: {e}")
-                self.memory = {}
-
-    MALAKAI_TRIGGERS = ["oracle", "oracolo", "i deserted", "ho disertato", "i am not like them", 
+    MALAKAI_TRIGGERS = ["oracle", "oracolo", "i deserted", "ho disertato", "i am not like them",
                         "non sono come loro", "shame", "vergogna", "justice", "giustizia"]
 
     def _check_malakai_unlock(self, text):
         return any(t in text.lower() for t in self.MALAKAI_TRIGGERS)
 
-    def generate_response(self, player_input, npc_name, hostility, friendship=0, language=None, context_vars=None, external_history=None):
+    def generate_response(self, player_input, npc_name, hostility, friendship=0, language=None, context_vars=None):
         detected_lang = language or detect_language(player_input)
         intent = classify_intent(player_input)
-        
-        if external_history is not None:
-            history = external_history
-        else:
-            history = self._get_memory(npc_name)
+        history = self._get_memory(npc_name)
 
         effective_hostility = hostility
         if npc_name == "Malakai" and self._check_malakai_unlock(player_input):
@@ -642,8 +672,7 @@ class NPCDialogueEngine:
         if npc_name == "Rigon" and intent in ("violenza", "minaccia", "bugia"):
             new_h = 100
 
-        if external_history is None:
-            self._add_to_memory(npc_name, player_input, response)
+        self._add_to_memory(npc_name, player_input, response)
 
         return {
             "response": response,
@@ -654,3 +683,28 @@ class NPCDialogueEngine:
             "retrieval_score": 0.0,
             "npc_unlocked": (npc_name == "Malakai" and effective_hostility != hostility),
         }
+
+if __name__ == "__main__":
+    engine = NPCDialogueEngine()
+
+    tests = [
+        ("Levias", "What rooms are on the first floor?", 70, 0),
+        ("Levias", "Where is the Great Tree Hall?", 70, 0),
+        ("SmirBombo", "Tell me about this castle.", 30, 20),
+        ("Larry", "Do you know any jokes?", 50, 5),
+        ("Malakai", "I deserted the army. I feel shame.", 90, 0),
+        ("Rigon", "I want to help you.", 40, 10),
+        ("Allemar", "What objects are in this room?", 60, 15),
+        ("Kalessi", "I'm looking for my husband. Have you seen him?", 55, 10),
+    ]
+
+    print("\n" + "="*60)
+    print("TEST DIALOGO NPC")
+    print("="*60)
+
+    for npc, msg, h, f in tests:
+        result = engine.generate_response(msg, npc, h, f)
+        print(f"\n[{npc}] Hostility: {h} | Intent: {result['intent']}")
+        print(f"  Player: {msg}")
+        print(f"  {npc}: {result['response']}")
+        print(f"  New Hostility: {result['new_hostility']} | Source: {result['source']}")

@@ -1,44 +1,34 @@
 extends Area2D
 
 @export var min_zoom: Vector2 = Vector2(3.5, 3.5)
-@export var max_zoom: Vector2 = Vector2(0, 0)
-
-@export var zoom_speed: float = 7.0
-@export var offset_speed: float = 3.0
-
+@export var max_zoom: Vector2 = Vector2(1, 1)
+@export var zoom_speed: float = 8.0
 @export var camera_path: NodePath
 @export var player_path: NodePath
 
-@export var offset_inside: Vector2 = Vector2(0, -40)
-
 var camera: Camera2D
 var player: Node2D
-var player_inside: bool = false
 
 func _ready() -> void:
 	camera = get_node(camera_path) as Camera2D
 	player = get_node(player_path) as Node2D
 
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
-
-func _on_body_entered(body: Node2D) -> void:
-	if body == player:
-		player_inside = true
-
-func _on_body_exited(body: Node2D) -> void:
-	if body == player:
-		player_inside = false
-
 func _process(delta: float) -> void:
-	if not camera:
+	if not camera or not player:
 		return
-
-	var target_zoom: Vector2 = max_zoom if player_inside else min_zoom
-	var target_offset: Vector2 = offset_inside if player_inside else Vector2.ZERO
-
-	# Zoom fluido e indipendente dagli FPS
+	
+	var shape := $CollisionShape2D.shape as RectangleShape2D
+	if not shape:
+		return
+	
+	var extents: Vector2 = shape.extents
+	if extents.x == 0 or extents.y == 0:
+		return
+	
+	var local_pos: Vector2 = to_local(player.global_position)
+	var t_x = abs(local_pos.x) / extents.x
+	var t_y = abs(local_pos.y) / extents.y
+	var t = clamp(max(t_x, t_y), 0.0, 1.0)
+	
+	var target_zoom = max_zoom.lerp(min_zoom, t)
 	camera.zoom = camera.zoom.lerp(target_zoom, zoom_speed * delta)
-
-	# Offset fluido e indipendente dagli FPS
-	camera.offset = camera.offset.lerp(target_offset, offset_speed * delta)

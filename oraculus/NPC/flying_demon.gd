@@ -59,7 +59,6 @@ var _ai_thread_new_hostility: int = -1
 var _ai_thread_done: bool = false
 var player_input_buffer: String = ""
 
-
 var _server_ready: bool = false
 var _server_timeout_timer: float = 0.0
 var _server_check_started: bool = false
@@ -88,27 +87,27 @@ var fallback_responses: Array = [
 	"*turns away* Another human with no words worth hearing.",
 	"*gazes into the dark* Leave, before I change my mind."
 ]
- 
+
 var cultural_responses: Array = [
 	"*pauses* You know of such things?",
 	"*quietly* The family valued that. As did I.",
 	"*softens* Perhaps you are not entirely without worth."
 ]
- 
+
 var attack_phrases: Array = [
 	"*cold fury* You chose violence. So be it.",
 	"*wings spread* You remind me of those who killed them.",
 	"*ancient wrath* This castle has seen enough blood.",
 	"*whispers* Forgiveness is not a word I know today."
 ]
- 
+
 var aggressive_hit_responses: Array = [
 	"*roars* You DARE?",
 	"*voice drops* That was your last mistake.",
 	"*trembles with rage* Three years of grief — and THIS.",
 	"*eyes glow* I held back. No longer."
 ]
- 
+
 var friendly_responses: Array = [
 	"*watches carefully* You are... less ignorant than most.",
 	"*slight nod* I begin to understand why you came here.",
@@ -116,7 +115,7 @@ var friendly_responses: Array = [
 	"*almost warm* Sit. There is much I could tell you.",
 	"*finally* You are not like the others. Come."
 ]
- 
+
 func _send_to_ai_server(player_message: String):
 	if not _server_ready:
 		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
@@ -135,7 +134,7 @@ func _send_to_ai_server(player_message: String):
 		_do_local_request(player_message)
 
 func _do_local_request(player_message: String):
-	var server_manager = get_node_or_null("/root/AIServerManager")  
+	var server_manager = get_node_or_null("/root/AIServerManager")
 	if not server_manager:
 		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
 		return
@@ -158,19 +157,18 @@ func _do_local_request(player_message: String):
 	}
 
 	_ai_thread = Thread.new()
-	_ai_thread.start(_thread_request.bind(payload, server_manager)) 
+	_ai_thread.start(_thread_request.bind(payload, server_manager))
 
 func _do_remote_request(player_message: String):
-	print("Esecuzione richiesta remota")
 	var server_manager = get_node_or_null("/root/AIServerManager")
 	if not server_manager:
 		_use_fallback_response("Connection error...")
 		return
-	
+
 	is_waiting_for_response = true
 	is_interacting = true
 	_start_thinking_dots()
-	
+
 	var payload = {
 		"npc_name": npc_name,
 		"player_input": player_message,
@@ -182,38 +180,33 @@ func _do_remote_request(player_message: String):
 		"max_length": 12,
 		"conversation_history": conversation_history
 	}
-	
+
 	var response = await server_manager.make_request("chat", payload)
-	
+
 	_stop_thinking_dots()
-	
+
 	if response == null or response.has("error"):
-		print("Errore richiesta remota: ", response.get("error", "Unknown error") if response else "Null response")
 		_use_fallback_response("The connection falters...")
 		is_waiting_for_response = false
 		is_interacting = false
 		return
-	
+
 	var ai_response = response.get("response", "")
 	var new_hostility = int(response.get("new_hostility", hostility))
-	
+
 	if new_hostility >= 0:
 		hostility = new_hostility
 		friendship_level = clamp(5 - int(hostility / 20.0), 0, max_friendship)
-	
+
 	_on_ai_chat_received(ai_response)
 
 func _thread_request(payload: Dictionary, server_manager: Node) -> void:
-	print("[AI Thread] Avvio connessione locale")
 	var response = server_manager.make_request_sync("chat", payload)
 	if response.has("error"):
-		print("[AI Thread] ERRORE: ", response["error"])
 		_ai_thread_done = true
 		return
 	_ai_thread_result = response.get("response", "")
 	_ai_thread_new_hostility = int(response.get("new_hostility", hostility))
-	print("[AI Thread] Response ricevuta: ", _ai_thread_result)
-	print("[AI Thread] New hostility: ", _ai_thread_new_hostility)
 	_ai_thread_done = true
 
 func _on_ai_chat_received(message: String):
@@ -242,9 +235,12 @@ func receive_player_answer(answer: String):
 	analyze_answer_for_friendship(answer)
 	_send_to_ai_server(answer)
 
-
 func _process(_delta: float) -> void:
-	if not _ai_thread_done or _ai_thread == null:
+	if not _ai_thread_done:
+		return
+
+	if _ai_thread == null:
+		_ai_thread_done = false
 		return
 
 	_ai_thread.wait_to_finish()
@@ -284,14 +280,14 @@ func _ready() -> void:
 	initialize_personality()
 	_update_ai_state()
 	_update_lateral_offset()
-	
+
 	var server_manager = get_node_or_null("/root/AIServerManager")
 	if server_manager:
 		if not server_manager.server_started.is_connected(_on_server_started):
 			server_manager.server_started.connect(_on_server_started)
 		if not server_manager.server_failed.is_connected(_on_server_failed):
 			server_manager.server_failed.connect(_on_server_failed)
-		
+
 		if server_manager.is_server_ready():
 			_on_server_started()
 		else:
@@ -337,7 +333,7 @@ func initialize_personality():
 
 func _physics_process(delta: float) -> void:
 	_process_server_timeout(delta)
-	
+
 	velocity.y += gravity * delta
 
 	if player and not is_instance_valid(player):
@@ -406,7 +402,7 @@ func handle_ally_behavior():
 			var dir = sign(target_position.x - global_position.x)
 			velocity.x = dir * speed
 			sprite.flip_h = dir > 0
-		
+
 		if is_on_floor() and abs(global_position.y - player.global_position.y) < 30:
 			if abs(global_position.x - player.global_position.x) < 20:
 				var push_dir = sign(global_position.x - player.global_position.x)
@@ -435,7 +431,7 @@ func handle_attack_behavior(delta: float):
 			sprite.play("walk")
 		else:
 			sprite.play("walk")
-		
+
 		if is_on_floor() and abs(global_position.y - player.global_position.y) < 30:
 			if abs(global_position.x - player.global_position.x) < 20:
 				var push_dir = sign(global_position.x - player.global_position.x)
@@ -634,7 +630,6 @@ func say_launch_message():
 func ask_riddle():
 	_send_to_ai_server("Speak short riddle (one sentence, max 10 words).")
 
-
 func analyze_answer_for_friendship(answer: String):
 	var lower = answer.to_lower()
 	var change = 0
@@ -658,8 +653,6 @@ func become_ally():
 	state = "ally"
 	if dialogue_box:
 		dialogue_box.show_text("*Calm* You're worthy ally... for now.")
-
-
 
 func analyze_sentiment(text: String) -> float:
 	var pos = ["ally", "friend", "wise", "powerful", "respect"]

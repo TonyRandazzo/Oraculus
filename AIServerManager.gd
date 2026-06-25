@@ -1,7 +1,7 @@
 extends Node
 
-const MAX_STARTUP_WAIT = 30.0
-const CHECK_INTERVAL = 1.0
+const MAX_STARTUP_WAIT = 90.0
+const CHECK_INTERVAL = 2.0
 const REMOTE_API_URL = "https://oraculus-ai-api.onrender.com"
 
 var _python_thread: Thread = null
@@ -111,14 +111,17 @@ func _check_server_ready_async():
 	var start_time = Time.get_ticks_msec() / 1000.0
 
 	while Time.get_ticks_msec() / 1000.0 - start_time < MAX_STARTUP_WAIT:
+		print("[ServerManager] Tentativo healthcheck locale... (", int(Time.get_ticks_msec() / 1000.0 - start_time), "s)")
 		if await _check_server_ready_once():
 			_server_ready = true
 			_checking = false
 			_using_remote = false
+			print("[ServerManager] Server locale pronto.")
 			emit_signal("server_started")
 			return
 		await get_tree().create_timer(CHECK_INTERVAL).timeout
 
+	print("[ServerManager] Timeout server locale, fallback su remoto.")
 	_checking = false
 	_switch_to_remote()
 
@@ -167,7 +170,6 @@ func make_request(endpoint: String, data: Dictionary = {}) -> Variant:
 	var json_data = JSON.stringify(data)
 
 	print("Richiesta a: ", url)
-	print("Payload: ", json_data)
 
 	if OS.get_name() == "Web":
 		return await _make_request_web(url, json_data)
@@ -192,7 +194,7 @@ func make_request(endpoint: String, data: Dictionary = {}) -> Variant:
 		return {"error": "Timeout o connessione persa"}
 
 	var response_text = body.get_string_from_utf8()
-	print("Risposta - Codice: ", response_code, " Body: ", response_text)
+	print("Risposta - Codice: ", response_code)
 
 	if response_code != 200:
 		return {"error": "Errore server: " + str(response_code)}
@@ -209,7 +211,6 @@ func make_request_sync(endpoint: String, data: Dictionary = {}) -> Variant:
 	var json_data = JSON.stringify(data)
 
 	print("[Sync] Richiesta a: ", url)
-	print("[Sync] Payload: ", json_data)
 
 	var client = HTTPClient.new()
 
@@ -332,7 +333,6 @@ func _make_request_web(url: String, json_data: String) -> Variant:
 		return {"error": "Timeout WebGL fetch (90s)"}
 
 	var raw = str(JavaScriptBridge.eval("window._gd_result"))
-	print("[WebGL] Raw response: ", raw)
 
 	var outer = JSON.new()
 	if outer.parse(raw) != OK:

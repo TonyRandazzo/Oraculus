@@ -153,6 +153,17 @@ class NPCHandler(BaseHTTPRequestHandler):
                 traceback.print_exc()
                 self.send_json(500, {"error": f"Errore interno: {e}"})
 
+        elif path == "/riddle":
+            door_id  = body.get("door_id",  "door_default")
+            language = body.get("language", "inglese")
+            theme    = body.get("theme",    "")
+            try:
+                result = engine.generate_door_riddle(door_id, language, theme)
+                self.send_json(200, result)
+            except Exception as e:
+                traceback.print_exc()
+                self.send_json(500, {"error": f"Errore generazione riddle: {e}"})
+
         elif path == "/reset":
             npc_name = body.get("npc_name", None)
             engine.reset_memory(npc_name)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=530 format=4 uid="uid://cudx3iq3gbf0t"]
+[gd_scene load_steps=529 format=4 uid="uid://cudx3iq3gbf0t"]
 
 [ext_resource type="Texture2D" uid="uid://db2j7xd1m2484" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Background/WhatsApp Image 2025-08-01 at 13.12.48.jpeg" id="1_33jsj"]
 [ext_resource type="Texture2D" uid="uid://byyhlcwbx03jq" path="res://oraculus/Level/rocks.png" id="1_45hhv"]
@@ -230,6 +230,7 @@
 [ext_resource type="PackedScene" uid="uid://bglcquetgjaby" path="res://oraculus/NPC/flying_demon.tscn" id="223_s8sn3"]
 [ext_resource type="Texture2D" uid="uid://bjttxg8415m0x" path="res://oraculus/Level/Transparent.png" id="224_0eqvl"]
 [ext_resource type="PackedScene" uid="uid://bo2fieohoisx" path="res://oraculus/NPC/potion.tscn" id="224_xe1aw"]
+[ext_resource type="PackedScene" uid="uid://djumvnhy4g2hs" path="res://oraculus/door.tscn" id="226_mqqny"]
 [ext_resource type="PackedScene" uid="uid://crtr2grxvjgnb" path="res://oraculus/scroll.tscn" id="229_0elpl"]
 [ext_resource type="Script" path="res://oraculus/astri_camera.gd" id="230_6vfoe"]
 [ext_resource type="Texture2D" uid="uid://bv5iqhnyu1oel" path="res://oraculus/Level/pixel_art_small.png" id="231_2hhd7"]
@@ -4177,45 +4178,15 @@ _data = {
 }
 point_count = 3
 
-[sub_resource type="GDScript" id="GDScript_6jone"]
-script/source = "extends Node2D
-
-@export var climb_speed: float = 100.0
-@export var use_path_direction: bool = true
-var direction: Vector2 = Vector2(1, -1).normalized()
-
-func _ready():
-	if use_path_direction and $Path2D.curve.get_point_count() >= 2:
-		var start = $Path2D.to_global($Path2D.curve.get_point_position(0))
-		var end = $Path2D.to_global($Path2D.curve.get_point_position(1))
-		direction = (end - start).normalized()
-		direction = (end - start).normalized()
-"
-
 [sub_resource type="Curve2D" id="Curve2D_4yw2m"]
 _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 6, -36, 0, 0, 0, 0, 17.9459, -47.5714, 0, 0, 0, 0, 30.5475, -62.1001)
 }
 point_count = 3
 
-[sub_resource type="GDScript" id="GDScript_vqjkd"]
-script/source = "extends Node2D
-
-@export var climb_speed: float = 100.0
-@export var use_path_direction: bool = true
-var direction: Vector2 = Vector2(1, -1).normalized()
-
-func _ready():
-	if use_path_direction and $Path2D.curve.get_point_count() >= 2:
-		var start = $Path2D.to_global($Path2D.curve.get_point_position(0))
-		var end = $Path2D.to_global($Path2D.curve.get_point_position(1))
-		direction = (end - start).normalized()
-		direction = (end - start).normalized()
-"
-
 [sub_resource type="Curve2D" id="Curve2D_jk2xe"]
 _data = {
-"points": PackedVector2Array(0, 0, 0, 0, 6.46143, -36.5162, 0, 0, 0, 0, 18.1763, -48.467, 0, 0, 0, 0, 29.8911, -61.0817, 0, 0, 0, 0, 42.295, -74.3603)
+"points": PackedVector2Array(0, 0, 0, 0, -0.429688, -32.5326, 0, 0, 0, 0, 16.1089, -49.1309, 0, 0, 0, 0, 30.5802, -63.7374, 0, 0, 0, 0, 41.606, -75.0242)
 }
 point_count = 4
 
@@ -18887,13 +18858,13 @@ scale = Vector2(1.06865, 1)
 polygon = PackedVector2Array(-28.0729, 29, 15.908, -16, 26.2013, 29)
 
 [node name="Path2D" type="Path2D" parent="Stairs/Stair"]
-position = Vector2(-32.355, 70.8894)
+position = Vector2(-33.355, 70.8894)
 scale = Vector2(1.55918, 1.50618)
 curve = SubResource("Curve2D_xc0qw")
 
 [node name="Stair2" type="Node2D" parent="Stairs" groups=["stairs"]]
 position = Vector2(1283, -166)
-script = SubResource("GDScript_6jone")
+script = ExtResource("223_l5xqp")
 
 [node name="Area2D" type="Area2D" parent="Stairs/Stair2"]
 position = Vector2(0, -1)
@@ -18904,24 +18875,24 @@ scale = Vector2(1.06865, 1)
 polygon = PackedVector2Array(-28.2133, 32, 2.66687, -1, 27.5, 37)
 
 [node name="Path2D" type="Path2D" parent="Stairs/Stair2"]
-position = Vector2(-16.355, 44)
+position = Vector2(-18.355, 44)
 scale = Vector2(1.05917, 1.11111)
 curve = SubResource("Curve2D_4yw2m")
 
 [node name="Stair3" type="Node2D" parent="Stairs" groups=["stairs"]]
 position = Vector2(1349, -198)
-script = SubResource("GDScript_vqjkd")
+script = ExtResource("223_l5xqp")
 
 [node name="Area2D" type="Area2D" parent="Stairs/Stair3"]
 position = Vector2(0, -1)
 
 [node name="CollisionShape2D" type="CollisionPolygon2D" parent="Stairs/Stair3/Area2D"]
-position = Vector2(9.15, -23)
+position = Vector2(5.15, -23)
 scale = Vector2(1.06865, 1)
-polygon = PackedVector2Array(-23.5344, 31, 32.6113, -32, 27.5, 37)
+polygon = PackedVector2Array(-28.2133, 35, 32.6113, -32, 27.5, 37)
 
 [node name="Path2D" type="Path2D" parent="Stairs/Stair3"]
-position = Vector2(-15.3765, 56)
+position = Vector2(-18.3765, 56)
 scale = Vector2(1.45115, 1.50618)
 curve = SubResource("Curve2D_jk2xe")
 
@@ -18936,6 +18907,22 @@ autoplay = true
 [node name="Music2" type="AudioStreamPlayer" parent="Music"]
 stream = ExtResource("173_nfyyl")
 volume_db = -10.0
+
+[node name="Door" parent="." instance=ExtResource("226_mqqny")]
+position = Vector2(540, -94)
+scale = Vector2(1, 1.24)
+
+[node name="Door3" parent="." instance=ExtResource("226_mqqny")]
+position = Vector2(2154, -39)
+scale = Vector2(2.1, 2.1)
+
+[node name="Door4" parent="." instance=ExtResource("226_mqqny")]
+position = Vector2(910, -7)
+scale = Vector2(0.9, 0.9)
+
+[node name="Door2" parent="." instance=ExtResource("226_mqqny")]
+position = Vector2(903, -198)
+scale = Vector2(1.27, 1.525)
 
 [node name="stanza 4" type="Node2D" parent="."]
 
@@ -19313,6 +19300,8 @@ metadata/_edit_group_ = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Campanile/CameraDistance3"]
 position = Vector2(8, -179)
 shape = SubResource("RectangleShape2D_lhqvy")
+
+[node name="Minigame" type="Node" parent="."]
 
 [connection signal="area_entered" from="PrimaStanza/Area2D" to="PrimaStanza/ParallaxBackground/ParallaxLayer8/Dragon" method="_on_area_2d_area_entered"]
 [connection signal="area_entered" from="PrimaStanza/Area2D2" to="Music" method="_on_area_2d_2_area_entered"]

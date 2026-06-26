@@ -107,8 +107,12 @@ func _ready() -> void:
 
 func _on_defense_potion_timeout() -> void:
 	defense_potion_active = false
-	print("ciao")
 	$VFX2.play("default")
+
+func apply_stairs_movement(input_dir: float) -> void:
+	if climbing and current_stairs:
+		var current_speed = speed * run_speed_multiplier if running else speed
+		velocity = current_stairs.direction * input_dir * current_speed
 
 func _physics_process(delta: float) -> void:
 	if $CanvasLayer/Options.visible == true:
@@ -122,18 +126,25 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
+	detect_stairs()
+
 	if knockback_active:
 		velocity.y += gravity * delta
 		move_and_slide()
 		return
 
 	if parrying:
+		velocity = Vector2.ZERO
 		move_and_slide()
 		return
 
 	if sliding:
 		collision_shape.rotation = deg_to_rad(90)
-		velocity.x = slide_direction * slide_speed
+		collision_shape.position.y = 10
+		if climbing and current_stairs:
+			velocity = slide_direction * current_stairs.direction * slide_speed
+		else:
+			velocity.x = slide_direction * slide_speed
 		move_and_slide()
 		if is_on_wall():
 			_on_slide_timeout()
@@ -141,40 +152,7 @@ func _physics_process(delta: float) -> void:
 		return
 	else:
 		collision_shape.rotation = deg_to_rad(0)
-
-	detect_stairs()
-
-	if climbing:
-		handle_stairs_movement(delta)
-		return
-
-	if is_on_wall() and not is_on_floor() and velocity.y > 80:
-		velocity.y = 80
-		if not attacking and not sliding and not parrying:
-			var wall_normal = get_wall_normal()
-			sprite.flip_h = wall_normal.x < 0
-			if sprite.animation != "wall_slide":
-				sprite.play("wall_slide")
-
-	if Input.is_action_just_pressed("jump") and is_on_wall() and not is_on_floor():
-		var wall_normal = get_wall_normal()
-		velocity.x = wall_normal.x * wall_jump_force_x
-		velocity.y = -wall_jump_force_y
-		wall_jumping = true
-		jumps_left = max_jumps - 1
-		jump_sound.play()
-		sprite.play("jump")
-		sprite.flip_h = wall_normal.x < 0
-		wall_jump_lock_timer.start(wall_jump_lock_time)
-		move_and_slide()
-		return
-
-	if wall_jumping:
-		velocity.y += gravity * delta
-		if sprite.animation != "jump":
-			sprite.play("jump")
-		move_and_slide()
-		return
+		collision_shape.position.y = 0
 
 	if is_on_floor():
 		if Input.is_action_just_pressed("crouch"):
@@ -188,6 +166,8 @@ func _physics_process(delta: float) -> void:
 		sprite.position.y = 0
 
 	if crouching:
+		collision_shape.rotation = deg_to_rad(90)
+		collision_shape.position.y = 10
 		if is_on_floor():
 			if Input.is_action_pressed("move_left") or Input.is_action_pressed("move_right"):
 				sprite.play("crouch_walk")
@@ -220,16 +200,33 @@ func _physics_process(delta: float) -> void:
 		parrying = true
 		sprite.play("parry")
 		velocity.x = 0
-		
 		if not defense_potion_active:
 			parry_timer.start(parry_window)
-		# se defense_potion_active, non avviare il timer — parry_active resta true
-		# fino a fine animazione
-		
 		move_and_slide()
 		return
 
 	if attacking or parrying:
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
+	if Input.is_action_just_pressed("jump") and is_on_wall() and not is_on_floor() and not climbing:
+		var wall_normal = get_wall_normal()
+		velocity.x = wall_normal.x * wall_jump_force_x
+		velocity.y = -wall_jump_force_y
+		wall_jumping = true
+		jumps_left = max_jumps - 1
+		jump_sound.play()
+		sprite.play("jump")
+		sprite.flip_h = wall_normal.x < 0
+		wall_jump_lock_timer.start(wall_jump_lock_time)
+		move_and_slide()
+		return
+
+	if wall_jumping:
+		velocity.y += gravity * delta
+		if sprite.animation != "jump":
+			sprite.play("jump")
 		move_and_slide()
 		return
 
@@ -252,16 +249,22 @@ func _physics_process(delta: float) -> void:
 		direction += 1
 		moving = true
 
-	velocity.x = direction * current_speed
+	if climbing and not attacking and not parrying and not sliding:
+		apply_stairs_movement(direction)
+	elif climbing:
+		velocity = Vector2.ZERO
+	else:
+		velocity.x = direction * current_speed
 
 	if is_on_floor() and moving and not walk_sound.playing:
 		walk_sound.play()
 	elif (not is_on_floor() or not moving) and walk_sound.playing:
 		walk_sound.stop()
 
-	if not is_on_floor():
+	if not climbing:
 		velocity.y += gravity * delta
-	else:
+
+	if is_on_floor():
 		velocity.y = 0
 		jumps_left = max_jumps
 
@@ -270,6 +273,10 @@ func _physics_process(delta: float) -> void:
 	was_on_floor = is_on_floor()
 
 	if Input.is_action_just_pressed("jump") and jumps_left > 0:
+		if climbing:
+			climbing = false
+			current_stairs = null
+			gravity = 1000.0
 		velocity.y = -jump_force
 		if running and direction != 0:
 			velocity.y = -jump_force
@@ -291,8 +298,20 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	if is_on_wall() and not is_on_floor() and velocity.y > 80 and not attacking and not sliding and not parrying:
-		pass
+	if climbing:
+		if direction != 0:
+			if running:
+				sprite.play("sprint")
+			else:
+				sprite.play("run")
+			sprite.flip_h = direction < 0
+		else:
+			sprite.play("idle")
+	elif is_on_wall() and not is_on_floor() and velocity.y > 80 and not attacking and not sliding and not parrying:
+		var wall_normal = get_wall_normal()
+		sprite.flip_h = wall_normal.x < 0
+		if sprite.animation != "wall_slide":
+			sprite.play("wall_slide")
 	elif sliding:
 		sprite.play("slide")
 	elif not is_on_floor():
@@ -308,12 +327,10 @@ func _physics_process(delta: float) -> void:
 	elif not parry_active and not attacking and not parrying:
 		sprite.play("idle")
 
-	if not (is_on_wall() and not is_on_floor() and velocity.y > 80) and direction != 0 and not sliding and not parrying:
+	if not wall_jumping and not (is_on_wall() and not is_on_floor() and velocity.y > 80) and direction != 0 and not sliding and not parrying and not climbing:
 		sprite.flip_h = direction < 0
 
 	health_bar.value += 2 * delta
-
-
 
 func _on_wall_jump_lock_timeout() -> void:
 	wall_jumping = false
@@ -335,6 +352,7 @@ func _on_slide_timeout() -> void:
 	velocity.x = 0
 	sprite.position.y = 0
 	collision_shape.rotation = deg_to_rad(0)
+	collision_shape.position.y = 0
 
 func detect_stairs():
 	var areas = $StairDetector.get_overlapping_areas()
@@ -345,7 +363,7 @@ func detect_stairs():
 			stairs_found = true
 			break
 	if stairs_found:
-		if not climbing:
+		if not climbing and velocity.y >= 0:
 			climbing = true
 			gravity = 0
 	else:
@@ -373,25 +391,12 @@ func shake_on_hit_enemy():
 func shake_on_take_damage():
 	camera_shake(3.0, 0.3)
 
-func handle_stairs_movement(delta):
-	var input_dir = Input.get_axis("move_left", "move_right")
-	if input_dir == 0:
-		velocity = Vector2.ZERO
-	else:
-		velocity = current_stairs.direction * input_dir * current_stairs.climb_speed
-	move_and_slide()
-	if input_dir == 0:
-		sprite.play("idle")
-	else:
-		sprite.play("run")
-		sprite.flip_h = input_dir < 0
-
 func _on_animation_finished() -> void:
 	if sprite.animation == "attack" or sprite.animation == "attack1":
 		attacking = false
 	if sprite.animation == "parry":
 		parrying = false
-		parry_active = false    # si spegne sempre a fine animazione
+		parry_active = false
 		can_take_damage = true
 
 func _on_hit_box_area_entered(area: Area2D) -> void:

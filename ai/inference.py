@@ -310,6 +310,43 @@ FALLBACK = {
     "low":  ["I'm listening.", "Tell me.", "Continue.", "Go on."],
 }
 
+RIDDLE_FALLBACKS = {
+    "inglese": [
+        {"riddle": "I walk without legs and speak without a tongue.\nI carry the memories of the dead, yet I have never lived.\nWhat am I?", "answer": "echo"},
+        {"riddle": "The more I am stolen, the more I remain.\nKings have sought me; the dying have cursed me.\nWhat am I?", "answer": "time"},
+        {"riddle": "I have no body, yet I can kill.\nI have no mouth, yet armies have marched in my name.\nWhat am I?", "answer": "lie"},
+        {"riddle": "I am cast by all things that stand in the light,\nyet I myself have no substance.\nWhat am I?", "answer": "shadow"},
+        {"riddle": "I am the last gift of every living thing.\nThe Oracle foresaw me; the noble family could not escape me.\nWhat am I?", "answer": "death"},
+    ],
+    "italiano": [
+        {"riddle": "Cammino senza gambe e parlo senza lingua.\nPorto i ricordi dei morti eppure non ho mai vissuto.\nCosa sono?", "answer": "eco"},
+        {"riddle": "Più mi rubano, più rimango.\nRe mi hanno cercato; i morenti mi hanno maledetto.\nCosa sono?", "answer": "tempo"},
+        {"riddle": "Non ho corpo, eppure posso uccidere.\nNon ho bocca, eppure eserciti hanno marciato in mio nome.\nCosa sono?", "answer": "menzogna"},
+        {"riddle": "Sono proiettato da tutto ciò che sta nella luce,\neppure io stesso non ho sostanza.\nCosa sono?", "answer": "ombra"},
+        {"riddle": "Sono l'ultimo dono di ogni essere vivente.\nL'Oracolo mi prevedeva; la famiglia nobile non poteva sfuggirmi.\nCosa sono?", "answer": "morte"},
+    ],
+}
+
+DEFAULT_RIDDLE_THEMES = [
+    "shadows, silence, and the boundary between life and death in a cursed castle",
+    "the Oracle's stolen prophecies and the price of forbidden knowledge",
+    "war, betrayal, and the souls of fallen soldiers who cannot rest",
+    "the ruined Oraculus Castle, the fallen noble family, and their restless spirits",
+    "blood, ancient curses, and dark medieval magic from year 1300",
+    "time, memory, and the weight of sins never forgiven",
+]
+
+def parse_riddle_response(raw: str) -> "dict | None":
+    riddle_match = re.search(r'RIDDLE:\s*(.+?)(?=ANSWER:|$)', raw, re.DOTALL | re.IGNORECASE)
+    answer_match = re.search(r'ANSWER:\s*(\w+)', raw, re.IGNORECASE)
+    if not riddle_match or not answer_match:
+        return None
+    riddle = riddle_match.group(1).strip()
+    answer = answer_match.group(1).strip().lower()
+    if len(riddle) < 10 or len(answer) < 2:
+        return None
+    return {"riddle": riddle, "answer": answer}
+
 def enforce_army_name(text, language):
     if language == "italiano":
         army_correct = ARMY_NAME
@@ -622,6 +659,84 @@ class LlamaCppWrapper:
             print(f"[llama.cpp] ERRORE generazione remota ({type(e).__name__}): {e}")
             return None
 
+    def generate_riddle(self, door_id: str, language: str = "inglese", theme: str = "") -> "dict | None":
+        if not self._available:
+            return None
+
+        if not theme:
+            idx = abs(hash(door_id)) % len(DEFAULT_RIDDLE_THEMES)
+            theme = DEFAULT_RIDDLE_THEMES[idx]
+
+        system = (
+            f"You are an ancient spirit guardian of Oraculus Castle, year 1300.\n"
+            f"{STORY_CONTEXT}\n\n"
+            f"You guard a door with a riddle. Create ONE riddle following these rules:\n"
+            f"- Theme: {theme}\n"
+            f"- Tone: dark, mysterious, medieval fantasy\n"
+            f"- Length: 2-4 lines\n"
+            f"- The answer must be a single common word\n"
+            f"- NEVER directly mention the answer in the riddle\n"
+            f"- Respond in {language}\n\n"
+            f"Respond ONLY in this exact format, nothing else:\n"
+            f"RIDDLE: [riddle text]\n"
+            f"ANSWER: [single word]"
+        )
+        user_msg = f"Generate a riddle in {language} about: {theme}"
+
+        if self._using_remote:
+            return self._generate_riddle_remote(system, user_msg)
+        else:
+            return self._generate_riddle_local(system, user_msg)
+
+    def _generate_riddle_local(self, system: str, user_msg: str) -> "dict | None":
+        stop = STOP_TOKENS_MAP.get(MODEL_FORMAT, STOP_TOKENS_MAP["chatml"])
+        try:
+            if MODEL_FORMAT == "llama3":
+                prompt = (
+                    f"<|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>"
+                    f"<|start_header_id|>user<|end_header_id|>\n\n{user_msg}<|eot_id|>"
+                    f"<|start_header_id|>assistant<|end_header_id|>\n\n"
+                )
+            else:
+                prompt = (
+                    f"<|im_start|>system\n{system}<|im_end|>\n"
+                    f"<|im_start|>user\n{user_msg}<|im_end|>\n"
+                    f"<|im_start|>assistant\n"
+                )
+            out = self._model(
+                prompt,
+                max_tokens=150,
+                temperature=0.85,
+                top_k=40,
+                top_p=0.9,
+                repeat_penalty=1.1,
+                stop=stop,
+                echo=False,
+            )
+            raw = out["choices"][0]["text"].strip()
+            return parse_riddle_response(raw)
+        except Exception as e:
+            print(f"[llama.cpp] Errore generazione riddle locale: {e}")
+            return None
+
+    def _generate_riddle_remote(self, system: str, user_msg: str) -> "dict | None":
+        try:
+            result = self._hf_client.chat_completion(
+                model=HF_MODEL,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user",   "content": user_msg},
+                ],
+                max_tokens=150,
+                temperature=0.85,
+                top_p=0.9,
+            )
+            raw = result.choices[0].message.content.strip()
+            return parse_riddle_response(raw)
+        except Exception as e:
+            print(f"[llama.cpp] Errore generazione riddle remota: {e}")
+            return None
+
 class NPCDialogueEngine:
     def __init__(self):
         self.memory = {}
@@ -683,6 +798,17 @@ class NPCDialogueEngine:
             "retrieval_score": 0.0,
             "npc_unlocked": (npc_name == "Malakai" and effective_hostility != hostility),
         }
+
+    def generate_door_riddle(self, door_id: str, language: str = "inglese", theme: str = "") -> dict:
+        result = self.llama.generate_riddle(door_id, language, theme)
+        if result:
+            print(f"[Riddle] door={door_id} answer={result['answer']}")
+            return result
+        fallback_list = RIDDLE_FALLBACKS.get(language, RIDDLE_FALLBACKS["inglese"])
+        idx = abs(hash(door_id)) % len(fallback_list)
+        chosen = fallback_list[idx]
+        print(f"[Riddle] door={door_id} using fallback, answer={chosen['answer']}")
+        return chosen
 
 if __name__ == "__main__":
     engine = NPCDialogueEngine()

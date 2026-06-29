@@ -365,7 +365,31 @@ def enforce_army_name(text, language):
         result = pattern.sub(army_correct, result)
     return result
 
-def build_prompt(player_input, npc_name, hostility, friendship, language, history, npc_data):
+def _format_dynamic_secrets(npc_name, friendship, context_vars):
+    """Inietta segreti dinamici nel prompt in base al contesto e al livello di amicizia."""
+    if not context_vars:
+        return ""
+    lines = []
+    answer = context_vars.get("entrance_riddle_answer", "")
+    threshold = context_vars.get("entrance_riddle_reveal_threshold", 60)
+    if answer and npc_name == "Levias":
+        if friendship >= threshold:
+            lines.append(
+                f"PERSONAL KNOWLEDGE: You know the answer to the riddle guarding the entrance door "
+                f"is '{answer}'. The player has earned enough of your trust. "
+                f"If they ask you directly about the door or the riddle, you may reveal it — "
+                f"but remain in character: speak as a guardian sharing a precious secret, not as a game hint."
+            )
+        else:
+            lines.append(
+                f"PERSONAL KNOWLEDGE: You know the answer to the riddle guarding the entrance door, "
+                f"but you will NOT reveal it yet. The player has not earned your trust. "
+                f"If they ask, deflect or hint that they must prove themselves first."
+            )
+    return ("\n\nDYNAMIC SECRETS:\n" + "\n".join(lines)) if lines else ""
+
+
+def build_prompt(player_input, npc_name, hostility, friendship, language, history, npc_data, context_vars=None):
     personality = npc_data.get("personalita", f"You are {npc_name}.")
     tier = hostility_tier(hostility, friendship)
     army_name_local = ARMY_NAME if language == "italiano" else ARMY_NAME_EN
@@ -387,12 +411,15 @@ def build_prompt(player_input, npc_name, hostility, friendship, language, histor
 
     location_info = f"CURRENT LOCATION: Ground Floor, Entrance. You ({npc_name}) are here. The player just entered the castle."
 
+    dynamic = _format_dynamic_secrets(npc_name, friendship, context_vars)
+
     system = (
         f"{STORY_CONTEXT}\n\n"
         f"{location_info}\n\n"
         f"CHARACTER:\n{personality}\n\n"
         f"{mood}\n"
-        f"{hist}\n"
+        f"{hist}"
+        f"{dynamic}\n"
         f"RULES:\n"
         f"1. Always speak in {language}, in first person, in character.\n"
         f"2. Keep your response to 1-3 short, complete sentences.\n"
@@ -424,7 +451,7 @@ def build_prompt(player_input, npc_name, hostility, friendship, language, histor
     return prompt
 
 
-def build_system_msg(npc_name, hostility, friendship, language, npc_data):
+def build_system_msg(npc_name, hostility, friendship, language, npc_data, context_vars=None):
     """System message per le API chat (ramo remoto)."""
     personality = npc_data.get("personalita", f"You are {npc_name}, an ancient spirit.")
     tier = hostility_tier(hostility, friendship)
@@ -437,10 +464,13 @@ def build_system_msg(npc_name, hostility, friendship, language, npc_data):
     else:
         mood = f"Attitude: OPEN (hostility {hostility}/100). Willing to help."
 
+    dynamic = _format_dynamic_secrets(npc_name, friendship, context_vars)
+
     return (
         f"{STORY_CONTEXT}\n\n"
         f"CHARACTER:\n{personality}\n\n"
-        f"{mood}\n\n"
+        f"{mood}"
+        f"{dynamic}\n\n"
         f"RULES:\n"
         f"1. Always speak in {language}, in first person, in character.\n"
         f"2. Keep your response to 1-3 short, complete sentences.\n"
@@ -598,21 +628,21 @@ class LlamaCppWrapper:
     def available(self):
         return self._available
 
-    def generate(self, player_input, npc_name, hostility, friendship, language, history):
+    def generate(self, player_input, npc_name, hostility, friendship, language, history, context_vars=None):
         if not self._available:
             return None
 
         if not self._using_remote:
-            return self._generate_local(player_input, npc_name, hostility, friendship, language, history)
+            return self._generate_local(player_input, npc_name, hostility, friendship, language, history, context_vars)
         else:
-            return self._generate_remote(player_input, npc_name, hostility, friendship, language, history)
+            return self._generate_remote(player_input, npc_name, hostility, friendship, language, history, context_vars)
 
-    def _generate_local(self, player_input, npc_name, hostility, friendship, language, history):
+    def _generate_local(self, player_input, npc_name, hostility, friendship, language, history, context_vars=None):
         npc_data = NPC_DATA.get(npc_name, {"personalita": f"You are {npc_name}, an ancient spirit."})
         stop = STOP_TOKENS_MAP.get(MODEL_FORMAT, STOP_TOKENS_MAP["chatml"])
 
         try:
-            prompt = build_prompt(player_input, npc_name, hostility, friendship, language, history, npc_data)
+            prompt = build_prompt(player_input, npc_name, hostility, friendship, language, history, npc_data, context_vars)
             out = self._model(
                 prompt,
                 max_tokens=MAX_TOKENS,
@@ -631,10 +661,10 @@ class LlamaCppWrapper:
             print(f"[llama.cpp] Errore generazione locale: {e}")
             return None
 
-    def _generate_remote(self, player_input, npc_name, hostility, friendship, language, history):
+    def _generate_remote(self, player_input, npc_name, hostility, friendship, language, history, context_vars=None):
         try:
             npc_data = NPC_DATA.get(npc_name, {"personalita": f"You are {npc_name}, an ancient spirit."})
-            system_msg = build_system_msg(npc_name, hostility, friendship, language, npc_data)
+            system_msg = build_system_msg(npc_name, hostility, friendship, language, npc_data, context_vars)
 
             messages = [{"role": "system", "content": system_msg}]
             for h in history[-3:]:
@@ -659,13 +689,16 @@ class LlamaCppWrapper:
             print(f"[llama.cpp] ERRORE generazione remota ({type(e).__name__}): {e}")
             return None
 
-    def generate_riddle(self, door_id: str, language: str = "inglese", theme: str = "") -> "dict | None":
+    def generate_riddle(self, door_id: str, language: str = "inglese", theme: str = "", session_id: str = "") -> "dict | None":
         if not self._available:
             return None
 
         if not theme:
             idx = abs(hash(door_id)) % len(DEFAULT_RIDDLE_THEMES)
             theme = DEFAULT_RIDDLE_THEMES[idx]
+
+        # session_id forza il LLM a non produrre lo stesso output del run precedente
+        variation_hint = f" (session: {session_id})" if session_id else ""
 
         system = (
             f"You are an ancient spirit guardian of Oraculus Castle, year 1300.\n"
@@ -676,12 +709,13 @@ class LlamaCppWrapper:
             f"- Length: 2-4 lines\n"
             f"- The answer must be a single common word\n"
             f"- NEVER directly mention the answer in the riddle\n"
+            f"- Every riddle must be unique and different from any you have created before\n"
             f"- Respond in {language}\n\n"
             f"Respond ONLY in this exact format, nothing else:\n"
             f"RIDDLE: [riddle text]\n"
             f"ANSWER: [single word]"
         )
-        user_msg = f"Generate a riddle in {language} about: {theme}"
+        user_msg = f"Generate a new, unique riddle in {language} about: {theme}{variation_hint}"
 
         if self._using_remote:
             return self._generate_riddle_remote(system, user_msg)
@@ -772,7 +806,7 @@ class NPCDialogueEngine:
         if npc_name == "Malakai" and self._check_malakai_unlock(player_input):
             effective_hostility = min(hostility, 20)
 
-        response = self.llama.generate(player_input, npc_name, effective_hostility, friendship, detected_lang, history)
+        response = self.llama.generate(player_input, npc_name, effective_hostility, friendship, detected_lang, history, context_vars)
         source = "llama"
 
         if not response:
@@ -799,15 +833,16 @@ class NPCDialogueEngine:
             "npc_unlocked": (npc_name == "Malakai" and effective_hostility != hostility),
         }
 
-    def generate_door_riddle(self, door_id: str, language: str = "inglese", theme: str = "") -> dict:
-        result = self.llama.generate_riddle(door_id, language, theme)
+    def generate_door_riddle(self, door_id: str, language: str = "inglese", theme: str = "", session_id: str = "") -> dict:
+        result = self.llama.generate_riddle(door_id, language, theme, session_id)
         if result:
-            print(f"[Riddle] door={door_id} answer={result['answer']}")
+            print(f"[Riddle] door={door_id} session={session_id} answer={result['answer']}")
             return result
         fallback_list = RIDDLE_FALLBACKS.get(language, RIDDLE_FALLBACKS["inglese"])
-        idx = abs(hash(door_id)) % len(fallback_list)
+        # Combina door_id e session_id per avere un fallback diverso ogni run
+        idx = abs(hash(door_id + session_id)) % len(fallback_list)
         chosen = fallback_list[idx]
-        print(f"[Riddle] door={door_id} using fallback, answer={chosen['answer']}")
+        print(f"[Riddle] door={door_id} session={session_id} using fallback, answer={chosen['answer']}")
         return chosen
 
 if __name__ == "__main__":

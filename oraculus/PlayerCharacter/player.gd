@@ -11,7 +11,7 @@ var normal_speed: float
 @export var invincibility_time: float = 0.5
 @export var damage: int = 10
 @export var slide_speed: float = 100.0
-@export var slide_duration: float = 0.5
+@export var slide_duration: float = 0.7
 var sliding: bool = false
 var slide_timer: Timer
 var last_input_time: Dictionary = {"move_left": 0.0, "move_right": 0.0}
@@ -36,6 +36,10 @@ var knockback_active: bool = false
 var running: bool = false
 var slide_direction: int = 0
 var collision_shape: CollisionShape2D
+var _stuck_on_wall_frames: int = 0
+# Layer corrente delle scale: 1 = foreground (default), 2 = background.
+# Cambialo via codice o da un trigger in scena per attivare le scale del layer corretto.
+var current_stair_layer: int = 1
 
 @export var wall_jump_force_x: float = 280.0
 @export var wall_jump_force_y: float = 380.0
@@ -145,8 +149,12 @@ func _physics_process(delta: float) -> void:
 			velocity = slide_direction * current_stairs.direction * slide_speed
 		else:
 			velocity.x = slide_direction * slide_speed
+		var _pre_slide_pos := global_position
 		move_and_slide()
-		if is_on_wall():
+		var _slide_moved := (global_position - _pre_slide_pos).length()
+		if _slide_moved < 1.0 and get_slide_collision_count() == 0:
+			_try_unstick_slide(_pre_slide_pos)
+		elif is_on_wall():
 			_on_slide_timeout()
 		sprite.play("slide")
 		return
@@ -227,7 +235,10 @@ func _physics_process(delta: float) -> void:
 		velocity.y += gravity * delta
 		if sprite.animation != "jump":
 			sprite.play("jump")
+		var _pre_wj_pos := global_position
 		move_and_slide()
+		if (global_position - _pre_wj_pos).length() < 0.5 and get_slide_collision_count() == 0:
+			_try_unstick_wall()
 		return
 
 	var direction = 0
@@ -296,7 +307,19 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
+	var _pre_move_pos := global_position
 	move_and_slide()
+
+	# Stuck-in-wall detection per il wall_slide normale
+	if is_on_wall() and not is_on_floor() and not wall_jumping:
+		if (global_position - _pre_move_pos).length() < 0.5:
+			_stuck_on_wall_frames += 1
+			if _stuck_on_wall_frames >= 20:
+				_try_unstick_wall()
+		else:
+			_stuck_on_wall_frames = 0
+	else:
+		_stuck_on_wall_frames = 0
 
 	if climbing:
 		if direction != 0:
@@ -346,6 +369,30 @@ func start_slide(action: String) -> void:
 	velocity.x = slide_direction * slide_speed
 	slide_timer.start(slide_duration)
 
+func _try_unstick_wall() -> void:
+	wall_jumping = false
+	wall_jump_lock_timer.stop()
+	_stuck_on_wall_frames = 0
+
+	var normal := get_wall_normal() if is_on_wall() else Vector2.RIGHT
+	var offsets: Array[Vector2] = [
+		normal * 14,
+		normal * 14 + Vector2(0, -10),
+		Vector2(0, -16),
+		normal * 24,
+		normal * 14 + Vector2(0, -20),
+		Vector2(0, -28),
+	]
+	for offset in offsets:
+		var candidate := global_position + offset
+		var t := global_transform
+		t.origin = candidate
+		if not test_move(t, Vector2.ZERO):
+			global_position = candidate
+			velocity = Vector2.ZERO
+			return
+	velocity = Vector2.ZERO
+
 func _on_slide_timeout() -> void:
 	sliding = false
 	slide_direction = 0
@@ -354,14 +401,44 @@ func _on_slide_timeout() -> void:
 	collision_shape.rotation = deg_to_rad(0)
 	collision_shape.position.y = 0
 
+func _try_unstick_slide(fallback_pos: Vector2) -> void:
+	# Candidati ordinati: prima avanti nella direzione della slide, poi indietro, poi in alto
+	var offsets: Array[Vector2] = [
+		Vector2(slide_direction * 10, 0),
+		Vector2(slide_direction * 10, -10),
+		Vector2(0, -12),
+		Vector2(-slide_direction * 10, 0),
+		Vector2(-slide_direction * 10, -10),
+		Vector2(0, -20),
+		Vector2(slide_direction * 20, 0),
+		Vector2(-slide_direction * 20, 0),
+	]
+	for offset in offsets:
+		var candidate := global_position + offset
+		var t := global_transform
+		t.origin = candidate
+		if not test_move(t, Vector2.ZERO):
+			global_position = candidate
+			_on_slide_timeout()
+			return
+	# Nessuna posizione libera trovata: torna dove eri prima del frame
+	global_position = fallback_pos
+	_on_slide_timeout()
+
 func detect_stairs():
 	var areas = $StairDetector.get_overlapping_areas()
 	var stairs_found = false
 	for area in areas:
-		if area.get_parent().is_in_group("stairs"):
-			current_stairs = area.get_parent()
-			stairs_found = true
-			break
+		var parent = area.get_parent()
+		if not parent.is_in_group("stairs"):
+			continue
+		# Ignora scale che appartengono a un layer diverso da quello corrente
+		var layer := parent.get("stair_layer")
+		if layer != null and layer != current_stair_layer:
+			continue
+		current_stairs = parent
+		stairs_found = true
+		break
 	if stairs_found:
 		if not climbing and velocity.y >= 0:
 			climbing = true
@@ -504,4 +581,5 @@ func _on_interact_pressed() -> void:
 	can_interact = true
 
 func _on_button_pressed() -> void:
+	GameState.reset_all()
 	get_tree().reload_current_scene()

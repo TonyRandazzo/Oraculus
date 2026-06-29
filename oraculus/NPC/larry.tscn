@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3 uid="uid://bkpr2hwc2s5nx"]
+
+[ext_resource type="Script" path="res://oraculus/NPC/larry.gd" id="1_0226n"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="2_fcg4r"]
+[ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="3_g188x"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_24smp"]
+size = Vector2(238, 375.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8ynu0"]
+bg_color = Color(0.0862745, 0.0862745, 0.0862745, 0.666667)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.404511, 0.404511, 0.404511, 1)
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
+
+[node name="Larry" type="Node2D"]
+script = ExtResource("1_0226n")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(63, 128.25)
+shape = SubResource("RectangleShape2D_24smp")
+
+[node name="Dialogue" type="Label" parent="."]
+z_index = 4095
+offset_left = 105.0
+offset_top = 182.0
+offset_right = 307.0
+offset_bottom = 196.0
+scale = Vector2(0.5, 0.5)
+theme_override_fonts/font = ExtResource("2_fcg4r")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8ynu0")
+text = "*La voce demoniaca echeggia...*"
+autowrap_mode = 3
+script = ExtResource("3_g188x")

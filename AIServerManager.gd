@@ -17,25 +17,54 @@ func _ready():
 	_check_and_setup_python()
 
 func _get_base_dir() -> String:
+	# In editor usa la cartella del progetto, in export usa quella dell'eseguibile.
+	if OS.has_feature("editor"):
+		return ProjectSettings.globalize_path("res://")
 	return OS.get_executable_path().get_base_dir() + "/"
 
 func _check_and_setup_python():
 	if OS.get_name() == "Web":
 		_switch_to_remote()
 		return
+	# Prova prima il server remoto con un timeout breve.
+	# Se non risponde (nessuna connessione), avvia il server locale.
+	_try_remote_first()
 
-	var base_dir = _get_base_dir()
-	var script_path = base_dir + "ai/ai_server.py"
-
-	if not FileAccess.file_exists(script_path):
-		_switch_to_remote()
+func _try_remote_first() -> void:
+	var http := HTTPRequest.new()
+	http.timeout = 6.0
+	add_child(http)
+	var err := http.request(REMOTE_API_URL + "/health")
+	if err != OK:
+		http.queue_free()
+		_start_local_server()
 		return
 
+	var result = await http.request_completed
+	http.queue_free()
+
+	if result[1] == 200:
+		print("[ServerManager] Server remoto raggiungibile.")
+		_switch_to_remote()
+	else:
+		print("[ServerManager] Server remoto non disponibile (%d). Avvio locale." % result[1])
+		_start_local_server()
+
+func _start_local_server() -> void:
+	var base_dir := _get_base_dir()
+	var script_path := base_dir + "ai/ai_server.py"
+
+	if not FileAccess.file_exists(script_path):
+		push_error("[ServerManager] Server locale non trovato: " + script_path)
+		emit_signal("server_failed", "Nessun server AI disponibile.")
+		return
+
+	print("[ServerManager] Avvio server locale: ", script_path)
 	_python_thread = Thread.new()
 	_python_thread.start(_setup_and_run_server.bind(script_path, base_dir))
 
 func _switch_to_remote():
-	print("[ServerManager] Fallback su server remoto: ", REMOTE_API_URL)
+	print("[ServerManager] Uso server remoto: ", REMOTE_API_URL)
 	_using_remote = true
 	_server_ready = true
 	emit_signal("server_started")

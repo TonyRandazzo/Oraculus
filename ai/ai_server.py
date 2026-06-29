@@ -154,11 +154,12 @@ class NPCHandler(BaseHTTPRequestHandler):
                 self.send_json(500, {"error": f"Errore interno: {e}"})
 
         elif path == "/riddle":
-            door_id  = body.get("door_id",  "door_default")
-            language = body.get("language", "inglese")
-            theme    = body.get("theme",    "")
+            door_id    = body.get("door_id",    "door_default")
+            language   = body.get("language",   "inglese")
+            theme      = body.get("theme",      "")
+            session_id = body.get("session_id", "")
             try:
-                result = engine.generate_door_riddle(door_id, language, theme)
+                result = engine.generate_door_riddle(door_id, language, theme, session_id)
                 self.send_json(200, result)
             except Exception as e:
                 traceback.print_exc()

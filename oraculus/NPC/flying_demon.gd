@@ -153,7 +153,8 @@ func _do_local_request(player_message: String):
 		"max_tokens": 25,
 		"temperature": 0.7,
 		"max_length": 12,
-		"conversation_history": conversation_history
+		"conversation_history": conversation_history,
+		"context_vars": _build_context_vars(),
 	}
 
 	_ai_thread = Thread.new()
@@ -178,7 +179,8 @@ func _do_remote_request(player_message: String):
 		"max_tokens": 25,
 		"temperature": 0.7,
 		"max_length": 12,
-		"conversation_history": conversation_history
+		"conversation_history": conversation_history,
+		"context_vars": _build_context_vars(),
 	}
 
 	var response = await server_manager.make_request("chat", payload)
@@ -228,6 +230,9 @@ func _on_ai_chat_received(message: String):
 func receive_player_answer(answer: String):
 	player_input_buffer = answer
 	if state == "attacking": state = "conversing"
+
+	if _try_reveal_entrance_answer(answer):
+		return
 	if state != "waiting" and state != "conversing" and state != "ready": return
 	if is_waiting_for_response: return
 	face_player()
@@ -236,6 +241,12 @@ func receive_player_answer(answer: String):
 	_send_to_ai_server(answer)
 
 func _process(_delta: float) -> void:
+	# DEBUG — F9 porta l'amicizia al massimo per testare la rivelazione del riddle
+	if Input.is_action_just_pressed("ui_accept"):
+		friendship_level = max_friendship
+		hostility = 0
+		print("[DEBUG Levias] friendship forzata al massimo. context_vars: ", _build_context_vars())
+
 	if not _ai_thread_done:
 		return
 
@@ -693,6 +704,53 @@ func _on_timeout():
 		is_interacting = false
 		_stop_thinking_dots()
 		_use_fallback_response("*Yawn* Boring..." if friendship_level > 3 else "*Echo*")
+
+func _try_reveal_entrance_answer(msg: String) -> bool:
+	if npc_name != "Levias":
+		return false
+	var gs := get_node_or_null("/root/GameState")
+	if gs == null or gs.entrance_riddle_answer.is_empty():
+		return false
+
+	var lower := msg.to_lower()
+	var is_asking := (
+		lower.contains("answer") or lower.contains("riddle") or
+		lower.contains("door") or lower.contains("solution") or
+		lower.contains("hint") or lower.contains("tell me") or
+		lower.contains("what is") or lower.contains("risposta") or
+		lower.contains("indovinello") or lower.contains("soluzione") or
+		lower.contains("porta")
+	)
+	if not is_asking:
+		return false
+
+	var threshold := 60
+	if friendship_level * 20 < threshold:
+		var deflections := [
+			"*turns away* That knowledge is not for those I do not trust.",
+			"*quiet* You have not yet earned the right to that answer.",
+			"*cold gaze* Prove yourself first. Then we speak of doors.",
+		]
+		_on_ai_chat_received(deflections[randi() % deflections.size()])
+		return true
+
+	var answer = gs.entrance_riddle_answer
+	var reveals := [
+		"*leans close, voice low* The word you seek... is '%s'. Do not waste this." % answer,
+		"*exhales slowly* You have earned this. The answer to the entrance riddle is '%s'." % answer,
+		"*quiet* I have guarded that door for years. The answer is '%s'. Speak it wisely." % answer,
+	]
+	_on_ai_chat_received(reveals[randi() % reveals.size()])
+	return true
+
+func _build_context_vars() -> Dictionary:
+	var gs := get_node_or_null("/root/GameState")
+	if gs == null or gs.entrance_riddle_answer.is_empty():
+		return {}
+	return {
+		"entrance_riddle_answer": gs.entrance_riddle_answer,
+		"entrance_riddle_reveal_threshold": 60,
+	}
 
 func _use_fallback_response(text: String):
 	if dialogue_box: dialogue_box.show_text(text)

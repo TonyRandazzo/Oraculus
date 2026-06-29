@@ -1,3 +1,120 @@
-[gd_scene format=3 uid="uid://vfcioslk3vfd"]
+[gd_scene load_steps=3 format=3 uid="uid://vfcioslk3vfd"]
+
+[ext_resource type="Script" path="res://oraculus/Minigames/draw_light.gd" id="1_drawl"]
+[ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="2_drawl"]
 
 [node name="DrawLight" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_drawl")
+
+[node name="Overlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.78)
+
+[node name="DrawPanel" type="Node2D" parent="."]
+
+[node name="LightSource" type="Node2D" parent="DrawPanel"]
+position = Vector2(120, 300)
+
+[node name="LightSourceSprite" type="ColorRect" parent="DrawPanel/LightSource"]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+color = Color(1, 0.9, 0.2, 1)
+
+[node name="Target" type="Node2D" parent="DrawPanel"]
+position = Vector2(760, 200)
+
+[node name="TargetSprite" type="ColorRect" parent="DrawPanel/Target"]
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+color = Color(1, 0.3, 0.1, 1)
+
+[node name="LightFlow" type="Line2D" parent="DrawPanel"]
+points = PackedVector2Array(120, 300, 900, 300)
+width = 3.0
+default_color = Color(1, 0.95, 0.3, 0.7)
+
+[node name="DrawnPath" type="Line2D" parent="DrawPanel"]
+width = 4.0
+default_color = Color(0.4, 0.8, 1, 0.9)
+
+[node name="ReflectedBeam" type="Line2D" parent="DrawPanel"]
+width = 3.0
+default_color = Color(1, 0.5, 0.1, 0.85)
+
+[node name="HUD" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="FeedbackLabel" type="Label" parent="HUD"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 50.0
+theme_override_fonts/font = ExtResource("2_drawl")
+theme_override_font_sizes/font_size = 18
+text = "Draw a path to redirect the light beam to the target."
+horizontal_alignment = 1
+
+[node name="ResetButton" type="Button" parent="HUD"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -130.0
+offset_top = 540.0
+offset_right = -10.0
+offset_bottom = 570.0
+theme_override_fonts/font = ExtResource("2_drawl")
+theme_override_font_sizes/font_size = 16
+text = "Reset"
+
+[node name="CloseButton" type="Button" parent="HUD"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 10.0
+offset_top = 540.0
+offset_right = 130.0
+offset_bottom = 570.0
+theme_override_fonts/font = ExtResource("2_drawl")
+theme_override_font_sizes/font_size = 16
+text = "Close"
+
+[node name="SuccessOverlay" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Background" type="ColorRect" parent="SuccessOverlay"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="Label" type="Label" parent="SuccessOverlay"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -30.0
+offset_right = 200.0
+offset_bottom = 30.0
+theme_override_fonts/font = ExtResource("2_drawl")
+theme_override_font_sizes/font_size = 28
+text = "The light flows true..."
+horizontal_alignment = 1

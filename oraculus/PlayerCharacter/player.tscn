@@ -516,7 +516,24 @@ _data = {
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_rsi7j")
+speed = null
+run_speed_multiplier = null
 jump_force = 300.0
+gravity = null
+max_jumps = null
+max_health = null
+attack_damage = null
+invincibility_time = null
+damage = null
+slide_speed = null
+slide_duration = null
+double_tap_time = null
+climb_speed = null
+knockback_force = null
+wall_jump_force_x = null
+wall_jump_force_y = null
+wall_jump_lock_time = null
+parry_window = null
 
 [node name="VFX2" type="AnimatedSprite2D" parent="."]
 modulate = Color(0, 1, 1, 1)

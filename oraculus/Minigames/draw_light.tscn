@@ -18,74 +18,52 @@ color = Color(0, 0, 0, 0.78)
 [node name="LightSource" type="Node2D" parent="DrawPanel"]
 position = Vector2(120, 300)
 
-[node name="LightSourceSprite" type="ColorRect" parent="DrawPanel/LightSource"]
-offset_left = -12.0
-offset_top = -12.0
-offset_right = 12.0
-offset_bottom = 12.0
+[node name="LightSourceShape" type="Polygon2D" parent="DrawPanel/LightSource"]
 color = Color(1, 0.9, 0.2, 1)
+polygon = PackedVector2Array(-9, -9, 14, 0, -9, 9)
 
 [node name="Target" type="Node2D" parent="DrawPanel"]
-position = Vector2(760, 200)
+position = Vector2(800, 220)
 
-[node name="TargetSprite" type="ColorRect" parent="DrawPanel/Target"]
-offset_left = -16.0
-offset_top = -16.0
-offset_right = 16.0
-offset_bottom = 16.0
+[node name="TargetSprite" type="Polygon2D" parent="DrawPanel/Target"]
 color = Color(1, 0.3, 0.1, 1)
+polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
 
-[node name="LightFlow" type="Line2D" parent="DrawPanel"]
-points = PackedVector2Array(120, 300, 900, 300)
+[node name="Mirrors" type="Node2D" parent="DrawPanel"]
+
+[node name="BeamLine" type="Line2D" parent="DrawPanel"]
 width = 3.0
-default_color = Color(1, 0.95, 0.3, 0.7)
-
-[node name="DrawnPath" type="Line2D" parent="DrawPanel"]
-width = 4.0
-default_color = Color(0.4, 0.8, 1, 0.9)
-
-[node name="ReflectedBeam" type="Line2D" parent="DrawPanel"]
-width = 3.0
-default_color = Color(1, 0.5, 0.1, 0.85)
+default_color = Color(1, 0.95, 0.3, 0.85)
 
 [node name="HUD" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="FeedbackLabel" type="Label" parent="HUD"]
 layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -300.0
+offset_left = -350.0
 offset_top = 20.0
-offset_right = 300.0
+offset_right = 350.0
 offset_bottom = 50.0
 theme_override_fonts/font = ExtResource("2_drawl")
-theme_override_font_sizes/font_size = 18
-text = "Draw a path to redirect the light beam to the target."
-horizontal_alignment = 1
-
-[node name="ResetButton" type="Button" parent="HUD"]
-layout_mode = 0
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -130.0
-offset_top = 540.0
-offset_right = -10.0
-offset_bottom = 570.0
-theme_override_fonts/font = ExtResource("2_drawl")
 theme_override_font_sizes/font_size = 16
-text = "Reset"
+text = "Move the mouse to aim the source. Bounce the light off the mirrors to hit the target."
+horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="CloseButton" type="Button" parent="HUD"]
 layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = 10.0
+offset_left = -60.0
 offset_top = 540.0
-offset_right = 130.0
+offset_right = 60.0
 offset_bottom = 570.0
 theme_override_fonts/font = ExtResource("2_drawl")
 theme_override_font_sizes/font_size = 16
@@ -97,6 +75,8 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Background" type="ColorRect" parent="SuccessOverlay"]
 layout_mode = 0

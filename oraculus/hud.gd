@@ -81,7 +81,30 @@ func _on_item_8_pressed() -> void:
 	item_description = $Inventory/Buttons/Item8.item_description
 
 
+func _try_use_door_scroll() -> bool:
+	var player = $"../.."
+	var door = player.current_demon
+	if door == null or not door.has_method("unlock_with_scroll"):
+		return false
+
+	for slot in $Inventory/Buttons.get_children():
+		if slot.name == "SelectedItem":
+			continue
+		if slot.is_in_group("door scroll"):
+			if door.unlock_with_scroll():
+				slot.remove_from_group("door scroll")
+				slot.texture_normal = null
+				slot.texture_pressed = null
+				slot.item_name = "no item"
+				slot.item_description = "there are no item in your inventory"
+				$Inventory/Buttons/SelectedItem.texture_normal = null
+				$Inventory/Buttons/SelectedItem.texture_pressed = null
+			return true
+	return false
+
 func _on_selected_item_pressed() -> void:
+	if _try_use_door_scroll():
+		return
 	if $Inventory/Buttons/Item1.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
 		$"../..".current_health = $"../..".max_health
 		$"../..".update_health()

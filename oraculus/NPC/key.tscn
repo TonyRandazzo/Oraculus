@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://bcqbn5dcb1voc"]
+
+[ext_resource type="Script" path="res://key.gd" id="1_key01"]
+[ext_resource type="Texture2D" uid="uid://djgbhnuys162x" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/Key 1 - SILVER -.png" id="2_key01"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_key01"]
+size = Vector2(24, 24)
+
+[node name="Key" type="Node2D"]
+script = ExtResource("1_key01")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("RectangleShape2D_key01")
+
+[node name="Sprite2D" type="Sprite2D" parent="Area2D"]
+rotation = 1.5708
+texture = ExtResource("2_key01")
+
+[connection signal="area_entered" from="Area2D" to="." method="_on_area_2d_area_entered"]

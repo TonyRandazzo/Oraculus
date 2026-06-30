@@ -57,6 +57,10 @@ var parry_timer: Timer
 @onready var attack_sound = $Attack
 @onready var hurt_sound = $Hurt
 @onready var death_sound = $Death
+@onready var wall_jump_anim: AnimatedSprite2D = $WallJumpAnim
+
+var _wall_jump_anim_home_pos: Vector2
+var _wall_jump_anim_pinned: bool = false
 @onready var hud_label: TextEdit = $CanvasLayer/HUD/Label
 @onready var hud = $CanvasLayer/HUD/Label
 @onready var health_bar = $CanvasLayer/HUD/HP/HP
@@ -83,6 +87,9 @@ func _ready() -> void:
 	update_health()
 	
 	collision_shape = $CollisionShape2D
+
+	_wall_jump_anim_home_pos = wall_jump_anim.position
+	wall_jump_anim.visible = false
 
 	slide_timer = Timer.new()
 	slide_timer.one_shot = true
@@ -225,8 +232,10 @@ func _physics_process(delta: float) -> void:
 		wall_jumping = true
 		jumps_left = max_jumps - 1
 		jump_sound.play()
+		walk_sound.play()
 		sprite.play("jump")
 		sprite.flip_h = wall_normal.x < 0
+		_pin_wall_jump_anim(wall_normal)
 		wall_jump_lock_timer.start(wall_jump_lock_time)
 		move_and_slide()
 		return
@@ -369,6 +378,23 @@ func start_slide(action: String) -> void:
 	velocity.x = slide_direction * slide_speed
 	slide_timer.start(slide_duration)
 
+func _pin_wall_jump_anim(wall_normal: Vector2) -> void:
+	# Al nuovo wall jump, prima riporta l'animazione precedente alla posizione originale
+	if _wall_jump_anim_pinned:
+		wall_jump_anim.top_level = false
+		wall_jump_anim.position = _wall_jump_anim_home_pos
+		wall_jump_anim.visible = false
+		_wall_jump_anim_pinned = false
+
+	# Poi la fissa sul muro appena usato, rivolta verso di esso
+	wall_jump_anim.top_level = true
+	wall_jump_anim.global_position = global_position + Vector2(-wall_normal.x * 10.0, 9.0)
+	wall_jump_anim.flip_h = wall_normal.x < 0
+	wall_jump_anim.visible = true
+	wall_jump_anim.stop()
+	wall_jump_anim.play("wall jump")
+	_wall_jump_anim_pinned = true
+
 func _try_unstick_wall() -> void:
 	wall_jumping = false
 	wall_jump_lock_timer.stop()
@@ -433,7 +459,7 @@ func detect_stairs():
 		if not parent.is_in_group("stairs"):
 			continue
 		# Ignora scale che appartengono a un layer diverso da quello corrente
-		var layer := parent.get("stair_layer")
+		var layer = parent.get("stair_layer")
 		if layer != null and layer != current_stair_layer:
 			continue
 		current_stairs = parent

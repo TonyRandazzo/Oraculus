@@ -115,10 +115,16 @@ func _fetch_ai_riddle(server: Node) -> void:
 
 	if door_id == "door_entrance":
 		GameState.entrance_riddle_answer = current_riddle_answer
-		print("[DEBUG door_entrance] answer saved to GameState: '%s'" % current_riddle_answer)
 
 	if player_in_range:
 		instructions.show_text(current_riddle_text)
+
+func unlock_with_scroll() -> bool:
+	if door_unlocked or _mode != "riddle":
+		return false
+	_unlock_door()
+	instructions.show_text("The scroll's magic forces the door open...")
+	return true
 
 func _use_fallback_riddle() -> void:
 	var fallback := GameState.get_fallback_riddle()

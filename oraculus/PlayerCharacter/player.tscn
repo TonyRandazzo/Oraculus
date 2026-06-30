@@ -1,4 +1,4 @@
-[gd_scene load_steps=93 format=3 uid="uid://cf67gkg04ayra"]
+[gd_scene load_steps=98 format=3 uid="uid://cf67gkg04ayra"]
 
 [ext_resource type="Texture2D" uid="uid://dqv11xtytfj82" path="res://oraculus/PlayerCharacter/Attack/0.png" id="1_0m1v8"]
 [ext_resource type="Script" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
@@ -82,6 +82,10 @@
 [ext_resource type="Texture2D" uid="uid://gj64l1cn7qvg" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame5.png" id="76_bxodk"]
 [ext_resource type="Texture2D" uid="uid://lotcvrx5iiaj" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame6.png" id="77_xb5k8"]
 [ext_resource type="Texture2D" uid="uid://db011n1amylyx" path="res://oraculus/VFX/VFX2/COLOR/Frames/VFXimpact2_frame7.png" id="78_unurj"]
+[ext_resource type="Texture2D" uid="uid://ctklhft4f2ncb" path="res://oraculus/VFX/VFX1/B&W/Frames/VFXimpact1_frame1.png" id="83_swddd"]
+[ext_resource type="Texture2D" uid="uid://b8s7rw5tg8mey" path="res://oraculus/VFX/VFX1/B&W/Frames/VFXimpact1_frame2.png" id="84_6ms2o"]
+[ext_resource type="Texture2D" uid="uid://dcy6uhwy1winx" path="res://oraculus/VFX/VFX1/B&W/Frames/VFXimpact1_frame3.png" id="85_gv61l"]
+[ext_resource type="Texture2D" uid="uid://cl347lgfemgto" path="res://oraculus/VFX/VFX1/B&W/Frames/VFXimpact1_frame4.png" id="86_utepw"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_rhs7m"]
 animations = [{
@@ -514,32 +518,37 @@ _data = {
 "hit_flash": SubResource("Animation_3ufcn")
 }
 
+[sub_resource type="SpriteFrames" id="SpriteFrames_sbkxv"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("83_swddd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("84_6ms2o")
+}, {
+"duration": 1.0,
+"texture": ExtResource("85_gv61l")
+}, {
+"duration": 1.0,
+"texture": ExtResource("86_utepw")
+}, {
+"duration": 1.0,
+"texture": null
+}],
+"loop": false,
+"name": &"wall jump",
+"speed": 15.0
+}]
+
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_rsi7j")
-speed = null
-run_speed_multiplier = null
 jump_force = 300.0
-gravity = null
-max_jumps = null
-max_health = null
-attack_damage = null
-invincibility_time = null
-damage = null
-slide_speed = null
-slide_duration = null
-double_tap_time = null
-climb_speed = null
-knockback_force = null
-wall_jump_force_x = null
-wall_jump_force_y = null
-wall_jump_lock_time = null
-parry_window = null
 
 [node name="VFX2" type="AnimatedSprite2D" parent="."]
 modulate = Color(0, 1, 1, 1)
 position = Vector2(2, -1)
 sprite_frames = SubResource("SpriteFrames_rhs7m")
-frame_progress = 0.452319
 
 [node name="Player" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_npq8g")
@@ -603,6 +612,14 @@ bus = &"SFX"
 modulate = Color(0, 1, 1, 1)
 position = Vector2(14, -10)
 sprite_frames = SubResource("SpriteFrames_rhs7m")
+
+[node name="WallJumpAnim" type="AnimatedSprite2D" parent="."]
+position = Vector2(-7, 9)
+scale = Vector2(0.3, 0.3)
+sprite_frames = SubResource("SpriteFrames_sbkxv")
+animation = &"wall jump"
+frame = 4
+frame_progress = 1.0
 
 [connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]
 [connection signal="area_entered" from="AttackBox" to="." method="_on_attack_box_area_entered"]

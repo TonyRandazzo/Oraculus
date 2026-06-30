@@ -241,12 +241,6 @@ func receive_player_answer(answer: String):
 	_send_to_ai_server(answer)
 
 func _process(_delta: float) -> void:
-	# DEBUG — F9 porta l'amicizia al massimo per testare la rivelazione del riddle
-	if Input.is_action_just_pressed("ui_accept"):
-		friendship_level = max_friendship
-		hostility = 0
-		print("[DEBUG Levias] friendship forzata al massimo. context_vars: ", _build_context_vars())
-
 	if not _ai_thread_done:
 		return
 

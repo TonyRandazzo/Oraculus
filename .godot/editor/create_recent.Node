@@ -1,3 +1,8 @@
+Path2D
+CollisionPolygon2D
+Area2D
+Node2D
+CollisionShape2D
 Sprite2D
 AnimatedSprite2D
 CanvasLayer
@@ -5,10 +10,6 @@ Node
 Button
 Panel
 ParallaxBackground
-Node2D
-CollisionPolygon2D
 StaticBody2D
-CollisionShape2D
 TileMap
 PointLight2D
-TouchScreenButton

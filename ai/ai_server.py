@@ -1,4 +1,4 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import json
 import urllib.parse
 import traceback
@@ -189,7 +189,7 @@ class NPCHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server = HTTPServer((HOST, PORT), NPCHandler)
+    server = ThreadingHTTPServer((HOST, PORT), NPCHandler)
     print("Esempio chiamata da PowerShell:")
     print(f'  Invoke-RestMethod -Uri "http://localhost:{PORT}/chat" \\')
     print(f'    -Method POST -ContentType "application/json" \\')

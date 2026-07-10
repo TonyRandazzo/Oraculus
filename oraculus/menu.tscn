@@ -1,13 +1,28 @@
-[gd_scene load_steps=18 format=4 uid="uid://c4kquegptmxn7"]
+[gd_scene load_steps=27 format=4 uid="uid://c4kquegptmxn7"]
 
 [ext_resource type="Script" path="res://oraculus/menu.gd" id="1_5bwf8"]
 [ext_resource type="Texture2D" uid="uid://vaiq1p8flm4i" path="res://oraculus/Level/314de424a24374ca5fb0ab2f34d96183.jpg" id="2_jr6gw"]
 [ext_resource type="Texture2D" uid="uid://cilnvrscp8yuo" path="res://oraculus/Level/Rectangle 124.png" id="3_1iuie"]
 [ext_resource type="Texture2D" uid="uid://bap8dmggnqve4" path="res://oraculus/Level/Rectangle 126.png" id="4_6653w"]
 [ext_resource type="Texture2D" uid="uid://cvulixjpd6gcu" path="res://oraculus/Level/Rectangle 125.png" id="5_rmkp3"]
+[ext_resource type="Texture2D" uid="uid://dyoobssarqmc4" path="res://oraculus/Level/o luce mirando le stelle al sol d'argenteo, calibra mente calibra corpo, spirto saggia 'l gaudio dei pré d'april.png" id="9_46fhc"]
+[ext_resource type="Texture2D" uid="uid://eua0exhq0qn2" path="res://oraculus/Level/tree.png" id="10_rjboo"]
+[ext_resource type="Script" path="res://oraculus/tree.gd" id="11_e5q0w"]
 [ext_resource type="FontFile" uid="uid://b307c1jtd3537" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Future Narrow.ttf" id="52_sbla2"]
 [ext_resource type="PackedScene" uid="uid://hii6shqpmp10" path="res://oraculus/options.tscn" id="53_xn8ic"]
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="55_gcax4"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xpaph"]
+bg_color = Color(0.0166535, 0.0451484, 0.111291, 1)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_831bj"]
+light_mode = 2
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_gekm7"]
+light_mode = 2
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_5ppon"]
+light_mode = 2
 
 [sub_resource type="Image" id="Image_33xlj"]
 data = {
@@ -1499,6 +1514,28 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.299547, 0.299547, 0.299547, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m7q36"]
+content_margin_left = 5.0
+content_margin_right = 5.0
+bg_color = Color(0.836359, 0.666298, 0.524627, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.697062, 0.579848, 0.380198, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sw15m"]
+bg_color = Color(0.0862745, 0.0862745, 0.0862745, 0.666667)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.404511, 0.404511, 0.404511, 1)
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
+
 [node name="Menu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -1508,9 +1545,36 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_5bwf8")
 
-[node name="Background" type="Sprite2D" parent="."]
-position = Vector2(534, 325)
-scale = Vector2(0.5, 0.5)
+[node name="Panel2" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = -0.407986
+anchor_top = -0.268519
+anchor_right = 0.444444
+anchor_bottom = 0.506173
+offset_left = 470.0
+offset_top = 171.0
+offset_right = 643.0
+offset_bottom = 320.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_xpaph")
+metadata/_edit_use_anchors_ = true
+
+[node name="Background3" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_831bj")
+position = Vector2(94.5, 325)
+scale = Vector2(0.588315, 0.5)
+texture = ExtResource("2_jr6gw")
+
+[node name="Background4" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_gekm7")
+position = Vector2(527.5, 325)
+scale = Vector2(0.588315, 0.5)
+texture = ExtResource("2_jr6gw")
+
+[node name="Background2" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_5ppon")
+position = Vector2(960.5, 325)
+scale = Vector2(0.588315, 0.5)
 texture = ExtResource("2_jr6gw")
 
 [node name="Title" type="Node2D" parent="."]
@@ -1532,9 +1596,9 @@ autowrap_mode = 2
 
 [node name="Start" type="TextureButton" parent="Title"]
 offset_left = 407.0
-offset_top = 463.0
+offset_top = 485.0
 offset_right = 922.0
-offset_bottom = 547.0
+offset_bottom = 569.0
 scale = Vector2(0.5, 0.5)
 texture_normal = ExtResource("3_1iuie")
 texture_pressed = ExtResource("4_6653w")
@@ -1561,9 +1625,9 @@ uppercase = true
 
 [node name="Options" type="TextureButton" parent="Title"]
 offset_left = 408.0
-offset_top = 518.0
+offset_top = 540.0
 offset_right = 923.0
-offset_bottom = 602.0
+offset_bottom = 624.0
 scale = Vector2(0.5, 0.5)
 texture_normal = ExtResource("3_1iuie")
 texture_pressed = ExtResource("4_6653w")
@@ -1590,10 +1654,10 @@ uppercase = true
 
 [node name="Options2" parent="Title" instance=ExtResource("53_xn8ic")]
 visible = false
-offset_left = 46.0
-offset_top = 114.0
-offset_right = 46.0
-offset_bottom = 114.0
+offset_left = 83.0
+offset_top = 201.0
+offset_right = 83.0
+offset_bottom = 201.0
 scale = Vector2(0.85, 0.85)
 
 [node name="Credits" type="Node2D" parent="."]
@@ -1619,6 +1683,49 @@ Free Game Assets (GUI, Sprite, Tilesets) - Free Top-Down Pixel Art Tileset, Free
 
 "
 autowrap_mode = 2
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+top_level = true
+position = Vector2(537.118, 350.477)
+rotation = -3.14159
+scale = Vector2(0.413879, 0.357065)
+blend_mode = 2
+shadow_enabled = true
+texture = ExtResource("9_46fhc")
+texture_scale = 0.5
+
+[node name="Tree" type="Sprite2D" parent="." node_paths=PackedStringArray("input_field", "output_label")]
+modulate = Color(0.591288, 0.732278, 0.947522, 1)
+position = Vector2(525, 364)
+scale = Vector2(2, 2)
+texture = ExtResource("10_rjboo")
+script = ExtResource("11_e5q0w")
+input_field = NodePath("../Label")
+output_label = NodePath("../Dialogue")
+
+[node name="Label" type="TextEdit" parent="."]
+offset_left = 266.0
+offset_top = 598.0
+offset_right = 777.0
+offset_bottom = 631.0
+theme_override_colors/font_placeholder_color = Color(0.513233, 0.513233, 0.513233, 1)
+theme_override_colors/font_color = Color(0.255659, 0.255659, 0.255659, 1)
+theme_override_fonts/font = ExtResource("55_gcax4")
+theme_override_styles/normal = SubResource("StyleBoxFlat_m7q36")
+placeholder_text = "Talk..."
+
+[node name="Dialogue" type="Label" parent="."]
+z_index = 4095
+offset_left = 602.0
+offset_top = 307.0
+offset_right = 1194.0
+offset_bottom = 439.0
+scale = Vector2(0.5, 0.5)
+theme_override_fonts/font = ExtResource("55_gcax4")
+theme_override_font_sizes/font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxFlat_sw15m")
+text = "Ask me whatever you want..."
+autowrap_mode = 3
 
 [connection signal="pressed" from="Title/Start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="Title/Options" to="." method="_on_options_pressed"]

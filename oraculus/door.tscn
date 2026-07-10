@@ -8,16 +8,17 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4ewqm"]
 size = Vector2(41, 60)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yv481"]
-content_margin_left = 5.0
-content_margin_top = 5.0
-content_margin_right = 5.0
-bg_color = Color(0.111197, 0.111197, 0.111197, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ojet1"]
+bg_color = Color(0.0862745, 0.0862745, 0.0862745, 0.666667)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.299547, 0.299547, 0.299547, 1)
+border_color = Color(0.404511, 0.404511, 0.404511, 1)
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_slwj8"]
 size = Vector2(20, 56)
@@ -41,17 +42,16 @@ shape = SubResource("RectangleShape2D_4ewqm")
 
 [node name="Instractions" type="Label" parent="."]
 z_index = 4095
-offset_left = -70.0
-offset_top = -60.0
-offset_right = 403.0
-offset_bottom = 17.0
-scale = Vector2(0.3, 0.3)
+offset_left = -44.0
+offset_top = -47.0
+offset_right = 158.0
+offset_bottom = -18.0
+scale = Vector2(0.5, 0.5)
 theme_override_fonts/font = ExtResource("3_2gi1r")
-theme_override_font_sizes/font_size = 30
-theme_override_styles/normal = SubResource("StyleBoxFlat_yv481")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ojet1")
 text = "..."
 horizontal_alignment = 1
-autowrap_mode = 2
+autowrap_mode = 3
 script = ExtResource("4_esb7m")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]

@@ -8,3 +8,6 @@ res://oraculus/Minigames/puzzle.tscn
 res://oraculus/Minigames/draw_light.tscn
 res://oraculus/NPC/larry.tscn
 res://oraculus/NPC/key.tscn
+res://oraculus/tree.gd
+res://oraculus/campanile.tscn
+res://oraculus/hud.tscn

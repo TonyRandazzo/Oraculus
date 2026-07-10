@@ -1,3 +1,5 @@
+RichTextLabel
+LineEdit
 Path2D
 CollisionPolygon2D
 Area2D
@@ -11,5 +13,3 @@ Button
 Panel
 ParallaxBackground
 StaticBody2D
-TileMap
-PointLight2D

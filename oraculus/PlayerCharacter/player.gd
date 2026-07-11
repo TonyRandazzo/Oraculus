@@ -609,3 +609,8 @@ func _on_interact_pressed() -> void:
 func _on_button_pressed() -> void:
 	GameState.reset_all()
 	get_tree().reload_current_scene()
+
+
+
+func _on_reset_area_entered(area: Area2D) -> void:
+	current_stair_layer = 1

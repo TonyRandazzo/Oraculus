@@ -1704,6 +1704,7 @@ input_field = NodePath("../Label")
 output_label = NodePath("../Dialogue")
 
 [node name="Label" type="TextEdit" parent="."]
+layout_mode = 0
 offset_left = 266.0
 offset_top = 598.0
 offset_right = 777.0
@@ -1716,6 +1717,7 @@ placeholder_text = "Talk..."
 
 [node name="Dialogue" type="Label" parent="."]
 z_index = 4095
+layout_mode = 0
 offset_left = 602.0
 offset_top = 307.0
 offset_right = 1194.0

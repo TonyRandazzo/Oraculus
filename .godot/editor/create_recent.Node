@@ -1,11 +1,11 @@
-Node2D
+Sprite2D
 CollisionShape2D
 Area2D
+Node2D
 RichTextLabel
 LineEdit
 Path2D
 CollisionPolygon2D
-Sprite2D
 AnimatedSprite2D
 CanvasLayer
 Node

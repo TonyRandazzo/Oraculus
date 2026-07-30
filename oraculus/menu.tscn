@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=4 uid="uid://c4kquegptmxn7"]
+[gd_scene load_steps=26 format=4 uid="uid://c4kquegptmxn7"]
 
 [ext_resource type="Script" path="res://oraculus/menu.gd" id="1_5bwf8"]
 [ext_resource type="Texture2D" uid="uid://vaiq1p8flm4i" path="res://oraculus/Level/314de424a24374ca5fb0ab2f34d96183.jpg" id="2_jr6gw"]
@@ -7,7 +7,6 @@
 [ext_resource type="Texture2D" uid="uid://cvulixjpd6gcu" path="res://oraculus/Level/Rectangle 125.png" id="5_rmkp3"]
 [ext_resource type="Texture2D" uid="uid://dyoobssarqmc4" path="res://oraculus/Level/o luce mirando le stelle al sol d'argenteo, calibra mente calibra corpo, spirto saggia 'l gaudio dei pré d'april.png" id="9_46fhc"]
 [ext_resource type="Texture2D" uid="uid://eua0exhq0qn2" path="res://oraculus/Level/tree.png" id="10_rjboo"]
-[ext_resource type="Script" path="res://oraculus/tree.gd" id="11_e5q0w"]
 [ext_resource type="FontFile" uid="uid://b307c1jtd3537" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Future Narrow.ttf" id="52_sbla2"]
 [ext_resource type="PackedScene" uid="uid://hii6shqpmp10" path="res://oraculus/options.tscn" id="53_xn8ic"]
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="55_gcax4"]
@@ -1694,17 +1693,13 @@ shadow_enabled = true
 texture = ExtResource("9_46fhc")
 texture_scale = 0.5
 
-[node name="Tree" type="Sprite2D" parent="." node_paths=PackedStringArray("input_field", "output_label")]
+[node name="Tree" type="Sprite2D" parent="."]
 modulate = Color(0.591288, 0.732278, 0.947522, 1)
 position = Vector2(525, 364)
 scale = Vector2(2, 2)
 texture = ExtResource("10_rjboo")
-script = ExtResource("11_e5q0w")
-input_field = NodePath("../Label")
-output_label = NodePath("../Dialogue")
 
 [node name="Label" type="TextEdit" parent="."]
-layout_mode = 0
 offset_left = 266.0
 offset_top = 598.0
 offset_right = 777.0
@@ -1717,7 +1712,6 @@ placeholder_text = "Talk..."
 
 [node name="Dialogue" type="Label" parent="."]
 z_index = 4095
-layout_mode = 0
 offset_left = 602.0
 offset_top = 307.0
 offset_right = 1194.0
@@ -1726,7 +1720,7 @@ scale = Vector2(0.5, 0.5)
 theme_override_fonts/font = ExtResource("55_gcax4")
 theme_override_font_sizes/font_size = 50
 theme_override_styles/normal = SubResource("StyleBoxFlat_sw15m")
-text = "Ask me whatever you want..."
+text = "Ask me anything..."
 autowrap_mode = 3
 
 [connection signal="pressed" from="Title/Start" to="." method="_on_start_pressed"]

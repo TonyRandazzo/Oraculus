@@ -1,41 +1,216 @@
-[gd_scene load_steps=3 format=3 uid="uid://vfcioslk3vfd"]
+[gd_scene format=3 uid="uid://vfcioslk3vfd"]
 
-[ext_resource type="Script" path="res://oraculus/Minigames/draw_light.gd" id="1_drawl"]
+[ext_resource type="Script" uid="uid://bedpg48w7fkk6" path="res://oraculus/Minigames/draw_light.gd" id="1_drawl"]
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="2_drawl"]
+[ext_resource type="Texture2D" uid="uid://d2it4mh5qtxhk" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Decorations/sword_1.png" id="2_wy8t2"]
+[ext_resource type="Texture2D" uid="uid://dkd5k3527e4cm" path="res://oraculus/thirdparty/kenney/ui-pack-adventure/PNG/Default/panel_brown.png" id="3_panel"]
+[ext_resource type="Texture2D" uid="uid://bk5cajaj72uk5" path="res://oraculus/thirdparty/kenney/ui-pack-adventure/PNG/Default/button_brown.png" id="4_button"]
 
-[node name="DrawLight" type="CanvasLayer"]
+[sub_resource type="Gradient" id="Gradient_vignette"]
+colors = PackedColorArray(0, 0, 0, 0, 0.1, 0.05, 0.02, 0.62)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vignette"]
+gradient = SubResource("Gradient_vignette")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_light_glow"]
+colors = PackedColorArray(1, 0.95, 0.6, 0.9, 1, 0.75, 0.2, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_light_glow"]
+gradient = SubResource("Gradient_light_glow")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_target_glow"]
+colors = PackedColorArray(0.6, 0.3, 0.9, 0.85, 0.4, 0.15, 0.65, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_target_glow"]
+gradient = SubResource("Gradient_target_glow")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+texture = ExtResource("3_panel")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_normal"]
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+texture = ExtResource("4_button")
+texture_margin_left = 8.0
+texture_margin_top = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_pressed"]
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+texture = ExtResource("4_button")
+texture_margin_left = 8.0
+texture_margin_top = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 6.0
+modulate_color = Color(0.72, 0.65, 0.55, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_hover"]
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+texture = ExtResource("4_button")
+texture_margin_left = 8.0
+texture_margin_top = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 6.0
+modulate_color = Color(1.2, 1.1, 0.85, 1)
+
+[node name="DrawLight" type="CanvasLayer" unique_id=1451888014]
 layer = 10
 script = ExtResource("1_drawl")
 
-[node name="Overlay" type="ColorRect" parent="."]
+[node name="Overlay" type="ColorRect" parent="." unique_id=275217231]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.78)
+color = Color(0.05, 0.03, 0.02, 0.82)
 
-[node name="DrawPanel" type="Node2D" parent="."]
+[node name="Vignette" type="TextureRect" parent="." unique_id=498168245]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_vignette")
+expand_mode = 1
+stretch_mode = 6
 
-[node name="LightSource" type="Node2D" parent="DrawPanel"]
+[node name="DrawPanel" type="Node2D" parent="." unique_id=1034605323]
+
+[node name="LightSource" type="Node2D" parent="DrawPanel" unique_id=1234893628]
 position = Vector2(120, 300)
 
-[node name="LightSourceShape" type="Polygon2D" parent="DrawPanel/LightSource"]
-color = Color(1, 0.9, 0.2, 1)
+[node name="Glow" type="Sprite2D" parent="DrawPanel/LightSource" unique_id=167076509]
+material = SubResource("CanvasItemMaterial_add")
+scale = Vector2(0.55, 0.55)
+texture = SubResource("GradientTexture2D_light_glow")
+
+[node name="Embers" type="CPUParticles2D" parent="DrawPanel/LightSource" unique_id=1589959261]
+amount = 6
+lifetime = 1.6
+preprocess = 1.6
+direction = Vector2(0, -1)
+spread = 25.0
+gravity = Vector2(0, -14)
+initial_velocity_min = 6.0
+initial_velocity_max = 16.0
+scale_amount_max = 2.0
+color = Color(1, 0.8, 0.4, 0.8)
+
+[node name="LightSourceShape" type="Polygon2D" parent="DrawPanel/LightSource" unique_id=421733038]
+visible = false
+color = Color(1, 0.9, 0.5, 1)
 polygon = PackedVector2Array(-9, -9, 14, 0, -9, 9)
 
-[node name="Target" type="Node2D" parent="DrawPanel"]
+[node name="Sword" type="Sprite2D" parent="DrawPanel/LightSource" unique_id=1318494053]
+rotation = 4.675737
+scale = Vector2(2, 2)
+texture = ExtResource("2_wy8t2")
+
+[node name="Target" type="Node2D" parent="DrawPanel" unique_id=20284788]
 position = Vector2(800, 220)
 
-[node name="TargetSprite" type="Polygon2D" parent="DrawPanel/Target"]
-color = Color(1, 0.3, 0.1, 1)
+[node name="Glow" type="Sprite2D" parent="DrawPanel/Target" unique_id=2012590028]
+material = SubResource("CanvasItemMaterial_add")
+scale = Vector2(0.6, 0.6)
+texture = SubResource("GradientTexture2D_target_glow")
+
+[node name="Motes" type="CPUParticles2D" parent="DrawPanel/Target" unique_id=368802975]
+lifetime = 2.2
+preprocess = 2.2
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 4.0
+initial_velocity_max = 12.0
+scale_amount_max = 2.0
+color = Color(0.8, 0.6, 1, 0.7)
+
+[node name="TargetRing" type="Node2D" parent="DrawPanel/Target" unique_id=657965637]
+
+[node name="TargetSprite" type="Polygon2D" parent="DrawPanel/Target" unique_id=1748393959]
+color = Color(0.55, 0.3, 0.85, 1)
 polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
 
-[node name="Mirrors" type="Node2D" parent="DrawPanel"]
+[node name="Wall" type="Node2D" parent="DrawPanel" unique_id=257500258]
+position = Vector2(460, 260)
 
-[node name="BeamLine" type="Line2D" parent="DrawPanel"]
+[node name="WallShadow" type="Polygon2D" parent="DrawPanel/Wall" unique_id=1040883309]
+color = Color(0, 0, 0, 0.35)
+polygon = PackedVector2Array(-9, -37, 11, -37, 11, 43, -9, 43)
+
+[node name="WallShape" type="Polygon2D" parent="DrawPanel/Wall" unique_id=273466561]
+color = Color(0.22, 0.18, 0.15, 1)
+polygon = PackedVector2Array(-9, -40, 9, -40, 9, 40, -9, 40)
+
+[node name="WallOutline" type="Line2D" parent="DrawPanel/Wall" unique_id=1695253493]
+points = PackedVector2Array(-9, -40, 9, -40, 9, 40, -9, 40)
+closed = true
+width = 2.0
+default_color = Color(0.85, 0.65, 0.25, 0.7)
+
+[node name="WallRune" type="Line2D" parent="DrawPanel/Wall" unique_id=384365201]
+points = PackedVector2Array(0, -14, 10, 0, 0, 14, -10, 0)
+closed = true
+width = 1.5
+default_color = Color(0.9, 0.75, 0.3, 0.85)
+
+[node name="Mirrors" type="Node2D" parent="DrawPanel" unique_id=931064960]
+
+[node name="BeamGlow" type="Line2D" parent="DrawPanel" unique_id=1002546636]
+material = SubResource("CanvasItemMaterial_add")
+width = 11.0
+default_color = Color(1, 0.85, 0.35, 0.25)
+
+[node name="BeamLine" type="Line2D" parent="DrawPanel" unique_id=948844562]
 width = 3.0
-default_color = Color(1, 0.95, 0.3, 0.85)
+default_color = Color(1, 0.98, 0.75, 0.95)
 
-[node name="HUD" type="Control" parent="."]
+[node name="WinParticles" type="CPUParticles2D" parent="DrawPanel" unique_id=2083297418]
+emitting = false
+amount = 42
+lifetime = 0.9
+one_shot = true
+explosiveness = 0.9
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 160)
+initial_velocity_min = 60.0
+initial_velocity_max = 220.0
+scale_amount_min = 2.0
+scale_amount_max = 4.0
+color = Color(1, 0.85, 0.35, 1)
+
+[node name="HUD" type="Control" parent="." unique_id=1393133468]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -43,34 +218,54 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FeedbackLabel" type="Label" parent="HUD"]
+[node name="FeedbackPanel" type="Panel" parent="HUD" unique_id=1516112482]
 layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -350.0
-offset_top = 20.0
-offset_right = 350.0
-offset_bottom = 50.0
+offset_left = -360.0
+offset_top = 16.0
+offset_right = 360.0
+offset_bottom = 58.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="FeedbackLabel" type="Label" parent="HUD/FeedbackPanel" unique_id=19151633]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.32, 0.19, 0.09, 1)
 theme_override_fonts/font = ExtResource("2_drawl")
 theme_override_font_sizes/font_size = 16
 text = "Move the mouse to aim the source. Bounce the light off the mirrors to hit the target."
 horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="CloseButton" type="Button" parent="HUD"]
+[node name="CloseButton" type="Button" parent="HUD" unique_id=1094682871]
 layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -60.0
 offset_top = 540.0
 offset_right = 60.0
-offset_bottom = 570.0
+offset_bottom = 574.0
+theme_override_colors/font_color = Color(0.32, 0.19, 0.09, 1)
+theme_override_colors/font_focus_color = Color(0.32, 0.19, 0.09, 1)
+theme_override_colors/font_pressed_color = Color(0.2, 0.12, 0.05, 1)
+theme_override_colors/font_hover_color = Color(0.32, 0.19, 0.09, 1)
 theme_override_fonts/font = ExtResource("2_drawl")
 theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+theme_override_styles/focus = SubResource("StyleBoxTexture_btn_normal")
 text = "Close"
 
-[node name="SuccessOverlay" type="Control" parent="."]
+[node name="SuccessOverlay" type="Control" parent="." unique_id=2017392342]
 visible = false
+modulate = Color(1, 1, 1, 0)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -78,22 +273,26 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="ColorRect" parent="SuccessOverlay"]
+[node name="Background" type="ColorRect" parent="SuccessOverlay" unique_id=878869997]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.6)
+color = Color(0.05, 0.03, 0.01, 0.65)
 
-[node name="Label" type="Label" parent="SuccessOverlay"]
+[node name="Label" type="Label" parent="SuccessOverlay" unique_id=983687061]
 layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -30.0
-offset_right = 200.0
-offset_bottom = 30.0
+offset_left = -220.0
+offset_top = -34.0
+offset_right = 220.0
+offset_bottom = 34.0
+pivot_offset = Vector2(220, 34)
+theme_override_colors/font_color = Color(1, 0.92, 0.6, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.02, 1)
+theme_override_constants/outline_size = 6
 theme_override_fonts/font = ExtResource("2_drawl")
 theme_override_font_sizes/font_size = 28
 text = "The light flows true..."

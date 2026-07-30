@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=73 format=3 uid="uid://cljq3j6geviui"]
+[gd_resource type="TileSet" format=3 uid="uid://cljq3j6geviui"]
 
 [ext_resource type="Texture2D" uid="uid://6oofnmw3r1pk" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Tiles/wall_6.png" id="1_d86ls"]
 [ext_resource type="Texture2D" uid="uid://ctsgaras8cfga" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/Tiles/wall_7.png" id="2_gjdwm"]

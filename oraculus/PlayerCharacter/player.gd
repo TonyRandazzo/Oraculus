@@ -580,6 +580,11 @@ func die() -> void:
 	await transition.timeout
 	$CanvasLayer/Loose.visible = true
 
+func win():
+	set_process(false)
+	set_physics_process(false)
+	set_process_input(false)
+	$CanvasLayer/Win.visible = true
 func _input(event):
 	if event is InputEventKey and event.keycode == KEY_ENTER and event.pressed:
 		if hud_label.has_focus():
@@ -608,6 +613,7 @@ func _on_interact_pressed() -> void:
 
 func _on_button_pressed() -> void:
 	GameState.reset_all()
+	await get_tree().process_frame
 	get_tree().reload_current_scene()
 
 

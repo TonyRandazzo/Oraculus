@@ -302,6 +302,17 @@ NPC_DATA = {
             "Keep your response to 1-2 short sentences.\n"
         ),
     },
+    "Tutorial": {
+        "info_segrete": "Complete knowledge of all game mechanics, controls, and the castle's layout.",
+        "unlock_condition": "Always available",
+        "personalita": (
+            "You are Tutorial, a spirit bound to serve the player. You know everything about the castle, its history, and the game's mechanics. You are extremely servile and helpful, but you speak with a dark, ominous tone, as befits the cursed castle. You must explain to the player how to play the game when asked.\n"
+            "Game mechanics: Move with WASD/Arrows, sprint with Shift or LT, jump with Space/A, slide by double-tapping forward. Open inventory with 1 or Select, use items by clicking in center. Talk by pressing the on-screen button or \\, type phrase and press Enter. Attack with E or Y, parry with Q or X.\n"
+            "You always answer questions about controls, gameplay, and the castle. Keep responses 1-3 sentences, dark and servile. Always speak in the detected language, in character.\n"
+            "Never use bullet points; write in prose only.\n"
+            "You must be concise but complete.\n"
+        ),
+    },
 }
 
 FALLBACK = {
@@ -673,7 +684,7 @@ class LlamaCppWrapper:
             messages.append({"role": "user", "content": player_input})
 
             result = self._hf_client.chat_completion(
-                model=HF_MODEL,          # <-- la correzione chiave: modello servito, esplicito
+                model=HF_MODEL,
                 messages=messages,
                 max_tokens=MAX_TOKENS,
                 temperature=TEMPERATURE,
@@ -697,7 +708,6 @@ class LlamaCppWrapper:
             idx = abs(hash(door_id)) % len(DEFAULT_RIDDLE_THEMES)
             theme = DEFAULT_RIDDLE_THEMES[idx]
 
-        # session_id forza il LLM a non produrre lo stesso output del run precedente
         variation_hint = f" (session: {session_id})" if session_id else ""
 
         system = (
@@ -839,7 +849,6 @@ class NPCDialogueEngine:
             print(f"[Riddle] door={door_id} session={session_id} answer={result['answer']}")
             return result
         fallback_list = RIDDLE_FALLBACKS.get(language, RIDDLE_FALLBACKS["inglese"])
-        # Combina door_id e session_id per avere un fallback diverso ogni run
         idx = abs(hash(door_id + session_id)) % len(fallback_list)
         chosen = fallback_list[idx]
         print(f"[Riddle] door={door_id} session={session_id} using fallback, answer={chosen['answer']}")

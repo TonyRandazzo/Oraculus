@@ -10,3 +10,7 @@ export/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Claude Code data
+.claude/
+

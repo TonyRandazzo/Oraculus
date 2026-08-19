@@ -23,6 +23,7 @@ config/icon="res://icon.svg"
 
 AIServerManager="*res://AIServerManager.gd"
 GameState="*res://oraculus/GameState.gd"
+FeedbackPopup="*res://oraculus/FeedbackPopup.gd"
 
 [display]
 

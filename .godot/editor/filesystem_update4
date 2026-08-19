@@ -1,7 +1,2 @@
-res://oraculus/menu.gd
-res://oraculus/Minigames/draw_light.gd
-res://oraculus/Minigames/puzzle.gd
-res://oraculus/Minigames/draw_light.tscn
-res://oraculus/Minigames/puzzle.tscn
-res://oraculus/muri.tres
-res://oraculus/main.tscn
+res://oraculus/hud.gd
+res://oraculus/PlayerCharacter/player.gd

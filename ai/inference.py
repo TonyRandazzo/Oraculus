@@ -1,5 +1,10 @@
 import json, re, os, random
-from llama_cpp import Llama
+
+try:
+    from llama_cpp import Llama
+except ImportError:
+    Llama = None
+
 from huggingface_hub import InferenceClient
 
 MODEL_PATH     = "models/Llama-3.2-1B-Instruct-Q6_K_L.gguf"
@@ -12,7 +17,10 @@ TOP_K          = 40
 TOP_P          = 0.9
 REPEAT_PENALTY = 1.1
 
-HF_MODEL    = os.environ.get("HF_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
+# Stesso identico modello del file locale (Llama-3.2-1B-Instruct), servito
+# via API invece che caricato in RAM: permette il deploy su Render senza
+# scaricare/eseguire il gguf in locale.
+HF_MODEL    = os.environ.get("HF_MODEL", "meta-llama/Llama-3.2-1B-Instruct")
 HF_PROVIDER = os.environ.get("HF_PROVIDER", "auto")
 
 ARMY_NAME = "Esercito della Sacra Croce"
@@ -323,18 +331,18 @@ FALLBACK = {
 
 RIDDLE_FALLBACKS = {
     "inglese": [
-        {"riddle": "I walk without legs and speak without a tongue.\nI carry the memories of the dead, yet I have never lived.\nWhat am I?", "answer": "echo"},
-        {"riddle": "The more I am stolen, the more I remain.\nKings have sought me; the dying have cursed me.\nWhat am I?", "answer": "time"},
-        {"riddle": "I have no body, yet I can kill.\nI have no mouth, yet armies have marched in my name.\nWhat am I?", "answer": "lie"},
-        {"riddle": "I am cast by all things that stand in the light,\nyet I myself have no substance.\nWhat am I?", "answer": "shadow"},
-        {"riddle": "I am the last gift of every living thing.\nThe Oracle foresaw me; the noble family could not escape me.\nWhat am I?", "answer": "death"},
+        {"riddle": "I repeat back the words you shout in an empty castle hall.\nI only happen after you make a sound.\nWhat am I?", "answer": "echo"},
+        {"riddle": "You cannot hold on to me or lock me away, yet I never stop passing by.\nEveryone always wishes they had more of me.\nWhat am I?", "answer": "time"},
+        {"riddle": "I have no body and no weapon, but I can still hurt people badly.\nOnce someone believes me, I can turn friends into enemies.\nWhat am I?", "answer": "lie"},
+        {"riddle": "I appear on the ground next to you whenever light shines on you.\nYou can see my shape, but you can never touch me.\nWhat am I?", "answer": "shadow"},
+        {"riddle": "Every living person will meet me one day, even kings and queens.\nNo one has ever found a way to escape me.\nWhat am I?", "answer": "death"},
     ],
     "italiano": [
-        {"riddle": "Cammino senza gambe e parlo senza lingua.\nPorto i ricordi dei morti eppure non ho mai vissuto.\nCosa sono?", "answer": "eco"},
-        {"riddle": "Più mi rubano, più rimango.\nRe mi hanno cercato; i morenti mi hanno maledetto.\nCosa sono?", "answer": "tempo"},
-        {"riddle": "Non ho corpo, eppure posso uccidere.\nNon ho bocca, eppure eserciti hanno marciato in mio nome.\nCosa sono?", "answer": "menzogna"},
-        {"riddle": "Sono proiettato da tutto ciò che sta nella luce,\neppure io stesso non ho sostanza.\nCosa sono?", "answer": "ombra"},
-        {"riddle": "Sono l'ultimo dono di ogni essere vivente.\nL'Oracolo mi prevedeva; la famiglia nobile non poteva sfuggirmi.\nCosa sono?", "answer": "morte"},
+        {"riddle": "Ripeto le parole che gridi in una sala vuota del castello.\nSuccedo soltanto dopo che fai un rumore.\nCosa sono?", "answer": "eco"},
+        {"riddle": "Non puoi trattenermi o chiudermi in una scatola, eppure non smetto mai di passare.\nTutti vorrebbero averne di più.\nCosa sono?", "answer": "tempo"},
+        {"riddle": "Non ho corpo né arma, ma posso comunque fare molto male.\nSe qualcuno mi crede, posso trasformare amici in nemici.\nCosa sono?", "answer": "menzogna"},
+        {"riddle": "Appaio per terra accanto a te ogni volta che la luce ti illumina.\nPuoi vedere la mia forma, ma non potrai mai toccarmi.\nCosa sono?", "answer": "ombra"},
+        {"riddle": "Ogni essere vivente mi incontrerà un giorno, anche i re e le regine.\nNessuno ha mai trovato un modo per sfuggirmi.\nCosa sono?", "answer": "morte"},
     ],
 }
 
@@ -591,7 +599,9 @@ class LlamaCppWrapper:
         self._try_load()
 
     def _try_load(self):
-        if os.path.exists(MODEL_PATH):
+        if Llama is None:
+            print("[llama.cpp] Pacchetto llama_cpp non installato: salto il caricamento locale (modalita' API remota).")
+        elif os.path.exists(MODEL_PATH):
             try:
                 self._model = Llama(
                     model_path=MODEL_PATH,
@@ -715,9 +725,11 @@ class LlamaCppWrapper:
             f"{STORY_CONTEXT}\n\n"
             f"You guard a door with a riddle. Create ONE riddle following these rules:\n"
             f"- Theme: {theme}\n"
-            f"- Tone: dark, mysterious, medieval fantasy\n"
-            f"- Length: 2-4 lines\n"
-            f"- The answer must be a single common word\n"
+            f"- Tone: dark, mysterious, medieval fantasy — but the riddle itself must be SIMPLE and EASY to understand\n"
+            f"- The answer must be a single common, everyday word (an object, animal, or simple concept a child would know)\n"
+            f"- Describe the answer using clear, concrete, literal clues (what it looks like, what it does, where you find it)\n"
+            f"- Do NOT use abstract philosophy, obscure metaphors, or wordplay — a player should be able to guess it after reading it once\n"
+            f"- Length: 2-3 short, simple sentences\n"
             f"- NEVER directly mention the answer in the riddle\n"
             f"- Every riddle must be unique and different from any you have created before\n"
             f"- Respond in {language}\n\n"

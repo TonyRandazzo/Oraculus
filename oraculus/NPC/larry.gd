@@ -225,8 +225,10 @@ func _analyze_friendship(answer: String) -> void:
 		return
 
 	var prev := friendship_level
+	var prev_hostility := hostility
 	friendship_level = clamp(friendship_level + change, 0, max_friendship)
 	hostility = clamp(hostility - change * 10, 0, 100)
+	FeedbackPopup.show_stat_change(self, friendship_level - prev, hostility - prev_hostility)
 	if change > 0 and friendship_level > prev:
 		dialogue_box.show_text(friendly_responses[min(friendship_level - 1, friendly_responses.size() - 1)])
 
@@ -299,8 +301,11 @@ func _handle_response(response: Dictionary) -> void:
 	var text: String = response.get("response", "")
 	var new_h := int(response.get("new_hostility", hostility))
 	if new_h >= 0:
+		var prev_friendship := friendship_level
+		var prev_hostility := hostility
 		hostility        = new_h
 		friendship_level = clamp(5 - int(hostility / 20.0), 0, max_friendship)
+		FeedbackPopup.show_stat_change(self, friendship_level - prev_friendship, hostility - prev_hostility)
 	if conversation_history.size() >= MEMORY_CAPACITY:
 		conversation_history.pop_front()
 	conversation_history.append({"player": player_input_buffer, "npc": text})

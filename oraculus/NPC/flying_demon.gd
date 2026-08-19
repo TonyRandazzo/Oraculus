@@ -197,8 +197,11 @@ func _do_remote_request(player_message: String):
 	var new_hostility = int(response.get("new_hostility", hostility))
 
 	if new_hostility >= 0:
+		var prev_friendship = friendship_level
+		var prev_hostility = hostility
 		hostility = new_hostility
 		friendship_level = clamp(5 - int(hostility / 20.0), 0, max_friendship)
+		FeedbackPopup.show_stat_change(self, friendship_level - prev_friendship, hostility - prev_hostility)
 
 	_on_ai_chat_received(ai_response)
 
@@ -231,8 +234,6 @@ func receive_player_answer(answer: String):
 	player_input_buffer = answer
 	if state == "attacking": state = "conversing"
 
-	if _try_reveal_entrance_answer(answer):
-		return
 	if state != "waiting" and state != "conversing" and state != "ready": return
 	if is_waiting_for_response: return
 	face_player()
@@ -255,8 +256,11 @@ func _process(_delta: float) -> void:
 	_stop_thinking_dots()
 	if _ai_thread_result != "":
 		if _ai_thread_new_hostility >= 0:
+			var prev_friendship = friendship_level
+			var prev_hostility = hostility
 			hostility = _ai_thread_new_hostility
 			friendship_level = clamp(5 - int(hostility / 20.0), 0, max_friendship)
+			FeedbackPopup.show_stat_change(self, friendship_level - prev_friendship, hostility - prev_hostility)
 		_on_ai_chat_received(_ai_thread_result)
 	else:
 		_on_ai_chat_failed(-1)
@@ -647,8 +651,10 @@ func analyze_answer_for_friendship(answer: String):
 
 func change_friendship(amount: int):
 	var prev = friendship_level
+	var prev_hostility = hostility
 	friendship_level = clamp(friendship_level + amount, 0, max_friendship)
 	hostility = clamp(hostility - amount * 15, 0, 100)
+	FeedbackPopup.show_stat_change(self, friendship_level - prev, hostility - prev_hostility)
 	if friendship_level >= max_friendship:
 		become_ally()
 	elif amount > 0 and friendship_level > prev and dialogue_box:
@@ -698,44 +704,6 @@ func _on_timeout():
 		is_interacting = false
 		_stop_thinking_dots()
 		_use_fallback_response("*Yawn* Boring..." if friendship_level > 3 else "*Echo*")
-
-func _try_reveal_entrance_answer(msg: String) -> bool:
-	if npc_name != "Levias":
-		return false
-	var gs := get_node_or_null("/root/GameState")
-	if gs == null or gs.entrance_riddle_answer.is_empty():
-		return false
-
-	var lower := msg.to_lower()
-	var is_asking := (
-		lower.contains("answer") or lower.contains("riddle") or
-		lower.contains("door") or lower.contains("solution") or
-		lower.contains("hint") or lower.contains("tell me") or
-		lower.contains("what is") or lower.contains("risposta") or
-		lower.contains("indovinello") or lower.contains("soluzione") or
-		lower.contains("porta")
-	)
-	if not is_asking:
-		return false
-
-	var threshold := 60
-	if friendship_level * 20 < threshold:
-		var deflections := [
-			"*turns away* That knowledge is not for those I do not trust.",
-			"*quiet* You have not yet earned the right to that answer.",
-			"*cold gaze* Prove yourself first. Then we speak of doors.",
-		]
-		_on_ai_chat_received(deflections[randi() % deflections.size()])
-		return true
-
-	var answer = gs.entrance_riddle_answer
-	var reveals := [
-		"*leans close, voice low* The word you seek... is '%s'. Do not waste this." % answer,
-		"*exhales slowly* You have earned this. The answer to the entrance riddle is '%s'." % answer,
-		"*quiet* I have guarded that door for years. The answer is '%s'. Speak it wisely." % answer,
-	]
-	_on_ai_chat_received(reveals[randi() % reveals.size()])
-	return true
 
 func _build_context_vars() -> Dictionary:
 	var gs := get_node_or_null("/root/GameState")

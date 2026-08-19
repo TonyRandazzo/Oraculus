@@ -497,8 +497,10 @@ func analyze_answer_for_friendship(answer: String):
 
 func change_friendship(amount: int):
 	var prev = friendship_level
+	var prev_hostility = hostility
 	friendship_level = clamp(friendship_level + amount, 0, max_friendship)
 	hostility = clamp(hostility - amount * 15, 0, 100)
+	FeedbackPopup.show_stat_change(self, friendship_level - prev, hostility - prev_hostility)
 	if friendship_level >= max_friendship: become_ally()
 	elif amount > 0 and friendship_level > prev and dialogue_box:
 		dialogue_box.show_text(friendly_responses[friendship_level - 1])
@@ -669,8 +671,11 @@ func _process(_delta: float) -> void:
 	_stop_thinking_dots()
 	if _ai_thread_result != "":
 		if _ai_thread_new_hostility >= 0:
+			var prev_friendship = friendship_level
+			var prev_hostility = hostility
 			hostility = _ai_thread_new_hostility
 			friendship_level = clamp(5 - int(hostility / 20.0), 0, max_friendship)
+			FeedbackPopup.show_stat_change(self, friendship_level - prev_friendship, hostility - prev_hostility)
 		_on_ai_chat_received(_ai_thread_result)
 	else:
 		_on_ai_chat_failed(-1)

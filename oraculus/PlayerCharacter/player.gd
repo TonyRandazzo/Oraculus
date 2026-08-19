@@ -16,6 +16,10 @@ var sliding: bool = false
 var slide_timer: Timer
 var last_input_time: Dictionary = {"move_left": 0.0, "move_right": 0.0}
 @export var double_tap_time: float = 0.3
+# Vero mentre TouchControls sta guidando move_left/move_right: il doppio tap
+# touch significa "corri", quindi non deve far partire anche la scivolata.
+var touch_controls_active: bool = false
+var _chat_label_base_y: float = 0.0
 var crouching: bool = false
 var jumps_left: int = 0
 var defense_potion_timer: Timer
@@ -83,6 +87,8 @@ func _ready() -> void:
 	$AttackBox.connect("area_entered", _on_attack_box_area_entered)
 	hud_label.editable = false
 	hud.hide()
+	_chat_label_base_y = hud_label.position.y
+	hud_label.text_changed.connect(_on_chat_text_changed)
 	attack_box.disabled = true
 	update_health()
 	
@@ -131,7 +137,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		$CanvasLayer/Pause.visible = true
 
-	if hud_label.has_focus():
+	if hud_label.visible or hud_label.has_focus():
 		velocity.x = 0
 		sprite.play("idle")
 		move_and_slide()
@@ -200,9 +206,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if Input.is_action_just_pressed("interact") and can_interact and current_demon:
-		hud_label.editable = true
-		hud.show()
-		hud_label.grab_focus()
+		open_chat()
 		return
 
 	if can_interact == true:
@@ -255,7 +259,7 @@ func _physics_process(delta: float) -> void:
 	running = Input.is_action_pressed("run")
 	var current_speed = speed * run_speed_multiplier if running else speed
 
-	if (Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right")) and is_on_floor():
+	if not touch_controls_active and (Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right")) and is_on_floor():
 		var action = "move_left" if Input.is_action_just_pressed("move_left") else "move_right"
 		var now = Time.get_ticks_msec() / 1000.0
 		if now - last_input_time[action] <= double_tap_time:
@@ -586,14 +590,74 @@ func win():
 	set_process_input(false)
 	$CanvasLayer/Win.visible = true
 func _input(event):
-	if event is InputEventKey and event.keycode == KEY_ENTER and event.pressed:
-		if hud_label.has_focus():
-			var answer = hud_label.text.strip_edges()
-			if answer != "" and current_demon:
-				current_demon.receive_player_answer(answer)
-				hud_label.text = ""
-				hud_label.release_focus()
-				hud.hide()
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+			if hud_label.visible:
+				submit_chat()
+				get_viewport().set_input_as_handled()
+
+## Apre il form di dialogo e, su mobile, tira su la tastiera virtuale.
+func open_chat() -> void:
+	if not can_interact or current_demon == null:
+		return
+	hud_label.editable = true
+	hud.show()
+	hud_label.grab_focus()
+	_show_virtual_keyboard()
+
+func close_chat() -> void:
+	hud_label.text = ""
+	hud_label.release_focus()
+	hud_label.editable = false
+	hud.hide()
+	hud_label.position.y = _chat_label_base_y
+	if DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD):
+		DisplayServer.virtual_keyboard_hide()
+
+func submit_chat() -> bool:
+	if not hud_label.visible:
+		return false
+	var answer := hud_label.text.strip_edges()
+	if answer == "" or current_demon == null:
+		return false
+	close_chat()
+	current_demon.receive_player_answer(answer)
+	return true
+
+func _show_virtual_keyboard() -> void:
+	if not DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD):
+		return
+	# TextEdit la aprirebbe già da solo prendendo il focus, ma su web la
+	# chiamata esplicita è più affidabile; KEYBOARD_TYPE_DEFAULT dà una
+	# tastiera a riga singola con il tasto invio al posto dell'a capo.
+	var caret := hud_label.text.length()
+	DisplayServer.virtual_keyboard_show(hud_label.text, Rect2(), DisplayServer.KEYBOARD_TYPE_DEFAULT, -1, caret, caret)
+
+## Su mobile e web l'invio della tastiera virtuale può arrivare come semplice
+## "a capo" invece che come tasto: in quel caso vale comunque come invio.
+func _on_chat_text_changed() -> void:
+	if not hud_label.visible or not hud_label.text.contains("\n"):
+		return
+	hud_label.text = hud_label.text.replace("\n", "")
+	hud_label.set_caret_column(hud_label.text.length())
+	submit_chat()
+
+## Tiene il campo di testo sopra la tastiera virtuale mentre si scrive.
+func _process(_delta: float) -> void:
+	if not hud_label.visible:
+		return
+	var keyboard_height := 0
+	if DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD):
+		keyboard_height = DisplayServer.virtual_keyboard_get_height()
+	if keyboard_height <= 0:
+		hud_label.position.y = _chat_label_base_y
+		return
+	var window_height := float(DisplayServer.window_get_size().y)
+	var hud_scale: float = hud_label.get_parent().scale.y
+	if window_height <= 0.0 or is_zero_approx(hud_scale):
+		return
+	var viewport_height := get_viewport().get_visible_rect().size.y
+	hud_label.position.y = _chat_label_base_y - (keyboard_height * viewport_height / window_height) / hud_scale
 
 func _on_interaction_area_entered(area):
 	if area.is_in_group("demon_detection"):
@@ -604,9 +668,7 @@ func _on_interaction_area_exited(area):
 	if area.is_in_group("demon_detection"):
 		can_interact = false
 		current_demon = null
-		hud_label.editable = false
-		hud.hide()
-		hud_label.release_focus()
+		close_chat()
 
 func _on_interact_pressed() -> void:
 	can_interact = true

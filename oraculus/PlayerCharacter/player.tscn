@@ -1,7 +1,8 @@
-[gd_scene load_steps=98 format=3 uid="uid://cf67gkg04ayra"]
+[gd_scene load_steps=99 format=3 uid="uid://cf67gkg04ayra"]
 
 [ext_resource type="Texture2D" uid="uid://dqv11xtytfj82" path="res://oraculus/PlayerCharacter/Attack/0.png" id="1_0m1v8"]
 [ext_resource type="Script" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
+[ext_resource type="Script" path="res://oraculus/PlayerCharacter/touch_controls.gd" id="1_tchct"]
 [ext_resource type="Texture2D" uid="uid://j8ocyxs8l46a" path="res://oraculus/PlayerCharacter/Attack/1.png" id="2_h1lhp"]
 [ext_resource type="Texture2D" uid="uid://8ju7yomptfs7" path="res://oraculus/PlayerCharacter/Attack/2.png" id="3_at42d"]
 [ext_resource type="Texture2D" uid="uid://cog2uku46ogb3" path="res://oraculus/PlayerCharacter/Attack/3.png" id="4_pgs84"]
@@ -620,6 +621,9 @@ sprite_frames = SubResource("SpriteFrames_sbkxv")
 animation = &"wall jump"
 frame = 4
 frame_progress = 1.0
+
+[node name="TouchControls" type="Node" parent="."]
+script = ExtResource("1_tchct")
 
 [connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]
 [connection signal="area_entered" from="AttackBox" to="." method="_on_attack_box_area_entered"]

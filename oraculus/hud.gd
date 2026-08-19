@@ -6,11 +6,7 @@ var item_description = "there are no item in your inventory"
 
 
 func _on_interact_pressed() -> void:
-	if $"../..".can_interact and$"../..".current_demon:
-		$"../..".hud_label.editable = true
-		$"../..".hud.show()
-		$"../..".hud_label.grab_focus()
-		return
+	$"../..".open_chat()
 
 
 func _physics_process(delta: float) -> void:

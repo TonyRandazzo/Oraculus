@@ -1,22 +1,22 @@
-[gd_scene load_steps=24 format=4 uid="uid://cvaiohgq560rm"]
+[gd_scene format=4 uid="uid://cvaiohgq560rm"]
 
-[ext_resource type="Script" path="res://oraculus/hud.gd" id="1_6ijqs"]
+[ext_resource type="Script" uid="uid://bfvt1uqmf4cjd" path="res://oraculus/hud.gd" id="1_6ijqs"]
 [ext_resource type="Texture2D" uid="uid://bwlb8odq8pf4i" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/HUD/bar_background.png" id="1_qwiu7"]
 [ext_resource type="Texture2D" uid="uid://c2qusn13xevg" path="res://oraculus/HUD/BlackBigCircleBoxWithBorder_27x27.png" id="1_rycg7"]
 [ext_resource type="Texture2D" uid="uid://b8af6f6nf7esv" path="res://oraculus/HUD/BlackSmallCircleBox_19x19.png" id="2_763o3"]
 [ext_resource type="Texture2D" uid="uid://ckdek6w8p20yq" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/HUD/health_bar.png" id="2_sw1e7"]
 [ext_resource type="Texture2D" uid="uid://djx8rccuia1ob" path="res://oraculus/Level/Medieval_Castle_Asset_Pack/HUD/bar.png" id="3_jink4"]
-[ext_resource type="Script" path="res://oraculus/item_1.gd" id="4_ork80"]
+[ext_resource type="Script" uid="uid://b25xtplk5pfo7" path="res://oraculus/item_1.gd" id="4_ork80"]
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="4_vkw1k"]
 [ext_resource type="Texture2D" uid="uid://c7blnjglicq6r" path="res://oraculus/HUD/MenusIcons_34x34.png" id="5_1k8hq"]
 [ext_resource type="Texture2D" uid="uid://btj45dicuwe5o" path="res://oraculus/HUD/MenusBox_34x34.png" id="5_vuj28"]
-[ext_resource type="Script" path="res://oraculus/item_2.gd" id="5_ywpmv"]
-[ext_resource type="Script" path="res://oraculus/item_3.gd" id="6_nsff4"]
-[ext_resource type="Script" path="res://oraculus/item_4.gd" id="7_vl0bs"]
-[ext_resource type="Script" path="res://oraculus/item_5.gd" id="8_efu43"]
-[ext_resource type="Script" path="res://oraculus/item_6.gd" id="9_7h448"]
-[ext_resource type="Script" path="res://oraculus/item_7.gd" id="10_xc2fw"]
-[ext_resource type="Script" path="res://oraculus/item_8.gd" id="11_0n24v"]
+[ext_resource type="Script" uid="uid://cxa4fmojdehgv" path="res://oraculus/item_2.gd" id="5_ywpmv"]
+[ext_resource type="Script" uid="uid://cyqmpg1pxytug" path="res://oraculus/item_3.gd" id="6_nsff4"]
+[ext_resource type="Script" uid="uid://xhj1f6dwt2cg" path="res://oraculus/item_4.gd" id="7_vl0bs"]
+[ext_resource type="Script" uid="uid://b8ph4o523f0oh" path="res://oraculus/item_5.gd" id="8_efu43"]
+[ext_resource type="Script" uid="uid://bga8kt1fcu23a" path="res://oraculus/item_6.gd" id="9_7h448"]
+[ext_resource type="Script" uid="uid://d16u0ul62c2lt" path="res://oraculus/item_7.gd" id="10_xc2fw"]
+[ext_resource type="Script" uid="uid://das4tpeshhg2l" path="res://oraculus/item_8.gd" id="11_0n24v"]
 
 [sub_resource type="Image" id="Image_cbrk3"]
 data = {
@@ -61,6 +61,15 @@ style_name = "Regular"
 subpixel_positioning = 4
 msdf_pixel_range = 8
 msdf_size = 128
+cache/0/variation_coordinates = {}
+cache/0/face_index = 0
+cache/0/embolden = 0.0
+cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
+cache/0/spacing_top = 0
+cache/0/spacing_bottom = 0
+cache/0/spacing_space = 0
+cache/0/spacing_glyph = 0
+cache/0/baseline_offset = 0.0
 cache/0/16/0/ascent = 10.0
 cache/0/16/0/descent = 2.0
 cache/0/16/0/underline_position = -1.20313
@@ -765,7 +774,7 @@ border_width_right = 3
 border_width_bottom = 3
 border_color = Color(0.697062, 0.579848, 0.380198, 1)
 
-[node name="HUD" type="Control"]
+[node name="HUD" type="Control" unique_id=1253163378]
 z_index = 4096
 layout_mode = 3
 anchors_preset = 15
@@ -775,139 +784,139 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_6ijqs")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=1565004316]
 layout_mode = 0
 offset_right = 1864.0
 offset_bottom = 955.0
 
-[node name="Inventory" type="Node2D" parent="."]
+[node name="Inventory" type="Node2D" parent="." unique_id=1924418897]
 visible = false
 position = Vector2(0, 44)
 scale = Vector2(0.7, 0.7)
 
-[node name="Graphics" type="Node2D" parent="Inventory"]
+[node name="Graphics" type="Node2D" parent="Inventory" unique_id=774219377]
 
-[node name="Panel" type="Panel" parent="Inventory/Graphics"]
+[node name="Panel" type="Panel" parent="Inventory/Graphics" unique_id=358446760]
 offset_top = -1429.0
 offset_right = 2686.0
 offset_bottom = -62.9999
 
-[node name="BlackBigCircleBoxWithBorder27x27" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackBigCircleBoxWithBorder27x27" type="Sprite2D" parent="Inventory/Graphics" unique_id=1926559488]
 position = Vector2(575, -271)
 scale = Vector2(10.5, 10.5)
 texture = ExtResource("1_rycg7")
 
-[node name="BlackSmallCircleBox19x19" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x19" type="Sprite2D" parent="Inventory/Graphics" unique_id=671910006]
 position = Vector2(578, -269)
 scale = Vector2(20, 20)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x20" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x20" type="Sprite2D" parent="Inventory/Graphics" unique_id=1997711153]
 modulate = Color(1, 0.784314, 0.654902, 0.513726)
 position = Vector2(471, -359)
 scale = Vector2(3, 3)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x21" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x21" type="Sprite2D" parent="Inventory/Graphics" unique_id=1945097594]
 modulate = Color(1, 0.784314, 0.654902, 0.513726)
 position = Vector2(566, -403)
 scale = Vector2(3, 3)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x22" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x22" type="Sprite2D" parent="Inventory/Graphics" unique_id=543813720]
 modulate = Color(1, 0.784314, 0.654902, 0.513726)
 position = Vector2(663, -360)
 scale = Vector2(3, 3)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x23" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x23" type="Sprite2D" parent="Inventory/Graphics" unique_id=1354335688]
 modulate = Color(1, 0.784314, 0.654902, 0.513726)
 position = Vector2(708, -273)
 scale = Vector2(3, 3)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x24" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x24" type="Sprite2D" parent="Inventory/Graphics" unique_id=771309471]
 modulate = Color(1, 0.784314, 0.654902, 0.513726)
 position = Vector2(664, -181)
 scale = Vector2(3, 3)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x25" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x25" type="Sprite2D" parent="Inventory/Graphics" unique_id=1665718188]
 modulate = Color(1, 0.784314, 0.654902, 0.513726)
 position = Vector2(576, -133)
 scale = Vector2(3, 3)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x26" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x26" type="Sprite2D" parent="Inventory/Graphics" unique_id=797112497]
 modulate = Color(1, 0.784314, 0.654902, 0.513726)
 position = Vector2(477, -178)
 scale = Vector2(3, 3)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x27" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x27" type="Sprite2D" parent="Inventory/Graphics" unique_id=544757890]
 modulate = Color(1, 0.784314, 0.654902, 0.513726)
 position = Vector2(436, -275)
 scale = Vector2(3, 3)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x28" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x28" type="Sprite2D" parent="Inventory/Graphics" unique_id=635792501]
 position = Vector2(575.125, -267.125)
 scale = Vector2(10.0921, 9.69737)
 texture = ExtResource("2_763o3")
 
-[node name="BlackSmallCircleBox19x29" type="Sprite2D" parent="Inventory/Graphics"]
+[node name="BlackSmallCircleBox19x29" type="Sprite2D" parent="Inventory/Graphics" unique_id=1548627296]
 position = Vector2(568.756, -274.187)
 rotation = 3.13425
 scale = Vector2(10.3236, 9.40806)
 texture = ExtResource("2_763o3")
 
-[node name="Buttons" type="Node2D" parent="Inventory"]
+[node name="Buttons" type="Node2D" parent="Inventory" unique_id=19294297]
 
-[node name="Item1" type="TouchScreenButton" parent="Inventory/Buttons"]
+[node name="Item1" type="TouchScreenButton" parent="Inventory/Buttons" unique_id=1916832325]
 position = Vector2(457.143, -374.286)
 scale = Vector2(2, 2)
 script = ExtResource("4_ork80")
 
-[node name="Item2" type="TouchScreenButton" parent="Inventory/Buttons"]
+[node name="Item2" type="TouchScreenButton" parent="Inventory/Buttons" unique_id=283393973]
 position = Vector2(532.857, -435.714)
 scale = Vector2(2, 2)
 script = ExtResource("5_ywpmv")
 
-[node name="Item3" type="TouchScreenButton" parent="Inventory/Buttons"]
+[node name="Item3" type="TouchScreenButton" parent="Inventory/Buttons" unique_id=1724826542]
 position = Vector2(629.857, -392.714)
 scale = Vector2(2, 2)
 script = ExtResource("6_nsff4")
 
-[node name="Item4" type="TouchScreenButton" parent="Inventory/Buttons"]
+[node name="Item4" type="TouchScreenButton" parent="Inventory/Buttons" unique_id=346829480]
 position = Vector2(674.857, -305.714)
 scale = Vector2(2, 2)
 script = ExtResource("7_vl0bs")
 
-[node name="Item5" type="TouchScreenButton" parent="Inventory/Buttons"]
+[node name="Item5" type="TouchScreenButton" parent="Inventory/Buttons" unique_id=1793599382]
 position = Vector2(630.857, -213.714)
 scale = Vector2(2, 2)
 script = ExtResource("8_efu43")
 
-[node name="Item6" type="TouchScreenButton" parent="Inventory/Buttons"]
+[node name="Item6" type="TouchScreenButton" parent="Inventory/Buttons" unique_id=550643051]
 position = Vector2(542.857, -165.714)
 scale = Vector2(2, 2)
 script = ExtResource("9_7h448")
 
-[node name="Item7" type="TouchScreenButton" parent="Inventory/Buttons"]
+[node name="Item7" type="TouchScreenButton" parent="Inventory/Buttons" unique_id=1883197237]
 position = Vector2(443.857, -210.714)
 scale = Vector2(2, 2)
 script = ExtResource("10_xc2fw")
 
-[node name="Item8" type="TouchScreenButton" parent="Inventory/Buttons"]
+[node name="Item8" type="TouchScreenButton" parent="Inventory/Buttons" unique_id=128942190]
 position = Vector2(402.857, -307.714)
 scale = Vector2(2, 2)
 script = ExtResource("11_0n24v")
 
-[node name="SelectedItem" type="TouchScreenButton" parent="Inventory/Buttons"]
+[node name="SelectedItem" type="TouchScreenButton" parent="Inventory/Buttons" unique_id=2123198902]
 position = Vector2(544.286, -330)
 scale = Vector2(4, 4)
 
-[node name="ItemName" type="Label" parent="Inventory"]
+[node name="ItemName" type="Label" parent="Inventory" unique_id=1434751133]
 z_index = 4096
 offset_left = 534.286
 offset_top = -268.571
@@ -923,7 +932,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 uppercase = true
 
-[node name="ItemDescription" type="Label" parent="Inventory"]
+[node name="ItemDescription" type="Label" parent="Inventory" unique_id=1770432829]
 z_index = 4096
 offset_left = 521.429
 offset_top = -251.429
@@ -937,10 +946,10 @@ text = "there are no item in your inventory"
 horizontal_alignment = 3
 autowrap_mode = 2
 
-[node name="HP" type="Node2D" parent="."]
+[node name="HP" type="Node2D" parent="." unique_id=1363472497]
 metadata/_edit_group_ = true
 
-[node name="HP" type="TextureProgressBar" parent="HP"]
+[node name="HP" type="TextureProgressBar" parent="HP" unique_id=1305874779]
 offset_left = 9.0
 offset_top = 3.0
 offset_right = 109.0
@@ -949,30 +958,30 @@ value = 50.0
 texture_under = ExtResource("1_qwiu7")
 texture_progress = ExtResource("2_sw1e7")
 
-[node name="TextureRect" type="TextureRect" parent="HP"]
+[node name="TextureRect" type="TextureRect" parent="HP" unique_id=942837015]
 offset_right = 118.0
 offset_bottom = 40.0
 texture = ExtResource("3_jink4")
 stretch_mode = 2
 
-[node name="Interact" type="Node2D" parent="."]
-scale = Vector2(0.7, 0.7)
+[node name="Interact" type="Node2D" parent="." unique_id=1840060411]
+scale = Vector2(0.6, 0.6)
 
-[node name="MenusBox34x34" type="Sprite2D" parent="Interact"]
-position = Vector2(19.8571, 51.2858)
+[node name="MenusBox34x34" type="Sprite2D" parent="Interact" unique_id=139272070]
+position = Vector2(19.857098, 44.61915)
 texture = ExtResource("5_vuj28")
 
-[node name="Interact" type="TouchScreenButton" parent="Interact"]
-position = Vector2(10, 38.5714)
+[node name="Interact" type="TouchScreenButton" parent="Interact" unique_id=2112115844]
+position = Vector2(10.000002, 31.904747)
 texture_normal = ExtResource("5_1k8hq")
 texture_pressed = ExtResource("5_1k8hq")
 
-[node name="Answer2" type="Label" parent="Interact"]
+[node name="Answer2" type="Label" parent="Interact" unique_id=1239473002]
 z_index = 4096
-offset_left = 39.0
-offset_top = 30.0
+offset_left = 39.000004
+offset_top = 26.190475
 offset_right = 908.0
-offset_bottom = 111.0
+offset_bottom = 107.190475
 scale = Vector2(0.5, 0.5)
 theme_override_fonts/font = SubResource("FontFile_cv5wx")
 theme_override_font_sizes/font_size = 50
@@ -981,15 +990,15 @@ text = "Interact
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="Label" type="TextEdit" parent="."]
+[node name="Label" type="TextEdit" parent="." unique_id=1991167145]
 visible = false
 layout_mode = 0
 offset_left = 1.0
 offset_top = 16.0
 offset_right = 617.0
 offset_bottom = 78.0
-theme_override_colors/font_placeholder_color = Color(0.513233, 0.513233, 0.513233, 1)
 theme_override_colors/font_color = Color(0.255659, 0.255659, 0.255659, 1)
+theme_override_colors/font_placeholder_color = Color(0.513233, 0.513233, 0.513233, 1)
 theme_override_fonts/font = ExtResource("4_vkw1k")
 theme_override_styles/normal = SubResource("StyleBoxFlat_blie8")
 placeholder_text = "Talk..."

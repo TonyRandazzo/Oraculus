@@ -1,2 +1,2 @@
-res://oraculus/hud.gd
-res://oraculus/PlayerCharacter/player.gd
+res://oraculus/main.tscn
+res://oraculus/muri.tres

@@ -15,11 +15,13 @@ extends CharacterBody2D
 @export var aggression_increase_on_hit: float = 0.2
 @export var base_aggression: float = 0.7
 
+# Kalessi: hostile by nature, endlessly curious about what the knight can do for her,
+# with almost no loyalty. She helps, but the help is always an investment in herself.
 @export var personality_traits: Dictionary = {
 	"aggressiveness": 0.7,
-	"curiosity": 0.5,
-	"playfulness": 0.3,
-	"loyalty": 0.2
+	"curiosity": 0.8,
+	"playfulness": 0.2,
+	"loyalty": 0.1
 }
 
 var is_attacking: bool = false
@@ -73,35 +75,46 @@ var ai_decision_weights: Dictionary = {}
 @onready var attack_sound = $AttackSound
 @onready var death_sound = $DeathSound
 
+# Kalessi never sounds kind. She sounds useful, and never says why.
 var fallback_responses = [
-	"*Chuckle* A riddle!", 
-	"*Roar* Too hard!", 
-	"*Hiss* You amuse me!"
+	"*Cold* The water swallows my words, soldier.",
+	"*Hiss* Go left. Do not ask me why.",
+	"*Slow* I could tell you. I will not. Yet."
 ]
 
+# She warms only in degree, never in trust. The last line is still a trap.
 var friendly_responses = [
-	"*Sigh* Not useless...",
-	"*Interest* Keep talking...",
-	"*Giggle* You're funny!",
-	"*Calm* I was wrong...",
-	"*Smile* You're worthy!"
+	"*Contempt* Still breathing. Curious.",
+	"*Slow* Keep the wall on your right. That is a gift.",
+	"*Cold* You ask better questions than the others did.",
+	"*Quiet* I begin to see a use for you.",
+	"*Smile* You will do exactly what I need. Good."
 ]
 
 var attack_phrases = [
-	"*Scream* Suffer!",
-	"*Roar* Taste fury!",
-	"*Laugh* This hurts!",
-	"*Shout* For darkness!",
-	"*Hiss* Die now!",
-	"*Howl* INSECT!"
+	"*Hiss* Stone suits you better!",
+	"*Cold* You were useful. Were.",
+	"*Slow* Do not look at me, soldier!",
+	"*Contempt* Your Holy Cross taught you nothing!",
+	"*Hiss* Kneel, and stay kneeling!",
+	"*Sharp* I warned you once!"
 ]
 
 var aggressive_hit_responses = [
-	"*Scream* ENOUGH!",
-	"*Roar* TO DUST!",
-	"*Shout* PAY DEARLY!",
-	"*Hiss* END IS NEAR!",
-	"*Laugh* PAIN TASTES!"
+	"*Hiss* You waste what I saved!",
+	"*Cold* I was helping you, insect!",
+	"*Sharp* Then find Rigon alone!",
+	"*Contempt* Your kind always chooses this!",
+	"*Slow* You will regret needing me!"
+]
+
+# She offers directions, then withholds the half that matters.
+var helpful_taunts = [
+	"*Cold* The stairs behind you climb to the entrance. Take them or drown.",
+	"*Slow* There is a dry passage east. I will not say what waits in it.",
+	"*Contempt* Do not touch the water in the second chamber. That is all you get.",
+	"*Quiet* I know every tunnel down here. You know none. Consider that.",
+	"*Hiss* Ask me about my husband, and I may spare you a corridor."
 ]
 
 func _ready() -> void:
@@ -153,7 +166,8 @@ func _process_server_timeout(delta: float):
 func face_player():
 	if player and is_instance_valid(player):
 		var direction = sign(player.global_position.x - global_position.x)
-		sprite.flip_h = direction > 0
+		if direction != 0:
+			sprite.flip_h = direction < 0
 
 func initialize_personality():
 	personality_state = personality_traits.duplicate()
@@ -208,6 +222,8 @@ func _physics_process(delta: float) -> void:
 			var decision = make_ai_decision()
 			execute_ai_decision(decision)
 	
+	face_player()
+	
 	match state:
 		"idle", "ready", "riddle", "waiting", "conversing":
 			handle_peaceful_states()
@@ -232,13 +248,11 @@ func handle_ally_behavior():
 		if distance > 150:
 			var dir = sign(player.global_position.x - global_position.x)
 			velocity.x = dir * speed
-			sprite.flip_h = dir < 0
 
 func handle_attack_behavior(delta: float):
 	if player and is_instance_valid(player):
 		var dir = sign(player.global_position.x - global_position.x)
 		velocity.x = dir * speed * (1.0 + current_aggression)
-		sprite.flip_h = dir < 0
 		
 		if not is_attacking and global_position.distance_to(player.global_position) > attack_range * 2.0:
 			state = "conversing"
@@ -340,7 +354,7 @@ func take_damage(amount: int):
 	if current_health <= 0: 
 		die()
 	elif friendship_level < 3 and player and is_instance_valid(player):
-		dialogue_box.show_text("*Scream* You'll pay!")
+		dialogue_box.show_text("*Hiss* And I was about to help you.")
 
 func die():
 	state = "dead"
@@ -438,30 +452,30 @@ func execute_ai_decision(decision: String):
 		"ally":
 			if friendship_level >= 3:
 				state = "ally"
-				dialogue_box.show_text("*Calm* We work together...")
+				dialogue_box.show_text("*Cold* We walk together. For my reasons.")
 				can_initiate_dialogue = false
 		"tease":
-			var t = ["*Chuckle* Funny face!", "*Giggle* Humans amuse!", "*Sarcasm* That's best?"]
-			dialogue_box.show_text(t[randi() % t.size()])
+			dialogue_box.show_text(helpful_taunts[randi() % helpful_taunts.size()])
 			can_initiate_dialogue = false
 		"retreat":
 			if current_health < max_health * 0.3:
 				state = "hurt"
-				dialogue_box.show_text("*Panting* Not over...")
+				dialogue_box.show_text("*Cold* Not yet. I still need you.")
 				can_initiate_dialogue = false
 
 func say_launch_message():
-	_send_to_ai_server("Announce presence in ONE short sentence (max 10 words).")
+	_send_to_ai_server("Reveal yourself to the knight in ONE cold, hostile sentence (max 12 words). Show contempt, but let him sense you may still be of use.")
 
 func ask_riddle():
-	_send_to_ai_server("Speak short riddle (one sentence, max 10 words).")
+	_send_to_ai_server("Speak ONE short riddle to the knight (one sentence, max 12 words). Make it sound like a test he must pass before you help him.")
 
 func initiate_random_dialogue():
 	var prompts = [
-		"Ask ONE short question (max 8 words).",
-		"Tell short story fragment (max 10 words).",
-		"Make short chilling observation (max 8 words).",
-		"Challenge with short phrase (max 6 words)."
+		"Ask the knight ONE cold question about himself or about your husband Rigon (max 10 words).",
+		"Offer him ONE useful direction through the underground, then withhold the crucial detail (max 12 words).",
+		"Make ONE contemptuous remark about his Army of the Holy Cross (max 10 words).",
+		"Hint in ONE sentence that you want something from him, without ever saying what (max 10 words).",
+		"Warn him of ONE danger below, as if the warning costs you something (max 12 words)."
 	]
 	_send_to_ai_server(prompts[randi() % prompts.size()])
 
@@ -480,12 +494,17 @@ func receive_player_answer(answer: String):
 func analyze_answer_for_friendship(answer: String):
 	var lower = answer.to_lower()
 	var change = 0
-	if lower.contains("please") or lower.contains("thank you"): 
+	# Kalessi cares about one thing above all: her husband, and who can lead her to him.
+	if lower.contains("rigon") or lower.contains("husband") or lower.contains("marito"):
+		change = 2
+	elif lower.contains("please") or lower.contains("thank you"): 
 		change = 1
 	elif lower.contains("alliance") or lower.contains("friend"): 
 		change = 2
 	elif lower.contains("wisdom") or lower.contains("power"): 
 		change = 1
+	elif lower.contains("monster") or lower.contains("medusa") or lower.contains("witch"):
+		change = -2
 	elif lower.contains("asshole") or lower.contains("idiot"): 
 		change = -1
 	elif lower.contains("respect") or lower.contains("honor"): 
@@ -507,7 +526,7 @@ func change_friendship(amount: int):
 func become_ally():
 	state = "ally"
 	if dialogue_box:
-		dialogue_box.show_text("*Calm* You're worthy ally... for now.")
+		dialogue_box.show_text("*Cold smile* We are useful to each other. Nothing more.")
 
 func _on_ai_chat_received(message: String):
 	is_waiting_for_response = false
@@ -552,9 +571,9 @@ func _on_ai_chat_failed(_error_code: int):
 	is_interacting = false
 	_stop_thinking_dots()
 	if friendship_level > 2: 
-		_use_fallback_response("*Calm* Weak magic...")
+		_use_fallback_response("*Slow* Keep walking. I will find you again.")
 	else: 
-		_use_fallback_response("*Laughter*")
+		_use_fallback_response("*Hiss*")
 
 func _on_body_entered(body: Node2D):
 	if body.name == "Player" and state in ["idle","ready"]:
@@ -572,9 +591,9 @@ func _on_timeout():
 		is_interacting = false
 		_stop_thinking_dots()
 		if friendship_level > 3: 
-			_use_fallback_response("*Yawn* Boring...")
+			_use_fallback_response("*Cold* You waste the little time I gave you.")
 		else: 
-			_use_fallback_response("*Echo*")
+			_use_fallback_response("*Dripping water*")
 
 func _use_fallback_response(text: String):
 	if dialogue_box: 

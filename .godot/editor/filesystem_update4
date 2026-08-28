@@ -1,7 +1,2 @@
 res://oraculus/main.tscn
 res://oraculus/muri.tres
-res://oraculus/astri_camera.gd
-res://oraculus/camera_distance2.gd
-res://oraculus/camera_distance.gd
-res://oraculus/camera_distance_3.gd
-res://oraculus/hud.tscn

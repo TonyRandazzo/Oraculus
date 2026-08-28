@@ -1,5 +1,5 @@
-Panel
 Node2D
+Panel
 CPUParticles2D
 PointLight2D
 Sprite2D
@@ -12,4 +12,3 @@ CollisionPolygon2D
 AnimatedSprite2D
 CanvasLayer
 Node
-Button

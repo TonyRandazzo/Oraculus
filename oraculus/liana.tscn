@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://oraculus/liana.gd" id="1_liana"]
+
+[node name="Liana" type="Node2D" groups=["liana"]]
+script = ExtResource("1_liana")
+
+[node name="Segments" type="Node2D" parent="."]
+
+[node name="GrabArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GrabArea"]

@@ -51,6 +51,17 @@ var current_stair_layer: int = 1
 var wall_jumping: bool = false
 var wall_jump_lock_timer: Timer
 
+# Liana: mentre swinging è vero il movimento lo detta la liana, non la gravità.
+var swinging: bool = false
+var current_liana: Node2D = null
+var _swing_blocked_frames: int = 0
+## Per quanto tempo, dopo essersi staccati dalla liana, la spinta orizzontale
+## resta intatta: senza questa finestra il movimento normale la cancellerebbe
+## già al frame dopo.
+@export var liana_launch_time: float = 0.45
+var liana_launching: bool = false
+var liana_launch_timer: Timer
+
 @export var parry_window: float = 0.15
 var parry_active: bool = false
 var parrying: bool = false
@@ -117,6 +128,11 @@ func _ready() -> void:
 	add_child(wall_jump_lock_timer)
 	wall_jump_lock_timer.timeout.connect(_on_wall_jump_lock_timeout)
 
+	liana_launch_timer = Timer.new()
+	liana_launch_timer.one_shot = true
+	add_child(liana_launch_timer)
+	liana_launch_timer.timeout.connect(_end_liana_launch)
+
 	defense_potion_timer = Timer.new()
 	defense_potion_timer.one_shot = true
 	add_child(defense_potion_timer)
@@ -141,6 +157,10 @@ func _physics_process(delta: float) -> void:
 		velocity.x = 0
 		sprite.play("idle")
 		move_and_slide()
+		return
+
+	if swinging:
+		_process_swing(delta)
 		return
 
 	detect_stairs()
@@ -252,6 +272,20 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		if (global_position - _pre_wj_pos).length() < 0.5 and get_slide_collision_count() == 0:
 			_try_unstick_wall()
+		return
+
+	if liana_launching:
+		velocity.y += gravity * delta
+		if Input.is_action_just_pressed("jump") and jumps_left > 0:
+			velocity.y = -jump_force
+			jumps_left -= 1
+			jump_sound.play()
+		if absf(velocity.x) > 1.0:
+			sprite.flip_h = velocity.x < 0
+		sprite.play("jump" if velocity.y < 0 else "fall")
+		move_and_slide()
+		if is_on_floor() or is_on_wall():
+			_end_liana_launch()
 		return
 
 	var direction = 0
@@ -370,6 +404,110 @@ func _physics_process(delta: float) -> void:
 
 func _on_wall_jump_lock_timeout() -> void:
 	wall_jumping = false
+
+## Chiamata dalla liana quando il giocatore la tocca: restituisce false se in
+## questo momento non ci si può aggrappare.
+func grab_liana(liana: Node2D) -> bool:
+	if swinging or attacking or parrying or knockback_active:
+		return false
+	if hud_label.visible:
+		return false
+	swinging = true
+	current_liana = liana
+	_swing_blocked_frames = 0
+	_end_liana_launch()
+	sliding = false
+	slide_direction = 0
+	slide_timer.stop()
+	crouching = false
+	wall_jumping = false
+	wall_jump_lock_timer.stop()
+	climbing = false
+	current_stairs = null
+	gravity = 1000.0
+	velocity = Vector2.ZERO
+	jumps_left = max_jumps
+	collision_shape.rotation = 0.0
+	collision_shape.position.y = 0.0
+	sprite.position.y = 0
+	if walk_sound.playing:
+		walk_sound.stop()
+	sprite.play("wall_slide")
+	return true
+
+## Appesi alla liana: destra/sinistra spingono l'oscillazione, climb_up/climb_down
+## fanno salire e scendere lungo la liana, il salto stacca.
+func _process_swing(delta: float) -> void:
+	if current_liana == null or not is_instance_valid(current_liana):
+		swinging = false
+		current_liana = null
+		return
+
+	var direction = 0
+	if Input.is_action_pressed("move_left"):
+		direction -= 1
+	if Input.is_action_pressed("move_right"):
+		direction += 1
+
+	var climb = 0
+	if Input.is_action_pressed("climb_up"):
+		climb -= 1
+	if Input.is_action_pressed("climb_down"):
+		climb += 1
+
+	current_liana.swing_step(delta, direction, climb)
+
+	# La liana non ha collisione, ma il giocatore sì: se il punto in cui
+	# dovrebbe stare è dentro un muro resta dov'è, e se la cosa dura si stacca.
+	var target: Vector2 = current_liana.get_attach_position()
+	var t := global_transform
+	t.origin = target
+	if test_move(t, Vector2.ZERO):
+		_swing_blocked_frames += 1
+		if _swing_blocked_frames >= 30:
+			_release_liana(false)
+			return
+	else:
+		_swing_blocked_frames = 0
+		global_position = target
+
+	var swing_velocity: Vector2 = current_liana.get_attach_velocity()
+	velocity = swing_velocity
+	if sprite.animation != "wall_slide":
+		sprite.play("wall_slide")
+	if absf(swing_velocity.x) > 8.0:
+		sprite.flip_h = swing_velocity.x < 0
+
+	# Su tastiera W e freccia su fanno parte sia di "jump" sia di "climb_up":
+	# mentre si sale lungo la liana il salto non deve staccare, per farlo si usa
+	# spazio (o il tasto salto del pad, che non è legato all'arrampicata).
+	if Input.is_action_just_pressed("jump") and not Input.is_action_pressed("climb_up"):
+		_release_liana(true)
+
+func _release_liana(with_jump: bool) -> void:
+	if current_liana == null:
+		swinging = false
+		return
+	var launch: Vector2 = Vector2.ZERO
+	if is_instance_valid(current_liana):
+		launch = current_liana.release(with_jump)
+	swinging = false
+	current_liana = null
+	_swing_blocked_frames = 0
+	velocity = launch
+	jumps_left = max(max_jumps - 1, 0)
+	was_on_floor = false
+	liana_launching = true
+	liana_launch_timer.start(liana_launch_time)
+	if with_jump:
+		jump_sound.play()
+		sprite.play("jump")
+	else:
+		sprite.play("fall")
+
+func _end_liana_launch() -> void:
+	liana_launching = false
+	liana_launch_timer.stop()
 
 func _disable_attack_box():
 	attack_box.disabled = true
@@ -538,6 +676,11 @@ func _on_attack_box_area_entered(area: Area2D) -> void:
 func take_damage(amount: float) -> void:
 	if not can_take_damage:
 		return
+	# Un colpo preso mentre si penzola stacca dalla liana, altrimenti il
+	# contraccolpo verrebbe ignorato e si resterebbe incollati.
+	if swinging:
+		_release_liana(false)
+	_end_liana_launch()
 	current_health -= amount
 	hurt_sound.play()
 	update_health()

@@ -1,4 +1,5 @@
-res://oraculus/liana.gd
-res://oraculus/PlayerCharacter/player.gd
 res://oraculus/main.tscn
 res://oraculus/muri.tres
+res://oraculus/liana.tscn
+res://oraculus/PlayerCharacter/player.gd
+res://oraculus/trampoline.gd

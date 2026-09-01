@@ -1,8 +1,9 @@
+ParallaxLayer
+Sprite2D
 Node2D
 Panel
 CPUParticles2D
 PointLight2D
-Sprite2D
 CollisionShape2D
 Area2D
 RichTextLabel

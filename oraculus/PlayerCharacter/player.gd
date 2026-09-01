@@ -323,7 +323,10 @@ func _physics_process(delta: float) -> void:
 		velocity.y += gravity * delta
 
 	if is_on_floor():
-		velocity.y = 0
+		# Solo la caduta va azzerata: una spinta verso l'alto ricevuta a terra (il
+		# trampolino) deve sopravvivere fino al move_and_slide che stacca i piedi.
+		if velocity.y > 0.0:
+			velocity.y = 0
 		jumps_left = max_jumps
 
 	if not was_on_floor and is_on_floor():
@@ -508,6 +511,48 @@ func _release_liana(with_jump: bool) -> void:
 func _end_liana_launch() -> void:
 	liana_launching = false
 	liana_launch_timer.stop()
+
+## Chiamata dal trampolino: rilancia il giocatore verso l'alto a [param speed]
+## pixel al secondo. Prima chiude tutti gli stati che ignorerebbero la spinta —
+## scivolata, accovacciata, scala, liana, attacco — altrimenti il balzo verrebbe
+## mangiato dal frame dopo.
+func bounce(speed: float) -> void:
+	if current_health <= 0:
+		return
+	if swinging:
+		_release_liana(false)
+	_end_liana_launch()
+	if sliding:
+		slide_timer.stop()
+		_on_slide_timeout()
+	if crouching:
+		crouching = false
+		sprite.position.y = 0
+		collision_shape.rotation = 0
+		collision_shape.position.y = 0
+	if climbing:
+		climbing = false
+		current_stairs = null
+		gravity = 1000.0
+	if attacking:
+		attacking = false
+		attack_box.disabled = true
+	if parrying or parry_active:
+		# La parata viene interrotta a metà: l'animazione non arriverà mai in fondo,
+		# quindi il permesso di prendere danno va restituito qui a mano.
+		parrying = false
+		parry_active = false
+		parry_timer.stop()
+		if invincibility_timer.is_stopped():
+			can_take_damage = true
+	wall_jumping = false
+	wall_jump_lock_timer.stop()
+	velocity.y = -speed
+	# Il balzo non consuma salti: dal trampolino si può ancora fare il doppio salto.
+	jumps_left = max_jumps
+	was_on_floor = false
+	jump_sound.play()
+	sprite.play("jump")
 
 func _disable_attack_box():
 	attack_box.disabled = true

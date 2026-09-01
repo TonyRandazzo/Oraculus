@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://oraculus/trampoline.gd" id="1_tramp"]
+
+[node name="Trampoline" type="Area2D" groups=["trampoline"]]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_tramp")
+
+[node name="PadShape" type="CollisionShape2D" parent="."]
+
+[node name="FallSensor" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="SensorShape" type="CollisionShape2D" parent="FallSensor"]
+
+[node name="Sound" type="AudioStreamPlayer2D" parent="."]

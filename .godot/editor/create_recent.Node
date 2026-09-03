@@ -12,4 +12,3 @@ Path2D
 CollisionPolygon2D
 AnimatedSprite2D
 CanvasLayer
-Node

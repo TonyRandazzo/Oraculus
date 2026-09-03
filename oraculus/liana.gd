@@ -37,15 +37,45 @@ signal released(player: Node)
 	set(value):
 		segment_texture = value
 		_refresh()
+## Scala della texture del segmento (1.0 = dimensione originale)
+@export_range(0.1, 5.0, 0.05) var segment_texture_scale: float = 1.0:
+	set(value):
+		segment_texture_scale = maxf(0.1, value)
+		_refresh()
+## Altezza fissa della texture del segmento in pixel (0 = usa altezza originale * scala)
+@export_range(0.0, 512.0, 1.0) var segment_texture_height: float = 0.0:
+	set(value):
+		segment_texture_height = maxf(0.0, value)
+		_refresh()
 ## Texture opzionale solo per l'ultimo segmento, la punta della liana.
 @export var tip_texture: Texture2D:
 	set(value):
 		tip_texture = value
 		_refresh()
+## Scala della texture della punta (1.0 = dimensione originale)
+@export_range(0.1, 5.0, 0.05) var tip_texture_scale: float = 1.0:
+	set(value):
+		tip_texture_scale = maxf(0.1, value)
+		_refresh()
+## Altezza fissa della texture della punta in pixel (0 = usa altezza originale * scala)
+@export_range(0.0, 512.0, 1.0) var tip_texture_height: float = 0.0:
+	set(value):
+		tip_texture_height = maxf(0.0, value)
+		_refresh()
 ## Texture opzionale dell'attacco al soffitto, disegnata sul punto d'ancoraggio.
 @export var anchor_texture: Texture2D:
 	set(value):
 		anchor_texture = value
+		_refresh()
+## Scala della texture dell'ancoraggio (1.0 = dimensione originale)
+@export_range(0.1, 5.0, 0.05) var anchor_texture_scale: float = 1.0:
+	set(value):
+		anchor_texture_scale = maxf(0.1, value)
+		_refresh()
+## Altezza fissa della texture dell'ancoraggio in pixel (0 = usa altezza originale * scala)
+@export_range(0.0, 512.0, 1.0) var anchor_texture_height: float = 0.0:
+	set(value):
+		anchor_texture_height = maxf(0.0, value)
 		_refresh()
 ## Specchia un segmento sì e uno no, così la ripetizione si nota meno.
 @export var alternate_flip: bool = true:
@@ -421,9 +451,11 @@ func _step_length() -> float:
 	if segment_length > 0.0:
 		return segment_length
 	if segment_texture != null:
-		return float(segment_texture.get_height()) * texture_scale
+		var height := segment_texture_height if segment_texture_height > 0.0 else float(segment_texture.get_height()) * segment_texture_scale
+		return height
 	if tip_texture != null:
-		return float(tip_texture.get_height()) * texture_scale
+		var height := tip_texture_height if tip_texture_height > 0.0 else float(tip_texture.get_height()) * tip_texture_scale
+		return height
 	return 16.0
 
 
@@ -471,14 +503,20 @@ func _rebuild_segments() -> void:
 	if anchor_texture != null:
 		_anchor_sprite = Sprite2D.new()
 		_anchor_sprite.texture = anchor_texture
-		_anchor_sprite.scale = Vector2.ONE * texture_scale
+		var anchor_scale := anchor_texture_scale
+		if anchor_texture_height > 0.0:
+			var original_height := float(anchor_texture.get_height())
+			if original_height > 0.0:
+				anchor_scale = anchor_texture_height / original_height
+		_anchor_sprite.scale = Vector2.ONE * anchor_scale
 		_segments_root.add_child(_anchor_sprite)
 
 	var step := _step_length()
 	for i in segment_count:
 		var sprite := Sprite2D.new()
 		var texture: Texture2D = segment_texture
-		if i == segment_count - 1 and tip_texture != null:
+		var is_tip := i == segment_count - 1 and tip_texture != null
+		if is_tip:
 			texture = tip_texture
 		sprite.texture = texture
 		sprite.visible = texture != null
@@ -486,9 +524,22 @@ func _rebuild_segments() -> void:
 			# Origine sul giunto alto del segmento, texture centrata in
 			# orizzontale e stesa verso il basso.
 			sprite.centered = false
-			sprite.offset = Vector2(-float(texture.get_width()) * 0.5, 0.0)
+			var texture_width := float(texture.get_width())
+			var texture_height := float(texture.get_height())
+			sprite.offset = Vector2(-texture_width * 0.5, 0.0)
 			if alternate_flip and i % 2 == 1:
 				sprite.flip_h = true
+			# Imposta la scala in base alle proprietà di ridimensionamento
+			var scale_value: float = segment_texture_scale
+			var height_override := segment_texture_height
+			if is_tip:
+				scale_value = tip_texture_scale
+				height_override = tip_texture_height
+			if height_override > 0.0 and texture_height > 0.0:
+				# Scala per raggiungere l'altezza desiderata
+				sprite.scale = Vector2(scale_value, height_override / texture_height)
+			else:
+				sprite.scale = Vector2.ONE * scale_value
 		_segments_root.add_child(sprite)
 		_segment_sprites.append(sprite)
 
@@ -517,7 +568,13 @@ func _update_visual() -> void:
 		if sprite.texture != null:
 			sprite.position = a
 			sprite.rotation = _rotation_for(dir)
-			sprite.scale = Vector2(texture_scale, length / maxf(float(sprite.texture.get_height()), 1.0))
+			# Mantieni la scala orizzontale ma adatta quella verticale alla lunghezza
+			var current_scale := sprite.scale
+			var texture_height := float(sprite.texture.get_height())
+			if texture_height > 0.0:
+				sprite.scale = Vector2(current_scale.x, length / texture_height)
+			else:
+				sprite.scale = Vector2(current_scale.x, length / 16.0)
 		if i < _grab_shapes.size():
 			var shape_node := _grab_shapes[i]
 			shape_node.position = (a + b) * 0.5

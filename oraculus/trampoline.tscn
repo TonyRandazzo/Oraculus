@@ -1,18 +1,32 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://g4vsenef2bfo"]
 
-[ext_resource type="Script" path="res://oraculus/trampoline.gd" id="1_tramp"]
+[ext_resource type="Script" uid="uid://bis4dcqlurf33" path="res://oraculus/trampoline.gd" id="1_tramp"]
+[ext_resource type="Texture2D" uid="uid://ca30niwkb7u6p" path="res://oraculus/Level/jessica-andrade-big-spiderweb-2-export-removebg-preview.png" id="2_vs5rh"]
 
-[node name="Trampoline" type="Area2D" groups=["trampoline"]]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_glpbv"]
+size = Vector2(64, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ar360"]
+size = Vector2(64, 480)
+
+[node name="Trampoline" type="Area2D" unique_id=685241319 groups=["trampoline"]]
 collision_layer = 0
-collision_mask = 1
 script = ExtResource("1_tramp")
+pad_texture = ExtResource("2_vs5rh")
+pad_texture_scale = 0.15000000000000002
+pad_texture_height = 23.0
+pad_texture_stretch_width = false
+frame_color = Color(0.36078432, 0.2901961, 0.21960784, 0)
 
-[node name="PadShape" type="CollisionShape2D" parent="."]
+[node name="PadShape" type="CollisionShape2D" parent="." unique_id=1491337242]
+position = Vector2(0, 8)
+shape = SubResource("RectangleShape2D_glpbv")
 
-[node name="FallSensor" type="Area2D" parent="."]
+[node name="FallSensor" type="Area2D" parent="." unique_id=369569060]
 collision_layer = 0
-collision_mask = 1
 
-[node name="SensorShape" type="CollisionShape2D" parent="FallSensor"]
+[node name="SensorShape" type="CollisionShape2D" parent="FallSensor" unique_id=253480559]
+position = Vector2(0, -240)
+shape = SubResource("RectangleShape2D_ar360")
 
-[node name="Sound" type="AudioStreamPlayer2D" parent="."]
+[node name="Sound" type="AudioStreamPlayer2D" parent="." unique_id=1385732585]

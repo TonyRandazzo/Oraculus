@@ -93,6 +93,20 @@ signal bounced(body: Node, height: float)
 	set(value):
 		pad_texture = value
 		queue_redraw()
+## Scala della texture (1.0 = dimensione originale)
+@export_range(0.1, 5.0, 0.05) var pad_texture_scale: float = 1.0:
+	set(value):
+		pad_texture_scale = maxf(0.1, value)
+		queue_redraw()
+## Altezza fissa della texture in pixel (0 = usa altezza originale * scala)
+@export_range(0.0, 512.0, 1.0) var pad_texture_height: float = 0.0:
+	set(value):
+		pad_texture_height = maxf(0.0, value)
+		queue_redraw()
+## Se true, la texture si allarga per coprire tutta la larghezza del telo
+@export var pad_texture_stretch_width: bool = true
+## Modalità di allineamento: "center", "left", "right"
+@export_enum("center", "left", "right") var pad_texture_align: String = "center"
 ## Texture opzionale del telaio, disegnata sotto al telo.
 @export var frame_texture: Texture2D:
 	set(value):
@@ -355,8 +369,29 @@ func _draw() -> void:
 		draw_line(Vector2(-half - splay, frame_height), Vector2(half + splay, frame_height), frame_color, line_width * 0.75, true)
 
 	if pad_texture != null:
-		var height := pad_texture.get_size().y
-		draw_texture_rect(pad_texture, Rect2(-half, dip, pad_width, height), false)
+		var texture_size := pad_texture.get_size()
+		var target_height := pad_texture_height if pad_texture_height > 0.0 else texture_size.y * pad_texture_scale
+		var target_width := texture_size.x * pad_texture_scale
+		
+		if pad_texture_stretch_width:
+			target_width = pad_width
+		
+		var rect := Rect2(Vector2.ZERO, Vector2(target_width, target_height))
+		
+		# Allineamento orizzontale
+		match pad_texture_align:
+			"left":
+				rect.position.x = -half
+			"right":
+				rect.position.x = half - target_width
+			_: # center
+				rect.position.x = -target_width / 2.0
+		
+		rect.position.y = dip
+		
+		# Usa region per disegnare con ridimensionamento
+		var region := Rect2(Vector2.ZERO, texture_size)
+		draw_texture_rect_region(pad_texture, rect, region)
 		return
 
 	# Telo disegnato come una curva che sprofonda al centro: senza texture il

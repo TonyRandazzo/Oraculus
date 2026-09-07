@@ -1,8 +1,8 @@
-[gd_scene load_steps=99 format=3 uid="uid://cf67gkg04ayra"]
+[gd_scene format=3 uid="uid://cf67gkg04ayra"]
 
 [ext_resource type="Texture2D" uid="uid://dqv11xtytfj82" path="res://oraculus/PlayerCharacter/Attack/0.png" id="1_0m1v8"]
-[ext_resource type="Script" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
-[ext_resource type="Script" path="res://oraculus/PlayerCharacter/touch_controls.gd" id="1_tchct"]
+[ext_resource type="Script" uid="uid://5w4dut84te7q" path="res://oraculus/PlayerCharacter/player.gd" id="1_rsi7j"]
+[ext_resource type="Script" uid="uid://7pbirouwx6o2" path="res://oraculus/PlayerCharacter/touch_controls.gd" id="1_tchct"]
 [ext_resource type="Texture2D" uid="uid://j8ocyxs8l46a" path="res://oraculus/PlayerCharacter/Attack/1.png" id="2_h1lhp"]
 [ext_resource type="Texture2D" uid="uid://8ju7yomptfs7" path="res://oraculus/PlayerCharacter/Attack/2.png" id="3_at42d"]
 [ext_resource type="Texture2D" uid="uid://cog2uku46ogb3" path="res://oraculus/PlayerCharacter/Attack/3.png" id="4_pgs84"]
@@ -94,7 +94,7 @@ animations = [{
 "duration": 1.0,
 "texture": null
 }],
-"loop": true,
+"loop": 1,
 "name": &"default",
 "speed": 5.0
 }, {
@@ -120,7 +120,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("78_unurj")
 }],
-"loop": true,
+"loop": 1,
 "name": &"defense",
 "speed": 30.0
 }, {
@@ -146,7 +146,7 @@ animations = [{
 "duration": 1.0,
 "texture": null
 }],
-"loop": false,
+"loop": 0,
 "name": &"vanishing",
 "speed": 16.0
 }]
@@ -172,7 +172,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("7_l3w1g")
 }],
-"loop": false,
+"loop": 0,
 "name": &"attack",
 "speed": 16.0
 }, {
@@ -189,7 +189,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("11_rufiy")
 }],
-"loop": false,
+"loop": 0,
 "name": &"attack1",
 "speed": 16.0
 }, {
@@ -197,7 +197,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("8_7fp77")
 }],
-"loop": true,
+"loop": 1,
 "name": &"crouch",
 "speed": 5.0
 }, {
@@ -226,7 +226,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("15_hx7te")
 }],
-"loop": true,
+"loop": 1,
 "name": &"crouch_walk",
 "speed": 12.0
 }, {
@@ -261,7 +261,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("17_s5ke7")
 }],
-"loop": false,
+"loop": 0,
 "name": &"death",
 "speed": 5.0
 }, {
@@ -272,7 +272,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("6_qrao2")
 }],
-"loop": true,
+"loop": 1,
 "name": &"fall",
 "speed": 5.0
 }, {
@@ -292,7 +292,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("8_gcajl")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle",
 "speed": 3.0
 }, {
@@ -306,7 +306,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("13_un4ov")
 }],
-"loop": true,
+"loop": 1,
 "name": &"jump",
 "speed": 5.0
 }, {
@@ -320,7 +320,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("4_pgs84")
 }],
-"loop": false,
+"loop": 0,
 "name": &"parry",
 "speed": 5.0
 }, {
@@ -361,7 +361,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("50_sjje6")
 }],
-"loop": true,
+"loop": 1,
 "name": &"roll",
 "speed": 20.0
 }, {
@@ -396,7 +396,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("23_fdfas")
 }],
-"loop": true,
+"loop": 1,
 "name": &"run",
 "speed": 16.0
 }, {
@@ -413,7 +413,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("48_aevuw")
 }],
-"loop": true,
+"loop": 1,
 "name": &"slide",
 "speed": 5.0
 }, {
@@ -448,7 +448,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("23_fdfas")
 }],
-"loop": true,
+"loop": 1,
 "name": &"sprint",
 "speed": 25.0
 }, {
@@ -462,7 +462,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("67_4ltlv")
 }],
-"loop": true,
+"loop": 1,
 "name": &"wall_slide",
 "speed": 5.0
 }]
@@ -515,8 +515,8 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_s4uui"]
 _data = {
-"RESET": SubResource("Animation_5kxj8"),
-"hit_flash": SubResource("Animation_3ufcn")
+&"RESET": SubResource("Animation_5kxj8"),
+&"hit_flash": SubResource("Animation_3ufcn")
 }
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_sbkxv"]
@@ -537,84 +537,82 @@ animations = [{
 "duration": 1.0,
 "texture": null
 }],
-"loop": false,
+"loop": 0,
 "name": &"wall jump",
 "speed": 15.0
 }]
 
-[node name="Player" type="CharacterBody2D"]
+[node name="Player" type="CharacterBody2D" unique_id=1130620972]
 script = ExtResource("1_rsi7j")
 jump_force = 300.0
 
-[node name="VFX2" type="AnimatedSprite2D" parent="."]
+[node name="VFX2" type="AnimatedSprite2D" parent="." unique_id=936491922]
 modulate = Color(0, 1, 1, 1)
 position = Vector2(2, -1)
 sprite_frames = SubResource("SpriteFrames_rhs7m")
 
-[node name="Player" type="AnimatedSprite2D" parent="."]
+[node name="Player" type="AnimatedSprite2D" parent="." unique_id=473646766]
 sprite_frames = SubResource("SpriteFrames_npq8g")
 animation = &"sprint"
 frame_progress = 0.367275
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=714272538]
 shape = SubResource("CapsuleShape2D_bl8he")
 
-[node name="Walk" type="AudioStreamPlayer2D" parent="."]
+[node name="Walk" type="AudioStreamPlayer2D" parent="." unique_id=1005659922]
 stream = ExtResource("27_xrc8i")
 volume_db = -5.0
 pitch_scale = 1.2
 bus = &"SFX"
 
-[node name="Jump" type="AudioStreamPlayer2D" parent="."]
+[node name="Jump" type="AudioStreamPlayer2D" parent="." unique_id=1054130501]
 stream = ExtResource("28_4g16k")
 volume_db = -5.0
 bus = &"SFX"
 
-[node name="Area2D" type="Area2D" parent="." groups=["overlap_player"]]
+[node name="Area2D" type="Area2D" parent="." unique_id=1991175649 groups=["overlap_player"]]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=858856676]
 position = Vector2(11, 0)
 shape = SubResource("RectangleShape2D_me4x8")
 
-[node name="StairDetector" type="Area2D" parent="."]
+[node name="StairDetector" type="Area2D" parent="." unique_id=556872548]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StairDetector"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StairDetector" unique_id=658491806]
 position = Vector2(0, 9)
 shape = SubResource("RectangleShape2D_eedij")
 
-[node name="Attack" type="AudioStreamPlayer2D" parent="."]
+[node name="Attack" type="AudioStreamPlayer2D" parent="." unique_id=795128905]
 stream = ExtResource("29_8ebmy")
 
-[node name="HitBox" type="Area2D" parent="." groups=["hit_player"]]
+[node name="HitBox" type="Area2D" parent="." unique_id=869694456 groups=["hit_player"]]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox" unique_id=1431016387]
 position = Vector2(8, 0)
 shape = SubResource("RectangleShape2D_3pift")
 
-[node name="AttackBox" type="Area2D" parent="." groups=["player"]]
+[node name="AttackBox" type="Area2D" parent="." unique_id=1162346313 groups=["player"]]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox" unique_id=410103937]
 position = Vector2(18.5, -7.5)
 shape = SubResource("RectangleShape2D_kyg1f")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-"": SubResource("AnimationLibrary_s4uui")
-}
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1970544386]
+libraries/ = SubResource("AnimationLibrary_s4uui")
 
-[node name="Hurt" type="AudioStreamPlayer2D" parent="."]
+[node name="Hurt" type="AudioStreamPlayer2D" parent="." unique_id=1485941611]
 bus = &"SFX"
 
-[node name="Death" type="AudioStreamPlayer2D" parent="."]
+[node name="Death" type="AudioStreamPlayer2D" parent="." unique_id=1815342475]
 stream = ExtResource("56_s18ex")
 bus = &"SFX"
 
-[node name="VFX" type="AnimatedSprite2D" parent="."]
+[node name="VFX" type="AnimatedSprite2D" parent="." unique_id=518674100]
 modulate = Color(0, 1, 1, 1)
 position = Vector2(14, -10)
 sprite_frames = SubResource("SpriteFrames_rhs7m")
 
-[node name="WallJumpAnim" type="AnimatedSprite2D" parent="."]
+[node name="WallJumpAnim" type="AnimatedSprite2D" parent="." unique_id=517995533]
 position = Vector2(-7, 9)
 scale = Vector2(0.3, 0.3)
 sprite_frames = SubResource("SpriteFrames_sbkxv")
@@ -622,7 +620,7 @@ animation = &"wall jump"
 frame = 4
 frame_progress = 1.0
 
-[node name="TouchControls" type="Node" parent="."]
+[node name="TouchControls" type="Node" parent="." unique_id=1894045766]
 script = ExtResource("1_tchct")
 
 [connection signal="area_entered" from="HitBox" to="." method="_on_hit_box_area_entered"]

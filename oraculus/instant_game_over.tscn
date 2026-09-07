@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://b5x37oehrktaq"]
+
+[ext_resource type="Script" uid="uid://xcuv8y52naa7" path="res://InstanGameOver.gd" id="1_e0tlm"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_b2bhr"]
+
+[node name="InstantGameOver" type="Area2D" unique_id=497955239]
+script = ExtResource("1_e0tlm")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1067085998]
+shape = SubResource("RectangleShape2D_b2bhr")
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]

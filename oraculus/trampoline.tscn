@@ -4,10 +4,12 @@
 [ext_resource type="Texture2D" uid="uid://ca30niwkb7u6p" path="res://oraculus/Level/jessica-andrade-big-spiderweb-2-export-removebg-preview.png" id="2_vs5rh"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_glpbv"]
-size = Vector2(64, 16)
+resource_local_to_scene = true
+size = Vector2(74, 16)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ar360"]
-size = Vector2(64, 480)
+resource_local_to_scene = true
+size = Vector2(74, 480)
 
 [node name="Trampoline" type="Area2D" unique_id=685241319 groups=["trampoline"]]
 collision_layer = 0

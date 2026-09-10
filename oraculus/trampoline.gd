@@ -28,8 +28,10 @@ extends Area2D
 signal bounced(body: Node, height: float)
 
 @export_group("Forma")
-## Larghezza del telo, cioè quanto è largo il punto in cui si rimbalza.
-@export_range(8.0, 512.0, 1.0, "or_greater") var pad_width: float = 64.0:
+## Larghezza del telo, cioè quanto è largo il punto in cui si rimbalza. È solo
+## la zona di atterraggio: la texture disegnata resta della sua misura, a meno
+## che [member pad_texture_stretch_width] non le dica di seguirla.
+@export_range(8.0, 512.0, 1.0, "or_greater") var pad_width: float = 74.0:
 	set(value):
 		pad_width = maxf(8.0, value)
 		_refresh()
@@ -330,23 +332,35 @@ func _ensure_nodes() -> void:
 	_sound.stream = bounce_sound
 
 
+## Il rettangolo di [param holder], garantito di proprietà di questo trampolino.
+## Le shape salvate dentro trampoline.tscn sarebbero un'unica risorsa condivisa
+## da tutte le istanze: ridimensionarla cambierebbe la larghezza a tutti gli
+## altri trampolini della mappa, e l'ultimo a partire vincerebbe su tutti. Se ne
+## troviamo una non locale ce ne prendiamo una copia nostra.
+func _own_rect(holder: CollisionShape2D) -> RectangleShape2D:
+	var rect := holder.shape as RectangleShape2D
+	if rect == null:
+		rect = RectangleShape2D.new()
+	elif not rect.resource_local_to_scene:
+		rect = rect.duplicate() as RectangleShape2D
+	else:
+		return rect
+	rect.resource_local_to_scene = true
+	holder.shape = rect
+	return rect
+
+
 func _refresh() -> void:
 	if not is_node_ready():
 		return
 	_ensure_nodes()
-	var pad := _pad_shape.shape as RectangleShape2D
-	if pad == null:
-		pad = RectangleShape2D.new()
-		_pad_shape.shape = pad
+	var pad := _own_rect(_pad_shape)
 	pad.size = Vector2(pad_width, pad_thickness)
 	# L'origine del nodo sta sulla superficie del telo: la zona di rimbalzo
 	# scende da lì.
 	_pad_shape.position = Vector2(0.0, pad_thickness * 0.5)
 
-	var sensor := _sensor_shape.shape as RectangleShape2D
-	if sensor == null:
-		sensor = RectangleShape2D.new()
-		_sensor_shape.shape = sensor
+	var sensor := _own_rect(_sensor_shape)
 	sensor.size = Vector2(pad_width, maxf(sensor_height, 1.0))
 	_sensor_shape.position = Vector2(0.0, -sensor_height * 0.5)
 	_sensor.monitoring = sensor_height > 0.0

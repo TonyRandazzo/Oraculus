@@ -32,12 +32,10 @@ var state: String = "idle"
 var attack_timer: float = 0.0
 var is_interacting: bool = false
 @export var npc_name: String = "Rigon"
-const AI_SERVER_URL = "http://localhost:5000"
 
-var _ai_thread: Thread = null
-var _ai_thread_result: String = ""
-var _ai_thread_new_hostility: int = -1
-var _ai_thread_done: bool = false
+var _ai_result: String = ""
+var _ai_new_hostility: int = -1
+var _ai_done: bool = false
 var _thinking_tween: Tween = null
 var hostility: int = 70
 
@@ -585,11 +583,9 @@ func _send_to_ai_server(player_message: String) -> void:
 	
 	if is_waiting_for_response:
 		return
-	if _ai_thread != null and _ai_thread.is_alive():
-		return
 	is_waiting_for_response = true
 	is_interacting = true
-	_ai_thread_done = false
+	_ai_done = false
 	_start_thinking_dots()
 	var payload = {
 		"npc_name": npc_name,
@@ -601,86 +597,49 @@ func _send_to_ai_server(player_message: String) -> void:
 		"temperature": 0.7,
 		"max_length": 50
 	}
-	_ai_thread = Thread.new()
-	_ai_thread.start(_thread_request.bind(payload))
+	_request_ai(payload)
 
-func _thread_request(payload: Dictionary) -> void:
-	var client = HTTPClient.new()
-	var err = client.connect_to_host("localhost", 5000)
-	if err != OK:
-		_ai_thread_done = true
+func _request_ai(payload: Dictionary) -> void:
+	# Prima qui c'era una connessione HTTP a mano dentro un thread verso la
+	# porta 5000. Il motore ora e' in-process e asincrono a segnali: resta un
+	# await, e le variabili _ai_* sopravvivono solo perche' _process le
+	# consuma con la stessa logica di prima.
+	var server_manager = get_node_or_null("/root/AIServerManager")
+	if server_manager == null:
+		_ai_result = ""
+		_ai_new_hostility = -1
+		_ai_done = true
 		return
-	var waited := 0.0
-	while client.get_status() in [HTTPClient.STATUS_CONNECTING, HTTPClient.STATUS_RESOLVING]:
-		OS.delay_msec(50)
-		client.poll()
-		waited += 0.05
-		if waited > 5.0:
-			_ai_thread_done = true
-			return
-	if client.get_status() != HTTPClient.STATUS_CONNECTED:
-		_ai_thread_done = true
+
+	var response = await server_manager.make_request("chat", payload)
+	if not is_instance_valid(self):
 		return
-	var body_str = JSON.stringify(payload)
-	var headers = ["Content-Type: application/json", "Content-Length: " + str(body_str.length())]
-	err = client.request(HTTPClient.METHOD_POST, "/chat", headers, body_str)
-	if err != OK:
-		_ai_thread_done = true
-		return
-	waited = 0.0
-	while waited < 60.0:
-		OS.delay_msec(100)
-		client.poll()
-		var status = client.get_status()
-		if status == HTTPClient.STATUS_BODY or status == HTTPClient.STATUS_CONNECTED:
-			break
-		elif status == HTTPClient.STATUS_DISCONNECTED:
-			_ai_thread_done = true
-			return
-		waited += 0.1
-	var response_body := PackedByteArray()
-	waited = 0.0
-	while waited < 20.0:
-		client.poll()
-		var status = client.get_status()
-		if status == HTTPClient.STATUS_BODY:
-			var chunk = client.read_response_body_chunk()
-			if chunk.size() > 0:
-				response_body.append_array(chunk)
-				waited = 0.0
-			else:
-				OS.delay_msec(50)
-				waited += 0.05
-		else:
-			break
-	if response_body.size() > 0:
-		var json = JSON.new()
-		var text = response_body.get_string_from_utf8()
-		if json.parse(text) == OK:
-			var data = json.get_data()
-			_ai_thread_result = data.get("response", "")
-			_ai_thread_new_hostility = int(data.get("new_hostility", hostility))
-	_ai_thread_done = true
+
+	if response is Dictionary and not response.has("error"):
+		_ai_result = response.get("response", "")
+		_ai_new_hostility = int(response.get("new_hostility", hostility))
+	else:
+		_ai_result = ""
+		_ai_new_hostility = -1
+	_ai_done = true
 
 func _process(_delta: float) -> void:
-	if not _ai_thread_done or _ai_thread == null:
+	if not _ai_done:
 		return
-	_ai_thread.wait_to_finish()
-	_ai_thread = null
-	_ai_thread_done = false
+	_ai_done = false
 	_stop_thinking_dots()
-	if _ai_thread_result != "":
-		if _ai_thread_new_hostility >= 0:
+	if _ai_result != "":
+		if _ai_new_hostility >= 0:
 			var prev_friendship = friendship_level
 			var prev_hostility = hostility
-			hostility = _ai_thread_new_hostility
+			hostility = _ai_new_hostility
 			friendship_level = clamp(5 - int(hostility / 20.0), 0, max_friendship)
 			FeedbackPopup.show_stat_change(self, friendship_level - prev_friendship, hostility - prev_hostility)
-		_on_ai_chat_received(_ai_thread_result)
+		_on_ai_chat_received(_ai_result)
 	else:
 		_on_ai_chat_failed(-1)
-	_ai_thread_result = ""
-	_ai_thread_new_hostility = -1
+	_ai_result = ""
+	_ai_new_hostility = -1
 
 func _start_thinking_dots() -> void:
 	if _thinking_tween:

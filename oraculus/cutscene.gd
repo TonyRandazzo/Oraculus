@@ -3,12 +3,11 @@ extends Node2D
 @onready var cutscene_sprite = $cutscene
 @onready var text = $Label
 
+const MAX_AI_WAIT := 20.0
+
 var timer_1: Timer
 var timer_2: Timer
-var http_request: HTTPRequest
-var is_server_responding: bool = false
-var retry_count: int = 0
-var max_retries: int = -1  # -1 significa ritenta all'infinito
+var _entered: bool = false
 
 func _ready():
 	timer_1 = Timer.new()
@@ -17,10 +16,6 @@ func _ready():
 	timer_1.timeout.connect(_on_first_timer_timeout)
 	add_child(timer_1)
 	timer_1.start()
-	
-	http_request = HTTPRequest.new()
-	add_child(http_request)
-	http_request.request_completed.connect(_on_request_completed)
 
 func _on_first_timer_timeout():
 	if cutscene_sprite:
@@ -40,40 +35,28 @@ func _on_first_timer_timeout():
 	timer_2.start()
 
 func _on_second_timer_timeout():
-	# Inizia il tentativo di connessione al server
-	_attempt_server_connection()
+	_wait_for_ai()
 
-func _attempt_server_connection():
-	if is_server_responding:
-		return  # Se il server ha già risposto, non fare ulteriori tentativi
-	
-	retry_count += 1
-	var url = "http://localhost:5000"
-	var error = http_request.request(url)
-	
-	if error != OK:
-		print("Errore nella richiesta HTTP (tentativo ", retry_count, "): ", error)
-		# Se c'è errore nella richiesta, riprova dopo 2 secondi
-		_retry_connection()
+func _wait_for_ai() -> void:
+	# Prima qui si interrogava http://localhost:5000 ritentando all'infinito:
+	# la cutscene non finiva finche' il server Python non rispondeva. Ora il
+	# motore e' in-process, quindi basta aspettare che l'autoload sia pronto.
+	var server := get_node_or_null("/root/AIServerManager")
+	if server == null or server.is_server_ready():
+		_enter_game()
+		return
 
-func _retry_connection():
-	# Crea un timer per riprovare dopo 2 secondi
-	var retry_timer = Timer.new()
-	retry_timer.wait_time = 2.0
-	retry_timer.one_shot = true
-	retry_timer.timeout.connect(_attempt_server_connection)
-	add_child(retry_timer)
-	retry_timer.start()
+	server.server_started.connect(_enter_game, CONNECT_ONE_SHOT)
 
-func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
-	if is_server_responding:
-		return  # Se abbiamo già ricevuto una risposta, ignora ulteriori callback
-	
-	if result == HTTPRequest.RESULT_SUCCESS and response_code == 200:
-		print("Server risponde correttamente dopo ", retry_count, " tentativi, cambio scena...")
-		is_server_responding = true
-		# Cambia scena a res://oraculus/main.tscn
-		get_tree().change_scene_to_file("res://oraculus/main.tscn")
-	else:
-		print("Server non risponde (tentativo ", retry_count, "), riprovo tra 2 secondi...")
-		_retry_connection()
+	# Rete di sicurezza: senza modello e senza rete si entra comunque, le
+	# risposte arrivano dai fallback invece di bloccare il giocatore qui.
+	await get_tree().create_timer(MAX_AI_WAIT).timeout
+	if not _entered:
+		print("[Cutscene] AI non pronta entro ", MAX_AI_WAIT, "s: entro comunque.")
+		_enter_game()
+
+func _enter_game() -> void:
+	if _entered:
+		return
+	_entered = true
+	get_tree().change_scene_to_file("res://oraculus/main.tscn")

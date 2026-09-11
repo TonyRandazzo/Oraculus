@@ -14,3 +14,12 @@ Thumbs.db
 # Claude Code data
 .claude/
 
+
+# Python venv (non serve piu': il motore di dialogo e' GDScript)
+python_venv/
+
+# Addon NobodyWho (binari GDExtension, ~300 MB: reinstallabile da AssetLib)
+addons/nobodywho/
+
+# Elenco delle GDExtension: lo rigenera Godot, e citerebbe un addon che non e' nel repo
+.godot/extension_list.cfg

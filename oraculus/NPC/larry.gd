@@ -39,10 +39,6 @@ const TELEPORT_FRIENDSHIP_REQ := 3
 # ── AI ────────────────────────────────────────────────────────────────────────
 var is_waiting_for_response: bool = false
 var _server_ready: bool = false
-var _ai_thread: Thread = null
-var _ai_thread_result: String = ""
-var _ai_thread_new_hostility: int = -1
-var _ai_thread_done: bool = false
 var _thinking_tween: Tween = null
 
 # ── Risposte ──────────────────────────────────────────────────────────────────
@@ -112,8 +108,6 @@ func _on_body_exited(body: Node2D) -> void:
 
 # ── Osservazione ogni frame ───────────────────────────────────────────────────
 func _process(delta: float) -> void:
-	_handle_ai_thread()
-
 	if not player or not is_instance_valid(player):
 		return
 
@@ -237,7 +231,7 @@ func _send_to_ai_server(player_message: String) -> void:
 	if not _server_ready:
 		dialogue_box.show_text(fallback_responses[randi() % fallback_responses.size()])
 		return
-	if is_waiting_for_response or (_ai_thread != null and _ai_thread.is_alive()):
+	if is_waiting_for_response:
 		return
 
 	var server_manager := get_node_or_null("/root/AIServerManager")
@@ -264,37 +258,14 @@ func _send_to_ai_server(player_message: String) -> void:
 	is_waiting_for_response = true
 	_start_thinking_dots()
 
-	if server_manager.is_using_remote():
-		var response = await server_manager.make_request("chat", payload)
-		_stop_thinking_dots()
-		if response == null or response.has("error"):
-			_use_fallback()
-			return
-		_handle_response(response)
-	else:
-		_ai_thread = Thread.new()
-		_ai_thread_done = false
-		_ai_thread.start(_thread_request.bind(payload, server_manager))
-
-func _thread_request(payload: Dictionary, server_manager: Node) -> void:
-	var response = server_manager.make_request_sync("chat", payload)
-	_ai_thread_result        = response.get("response", "") if not response.has("error") else ""
-	_ai_thread_new_hostility = int(response.get("new_hostility", hostility))
-	_ai_thread_done = true
-
-func _handle_ai_thread() -> void:
-	if not _ai_thread_done or _ai_thread == null:
+	var response = await server_manager.make_request("chat", payload)
+	if not is_instance_valid(self):
 		return
-	_ai_thread.wait_to_finish()
-	_ai_thread = null
-	_ai_thread_done = false
 	_stop_thinking_dots()
-	if _ai_thread_result != "":
-		_handle_response({"response": _ai_thread_result, "new_hostility": _ai_thread_new_hostility})
-	else:
+	if response == null or not (response is Dictionary) or response.has("error"):
 		_use_fallback()
-	_ai_thread_result        = ""
-	_ai_thread_new_hostility = -1
+		return
+	_handle_response(response)
 
 func _handle_response(response: Dictionary) -> void:
 	is_waiting_for_response = false

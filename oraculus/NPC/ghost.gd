@@ -18,7 +18,6 @@ extends CharacterBody2D
 @export var lateral_offset_range: Vector2 = Vector2(50.0, 120.0)
 
 @export var npc_name: String = "SmirBombo"
-const AI_SERVER_URL = "http://localhost:5000"
 
 @export var personality_traits: Dictionary = {
 	"aggressiveness": 0.2,
@@ -52,11 +51,7 @@ var current_aggression: float = base_aggression
 var current_lateral_offset: float = 0.0
 var hostility: int = 30   # SmirBombo non è ostile di default
 
-var _ai_thread: Thread = null
 var _thinking_tween: Tween = null
-var _ai_thread_result: String = ""
-var _ai_thread_new_hostility: int = -1
-var _ai_thread_done: bool = false
 var player_input_buffer: String = ""
 
 var _server_ready: bool = false
@@ -121,7 +116,7 @@ func _send_to_ai_server(player_message: String):
 	if not _server_ready:
 		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
 		return
-	if is_waiting_for_response or (_ai_thread != null and _ai_thread.is_alive()):
+	if is_waiting_for_response:
 		return
 
 	var server_manager = get_node_or_null("/root/AIServerManager")
@@ -129,38 +124,10 @@ func _send_to_ai_server(player_message: String):
 		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
 		return
 
-	if server_manager.is_using_remote():
-		_do_remote_request(player_message)
-	else:
-		_do_local_request(player_message)
+	# Un solo percorso: make_request() e' asincrona sia in locale sia in remoto.
+	_do_ai_request(player_message)
 
-func _do_local_request(player_message: String):
-	var server_manager = get_node_or_null("/root/AIServerManager")
-	if not server_manager:
-		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
-		return
-
-	is_waiting_for_response = true
-	is_interacting = true
-	_ai_thread_done = false
-	_start_thinking_dots()
-
-	var payload = {
-		"npc_name": npc_name,
-		"player_input": player_message,
-		"hostility": hostility,
-		"friendship": friendship_level * 20,
-		"language": "inglese",
-		"max_tokens": 25,
-		"temperature": 0.75,
-		"max_length": 12,
-		"conversation_history": conversation_history,
-	}
-
-	_ai_thread = Thread.new()
-	_ai_thread.start(_thread_request.bind(payload, server_manager))
-
-func _do_remote_request(player_message: String):
+func _do_ai_request(player_message: String):
 	var server_manager = get_node_or_null("/root/AIServerManager")
 	if not server_manager:
 		_use_fallback_response("Connection error...")
@@ -183,6 +150,8 @@ func _do_remote_request(player_message: String):
 	}
 
 	var response = await server_manager.make_request("chat", payload)
+	if not is_instance_valid(self):
+		return
 
 	_stop_thinking_dots()
 
@@ -203,15 +172,6 @@ func _do_remote_request(player_message: String):
 		FeedbackPopup.show_stat_change(self, friendship_level - prev_friendship, hostility - prev_hostility)
 
 	_on_ai_chat_received(ai_response)
-
-func _thread_request(payload: Dictionary, server_manager: Node) -> void:
-	var response = server_manager.make_request_sync("chat", payload)
-	if response.has("error"):
-		_ai_thread_done = true
-		return
-	_ai_thread_result = response.get("response", "")
-	_ai_thread_new_hostility = int(response.get("new_hostility", hostility))
-	_ai_thread_done = true
 
 func _on_ai_chat_received(message: String):
 	timer.stop()
@@ -238,33 +198,6 @@ func receive_player_answer(answer: String):
 	state = "waiting"
 	analyze_answer_for_friendship(answer)
 	_send_to_ai_server(answer)
-
-func _process(_delta: float) -> void:
-	if not _ai_thread_done:
-		return
-
-	if _ai_thread == null:
-		_ai_thread_done = false
-		return
-
-	_ai_thread.wait_to_finish()
-	_ai_thread = null
-	_ai_thread_done = false
-
-	_stop_thinking_dots()
-	if _ai_thread_result != "":
-		if _ai_thread_new_hostility >= 0:
-			var prev_friendship = friendship_level
-			var prev_hostility = hostility
-			hostility = _ai_thread_new_hostility
-			friendship_level = clamp(5 - int(hostility / 20.0), 0, max_friendship)
-			FeedbackPopup.show_stat_change(self, friendship_level - prev_friendship, hostility - prev_hostility)
-		_on_ai_chat_received(_ai_thread_result)
-	else:
-		_on_ai_chat_failed(-1)
-
-	_ai_thread_result = ""
-	_ai_thread_new_hostility = -1
 
 func _ready() -> void:
 	current_health = max_health

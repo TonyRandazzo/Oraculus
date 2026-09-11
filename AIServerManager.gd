@@ -1,394 +1,111 @@
+# ============================================================================
+# Facciata sottile sopra OraculusEngine.
+#
+# Prima questo autoload creava un venv, installava llama-cpp-python con pip,
+# lanciava ai/ai_server.py con OS.create_process, uccideva chi occupava la
+# porta 5000 e aspettava fino a 90 secondi un healthcheck HTTP. Ora il motore
+# di dialogo e' GDScript e gira nel processo del gioco: niente Python
+# installato sulla macchina del giocatore, niente porte, niente attesa.
+#
+# La firma pubblica e' rimasta la stessa (make_request, is_server_ready,
+# is_using_remote, server_started, server_failed) perche' il resto del gioco
+# la usa: door.gd aspetta server_started, gli NPC chiamano make_request.
+# ============================================================================
 extends Node
-
-const MAX_STARTUP_WAIT = 90.0
-const CHECK_INTERVAL = 2.0
-const REMOTE_API_URL = "https://oraculus-ai-api.onrender.com"
-
-var _python_thread: Thread = null
-var _server_ready: bool = false
-var _server_process: int = 0
-var _checking: bool = false
-var _using_remote: bool = false
 
 signal server_started
 signal server_failed(error_message)
 
-func _ready():
-	_check_and_setup_python()
+var _engine: OraculusEngine = null
+var _ready_flag := false
 
-func _get_base_dir() -> String:
-	# In editor usa la cartella del progetto, in export usa quella dell'eseguibile.
-	if OS.has_feature("editor"):
-		return ProjectSettings.globalize_path("res://")
-	return OS.get_executable_path().get_base_dir() + "/"
 
-func _check_and_setup_python():
-	if OS.get_name() == "Web":
-		_switch_to_remote()
-		return
-	# Prova prima il server remoto con un timeout breve.
-	# Se non risponde (nessuna connessione), avvia il server locale.
-	_try_remote_first()
-
-func _try_remote_first() -> void:
-	var http := HTTPRequest.new()
-	http.timeout = 6.0
-	add_child(http)
-	var err := http.request(REMOTE_API_URL + "/health")
-	if err != OK:
-		http.queue_free()
-		_start_local_server()
-		return
-
-	var result = await http.request_completed
-	http.queue_free()
-
-	if result[1] == 200:
-		print("[ServerManager] Server remoto raggiungibile.")
-		_switch_to_remote()
+func _ready() -> void:
+	_engine = OraculusEngine.new()
+	_engine.name = "OraculusEngine"
+	add_child(_engine)
+	await _engine.setup()
+	_ready_flag = true
+	if _engine.is_available():
+		server_started.emit()
 	else:
-		print("[ServerManager] Server remoto non disponibile (%d). Avvio locale." % result[1])
-		_start_local_server()
+		server_failed.emit("Nessun backend di inferenza disponibile.")
+		# Anche senza modello il gioco resta giocabile: le risposte arrivano
+		# da FALLBACK e gli indovinelli da RIDDLE_FALLBACKS.
+		server_started.emit()
 
-func _start_local_server() -> void:
-	var base_dir := _get_base_dir()
-	var script_path := base_dir + "ai/ai_server.py"
-
-	if not FileAccess.file_exists(script_path):
-		push_error("[ServerManager] Server locale non trovato: " + script_path)
-		emit_signal("server_failed", "Nessun server AI disponibile.")
-		return
-
-	print("[ServerManager] Avvio server locale: ", script_path)
-	_python_thread = Thread.new()
-	_python_thread.start(_setup_and_run_server.bind(script_path, base_dir))
-
-func _switch_to_remote():
-	print("[ServerManager] Uso server remoto: ", REMOTE_API_URL)
-	_using_remote = true
-	_server_ready = true
-	emit_signal("server_started")
-
-func _kill_existing_server():
-	if OS.get_name() == "Windows":
-		var output = []
-		OS.execute("cmd", ["/c", "for /f \"tokens=5\" %a in ('netstat -aon ^| findstr :5000 ^| findstr LISTENING') do taskkill /F /PID %a"], output, true)
-	else:
-		var output = []
-		OS.execute("bash", ["-c", "fuser -k 5000/tcp"], output, true)
-
-func _setup_and_run_server(script_path: String, base_dir: String):
-	var venv_dir = base_dir + "python_venv"
-
-	_kill_existing_server()
-
-	var dir = DirAccess.open(base_dir)
-	if not dir.dir_exists("python_venv"):
-		dir.make_dir("python_venv")
-
-	var python_exe = ""
-	if OS.get_name() == "Windows":
-		python_exe = venv_dir + "/Scripts/python.exe"
-	else:
-		python_exe = venv_dir + "/bin/python3"
-
-	if not FileAccess.file_exists(python_exe):
-		var python_cmd = "python" if OS.get_name() == "Windows" else "python3"
-		var output = []
-		var exit_code = OS.execute(python_cmd, ["-m", "venv", venv_dir], output, true)
-		if exit_code != 0:
-			call_deferred("_switch_to_remote")
-			return false
-
-	var marker_file = venv_dir + "/.installed"
-
-	if not FileAccess.file_exists(marker_file):
-		var pip_exe = ""
-		if OS.get_name() == "Windows":
-			pip_exe = venv_dir + "/Scripts/pip.exe"
-		else:
-			pip_exe = venv_dir + "/bin/pip"
-
-		var dependencies = ["llama-cpp-python", "requests"]
-		for dep in dependencies:
-			var output = []
-			var exit_code = OS.execute(pip_exe, ["install", dep], output, true)
-			if exit_code != 0:
-				call_deferred("_switch_to_remote")
-				return false
-
-		var file = FileAccess.open(marker_file, FileAccess.WRITE)
-		file.store_string("installed")
-		file.close()
-
-	_server_process = OS.create_process(python_exe, [script_path])
-
-	if _server_process < 0:
-		call_deferred("_switch_to_remote")
-		return false
-
-	call_deferred("_start_server_ready_check")
-	return true
-
-func _start_server_ready_check():
-	if _checking:
-		return
-	_checking = true
-	_check_server_ready_async()
-
-func _check_server_ready_async():
-	var start_time = Time.get_ticks_msec() / 1000.0
-
-	while Time.get_ticks_msec() / 1000.0 - start_time < MAX_STARTUP_WAIT:
-		print("[ServerManager] Tentativo healthcheck locale... (", int(Time.get_ticks_msec() / 1000.0 - start_time), "s)")
-		if await _check_server_ready_once():
-			_server_ready = true
-			_checking = false
-			_using_remote = false
-			print("[ServerManager] Server locale pronto.")
-			emit_signal("server_started")
-			return
-		await get_tree().create_timer(CHECK_INTERVAL).timeout
-
-	print("[ServerManager] Timeout server locale, fallback su remoto.")
-	_checking = false
-	_switch_to_remote()
-
-func _check_server_ready_once() -> bool:
-	if OS.get_name() == "Web":
-		var result = await _make_request_web(REMOTE_API_URL + "/health", "{}")
-		if result == null or result.has("error"):
-			return false
-		return result.get("status", "") == "ok"
-
-	var http = HTTPRequest.new()
-	add_child(http)
-	var error = http.request("http://localhost:5000/health")
-	if error != OK:
-		http.queue_free()
-		return false
-
-	var result = await http.request_completed
-	http.queue_free()
-
-	var response_code: int = result[1]
-	var body: PackedByteArray = result[3]
-
-	if response_code == 200:
-		var json = JSON.new()
-		var text = body.get_string_from_utf8()
-		if json.parse(text) == OK:
-			var data = json.get_data()
-			return data.has("status") and data["status"] == "ok"
-
-	return false
 
 func is_server_ready() -> bool:
-	return _server_ready
+	return _ready_flag
+
 
 func is_using_remote() -> bool:
-	return _using_remote
+	return _engine != null and _engine.is_using_remote()
 
+
+## Conservata per compatibilita': un tempo era l'URL del server HTTP.
 func get_api_url() -> String:
-	if _using_remote:
-		return REMOTE_API_URL
-	return "http://localhost:5000"
+	if _engine != null and _engine.is_using_remote():
+		return _engine.remote.base_url
+	return "in-process"
 
+
+## Stesso contratto del vecchio POST su ai_server.py: gli endpoint sono
+## rimasti "chat", "riddle", "reset", "set_context", "health".
 func make_request(endpoint: String, data: Dictionary = {}) -> Variant:
-	var url = get_api_url() + "/" + endpoint
-	var json_data = JSON.stringify(data)
+	if _engine == null:
+		return {"error": "Motore non inizializzato"}
 
-	print("Richiesta a: ", url)
-
-	if OS.get_name() == "Web":
-		return await _make_request_web(url, json_data)
-
-	var http = HTTPRequest.new()
-	http.timeout = 90.0
-	add_child(http)
-
-	var headers = ["Content-Type: application/json"]
-	var error = http.request(url, headers, HTTPClient.METHOD_POST, json_data)
-	if error != OK:
-		http.queue_free()
-		return {"error": "Errore di connessione: " + str(error)}
-
-	var result = await http.request_completed
-	http.queue_free()
-
-	var response_code: int = result[1]
-	var body: PackedByteArray = result[3]
-
-	if response_code == 0:
-		return {"error": "Timeout o connessione persa"}
-
-	var response_text = body.get_string_from_utf8()
-	print("Risposta - Codice: ", response_code)
-
-	if response_code != 200:
-		return {"error": "Errore server: " + str(response_code)}
-
-	var json = JSON.new()
-	if json.parse(response_text) != OK:
-		return {"error": "Errore parsing: " + response_text}
-
-	return json.get_data()
-
-func make_request_sync(endpoint: String, data: Dictionary = {}) -> Variant:
-	var url = get_api_url() + "/" + endpoint
-	var headers = ["Content-Type: application/json"]
-	var json_data = JSON.stringify(data)
-
-	print("[Sync] Richiesta a: ", url)
-
-	var client = HTTPClient.new()
-
-	var use_https = url.begins_with("https://")
-	var without_scheme = url.replace("https://", "").replace("http://", "")
-
-	var slash_pos = without_scheme.find("/")
-	var host_port: String
-	var path: String
-	if slash_pos == -1:
-		host_port = without_scheme
-		path = "/"
-	else:
-		host_port = without_scheme.substr(0, slash_pos)
-		path = without_scheme.substr(slash_pos)
-
-	var host: String
-	var port: int
-	var colon_pos = host_port.find(":")
-	if colon_pos == -1:
-		host = host_port
-		port = 443 if use_https else 80
-	else:
-		host = host_port.substr(0, colon_pos)
-		port = int(host_port.substr(colon_pos + 1))
-
-	print("[Sync] Host: ", host, " Porta: ", port, " Path: ", path)
-
-	var err = client.connect_to_host(host, port)
-	if err != OK:
-		return {"error": "Connessione fallita: " + str(err)}
-
-	var waited = 0.0
-	while client.get_status() in [HTTPClient.STATUS_CONNECTING, HTTPClient.STATUS_RESOLVING]:
-		OS.delay_msec(50)
-		client.poll()
-		waited += 0.05
-		if waited > 10.0:
-			return {"error": "Timeout connessione"}
-
-	if client.get_status() != HTTPClient.STATUS_CONNECTED:
-		return {"error": "Connessione fallita, status: " + str(client.get_status())}
-
-	err = client.request(HTTPClient.METHOD_POST, path, headers, json_data)
-	if err != OK:
-		return {"error": "Errore richiesta: " + str(err)}
-
-	waited = 0.0
-	while waited < 60.0:
-		OS.delay_msec(100)
-		client.poll()
-		var status = client.get_status()
-		if status == HTTPClient.STATUS_BODY or status == HTTPClient.STATUS_CONNECTED:
-			break
-		elif status == HTTPClient.STATUS_DISCONNECTED:
-			return {"error": "Disconnesso durante l'attesa"}
-		waited += 0.1
-
-	var response_body := PackedByteArray()
-	waited = 0.0
-	while waited < 20.0:
-		client.poll()
-		var status = client.get_status()
-		if status == HTTPClient.STATUS_BODY:
-			var chunk = client.read_response_body_chunk()
-			if chunk.size() > 0:
-				response_body.append_array(chunk)
-				waited = 0.0
-			else:
-				OS.delay_msec(50)
-				waited += 0.05
-		else:
-			break
-
-	if response_body.size() > 0:
-		var text = response_body.get_string_from_utf8()
-		print("[Sync] Risposta ricevuta: ", text)
-		var json = JSON.new()
-		if json.parse(text) == OK:
-			return json.get_data()
-		else:
-			return {"error": "Errore parsing JSON: " + text}
-	else:
-		return {"error": "Nessuna risposta ricevuta"}
-
-func _make_request_web(url: String, json_data: String) -> Variant:
-	var safe_body = json_data \
-		.replace("\\", "\\\\") \
-		.replace("`", "\\`") \
-		.replace("$", "\\$")
-
-	JavaScriptBridge.eval("window._gd_done = false; window._gd_result = null;")
-
-	JavaScriptBridge.eval("""
-		(async () => {
-			try {
-				const r = await fetch('%s', {
-					method: 'POST',
-					headers: {'Content-Type': 'application/json'},
-					body: `%s`
-				});
-				const t = await r.text();
-				window._gd_result = JSON.stringify({ok: r.ok, status: r.status, body: t});
-			} catch(e) {
-				window._gd_result = JSON.stringify({ok: false, status: 0, body: String(e)});
+	match endpoint:
+		"chat":
+			return await _engine.generate_response(data)
+		"riddle":
+			return await _engine.generate_door_riddle(data)
+		"reset":
+			var npc: Variant = data.get("npc_name", null)
+			_engine.reset_memory(npc)
+			var msg := "Tutta la memoria resettata"
+			if npc != null and not String(npc).is_empty():
+				msg = "Memoria di '%s' resettata" % String(npc)
+			return {"status": "ok", "message": msg}
+		"set_context":
+			# Il contesto viaggia dentro il payload di "chat" (context_vars),
+			# quindi qui non c'e' piu' nulla da memorizzare lato server.
+			var npc_name := String(data.get("npc_name", ""))
+			if npc_name.is_empty():
+				return {"error": "npc_name è obbligatorio"}
+			return {
+				"status": "ok",
+				"npc_name": npc_name,
+				"context_vars": data.get("context_vars", {}),
 			}
-			window._gd_done = true;
-		})();
-	""" % [url, safe_body])
+		"health":
+			return {
+				"status": "ok",
+				"engine": "gdscript+nobodywho" if not _engine.is_using_remote() else "gdscript+remote",
+				"llama": _engine.is_available(),
+			}
+		"npcs":
+			var nomi := PackedStringArray(OraculusData.NPC_DATA.keys())
+			nomi.sort()
+			return {"npcs": nomi}
 
-	var elapsed = 0.0
-	while elapsed < 90.0:
-		await get_tree().process_frame
-		var done = JavaScriptBridge.eval("window._gd_done ? 1 : 0")
-		if done == 1:
-			break
-		elapsed += get_process_delta_time()
+	return {"error": "Endpoint non trovato: " + endpoint}
 
-	if elapsed >= 90.0:
-		return {"error": "Timeout WebGL fetch (90s)"}
 
-	var raw = str(JavaScriptBridge.eval("window._gd_result"))
+## Deprecata. Esisteva per chiamare il server HTTP da dentro un Thread; ora
+## l'inferenza e' asincrona a segnali e i Thread sono stati rimossi dai
+## chiamanti. Se qualcosa la invoca ancora, e' un residuo da convertire in
+## `await make_request(...)`.
+func make_request_sync(endpoint: String, _data: Dictionary = {}) -> Variant:
+	push_warning("[ServerManager] make_request_sync è deprecata (endpoint '%s'): usa await make_request()." % endpoint)
+	return {"error": "make_request_sync non è più supportata: usa await make_request()"}
 
-	var outer = JSON.new()
-	if outer.parse(raw) != OK:
-		return {"error": "JSON esterno non valido: " + raw}
-	var obj = outer.get_data()
 
-	if not obj.get("ok", false):
-		return {"error": "HTTP " + str(obj.get("status", 0)) + ": " + str(obj.get("body", ""))}
+func reset_memory(npc_name: Variant = null) -> void:
+	if _engine != null:
+		_engine.reset_memory(npc_name)
 
-	var inner = JSON.new()
-	if inner.parse(str(obj.get("body", ""))) != OK:
-		return {"error": "JSON risposta AI non valido"}
 
-	return inner.get_data()
-
-func stop_server():
-	_server_ready = false
-	_checking = false
-	_using_remote = false
-
-	if _server_process > 0:
-		OS.kill(_server_process)
-		_server_process = 0
-
-	if _python_thread and _python_thread.is_alive():
-		_python_thread.wait_to_finish()
-	_python_thread = null
-
-func _exit_tree():
-	stop_server()
+func stop_server() -> void:
+	_ready_flag = false

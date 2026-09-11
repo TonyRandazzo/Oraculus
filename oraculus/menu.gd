@@ -10,9 +10,6 @@ var _server_ready: bool = false
 var _using_remote: bool = false
 var is_waiting_for_response: bool = false
 var conversation_history: Array = []
-var _ai_thread: Thread = null
-var _ai_thread_done: bool = false
-var _ai_thread_result: String = ""
 var _player_input_buffer: String = ""
 var _thinking_timer: Timer
 var _dot_count: int = 0
@@ -78,13 +75,10 @@ func _send_ai_request(player_message: String, language: String = "inglese") -> v
 		return
 	is_waiting_for_response = true
 	_start_thinking_dots()
-	var server_manager = get_node("/root/AIServerManager")
-	if server_manager.is_using_remote():
-		_do_remote_request(player_message, language)
-	else:
-		_do_local_request(player_message, language)
+	# Un solo percorso: make_request() e' asincrona sia in locale sia in remoto.
+	_do_ai_request(player_message, language)
 
-func _do_remote_request(player_message: String, language: String) -> void:
+func _do_ai_request(player_message: String, language: String) -> void:
 	var server_manager = get_node("/root/AIServerManager")
 	var payload = {
 		"npc_name": npc_name,
@@ -102,41 +96,6 @@ func _do_remote_request(player_message: String, language: String) -> void:
 		return
 	var ai_message = response.get("response", "")
 	_on_ai_response_received(ai_message)
-
-func _do_local_request(player_message: String, language: String) -> void:
-	var server_manager = get_node("/root/AIServerManager")
-	_ai_thread_done = false
-	_ai_thread_result = ""
-	_ai_thread = Thread.new()
-	_ai_thread.start(_thread_request.bind(player_message, language, server_manager))
-
-func _thread_request(player_message: String, language: String, server_manager: Node) -> void:
-	var payload = {
-		"npc_name": npc_name,
-		"player_input": player_message,
-		"max_tokens": max_tokens,
-		"temperature": temperature,
-		"conversation_history": conversation_history,
-		"language": language
-	}
-	var response = server_manager.make_request_sync("chat", payload)
-	if response.has("error"):
-		_ai_thread_result = ""
-	else:
-		_ai_thread_result = response.get("response", "")
-	_ai_thread_done = true
-
-func _process(_delta: float) -> void:
-	if _ai_thread != null and _ai_thread_done:
-		_ai_thread.wait_to_finish()
-		_ai_thread = null
-		_ai_thread_done = false
-		_stop_thinking_dots()
-		is_waiting_for_response = false
-		if _ai_thread_result != "":
-			_on_ai_response_received(_ai_thread_result)
-		else:
-			_use_fallback_response("Local server did not respond.")
 
 func _on_ai_response_received(message: String) -> void:
 	if conversation_history.size() >= 10:

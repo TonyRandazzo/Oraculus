@@ -142,7 +142,7 @@ func _do_ai_request(player_message: String):
 		"player_input": player_message,
 		"hostility": hostility,
 		"friendship": friendship_level * 20,
-		"language": "inglese",
+		"language": GameState.ai_language,
 		"max_tokens": 25,
 		"temperature": 0.75,
 		"max_length": 12,
@@ -192,7 +192,11 @@ func _on_ai_chat_received(message: String):
 func receive_player_answer(answer: String):
 	player_input_buffer = answer
 	if state == "attacking": state = "conversing"
-	if state != "waiting" and state != "conversing" and state != "ready": return
+	# "idle" incluso: prima lo stato passava a "ready" solo quando tornava
+	# una battuta generata, quindi un NPC che non aveva ancora parlato
+	# (server lento, o messaggio di caricamento fallito) non sentiva il
+	# giocatore. Farsi scrivere deve funzionare sempre.
+	if state != "idle" and state != "waiting" and state != "conversing" and state != "ready": return
 	if is_waiting_for_response: return
 	face_player()
 	state = "waiting"
@@ -443,9 +447,9 @@ func take_damage(amount: int):
 		can_attack = true
 		attack_timer = 0.0
 		start_attack()
-		dialogue_box.show_text(aggressive_hit_responses[randi() % aggressive_hit_responses.size()])
+		_react_to_hit()
 	else:
-		dialogue_box.show_text(aggressive_hit_responses[randi() % aggressive_hit_responses.size()])
+		_react_to_hit()
 	sprite.play("hurt")
 	if current_health <= 0:
 		die()
@@ -529,7 +533,10 @@ func execute_ai_decision(decision: String):
 				dialogue_box.show_text(attack_phrases[randi() % attack_phrases.size()])
 				can_initiate_dialogue = false
 		"talk":
-			share_castle_knowledge()
+			# Il ciclo in _process() arrivava qui ogni ai_update_interval
+			# secondi finche' il giocatore restava a portata: era la fonte
+			# principale delle generazioni. L'NPC ora tace finche' non lo
+			# colpisci o non gli scrivi.
 			can_initiate_dialogue = false
 		"ally":
 			if friendship_level >= 3:
@@ -553,6 +560,10 @@ func execute_ai_decision(decision: String):
 func say_launch_message():
 	_send_to_ai_server("Introduce yourself briefly in ONE sentence (max 10 words). You are Smirne Bombo, a gentle spirit who knew the noble family.")
 
+## Non piu' collegata: era il dialogo ambientale, che partiva all'ingresso
+## nell'area e poi ogni ai_update_interval secondi. Resta qui perche' e'
+## il testo dei prompt, se un giorno si vuole rimetterla dietro a un
+## innesco esplicito (un tasto "parla", per esempio).
 func share_castle_knowledge():
 	var prompts := [
 		"Share ONE curious fact about the castle or its spirits (max 10 words).",
@@ -666,3 +677,17 @@ func _stop_thinking_dots() -> void:
 	if _thinking_tween:
 		_thinking_tween.kill()
 		_thinking_tween = null
+
+## Reazione al colpo: e' uno dei tre soli momenti in cui l'NPC interpella il
+## modello (gli altri due sono il caricamento della scena e il messaggio del
+## giocatore).
+##
+## Il ripiego scritto a mano resta, e non solo per quando il server manca:
+## is_waiting_for_response impedisce una seconda richiesta mentre la prima e'
+## in volo, cosi' una raffica di colpi non accoda una raffica di generazioni.
+## Essere colpiti deve comunque produrre SEMPRE una reazione immediata.
+func _react_to_hit() -> void:
+	if _server_ready and not is_waiting_for_response:
+		_send_to_ai_server("The knight just struck you. React in ONE short, wounded line (max 10 words). You are Smirne Bombo, gentle.")
+	elif dialogue_box:
+		dialogue_box.show_text(aggressive_hit_responses[randi() % aggressive_hit_responses.size()])

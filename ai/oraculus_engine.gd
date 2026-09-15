@@ -21,6 +21,8 @@ extends Node
 
 const MEMORY_LIMIT := 10
 const LOCAL_TIMEOUT := 60.0
+## Quante volte richiedere un indovinello prima di usare RIDDLE_FALLBACKS.
+const RIDDLE_ATTEMPTS := 3
 
 var memory: Dictionary = {}
 var local: OraculusLocalBackend = null
@@ -167,7 +169,8 @@ func _generate(player_input: String, npc_name: String, hostility: int, friendshi
 		for h in history.slice(maxi(0, history.size() - 3)):
 			messages.append({"role": "user", "content": String(h["player"])})
 			messages.append({"role": "assistant", "content": String(h["npc"])})
-		messages.append({"role": "user", "content": player_input})
+		messages.append({"role": "user",
+			"content": OraculusLogic.decorate_user_msg(player_input, language)})
 		raw = await remote.chat_completion(messages, OraculusData.MAX_TOKENS,
 			OraculusData.TEMPERATURE, OraculusData.TOP_P)
 	else:
@@ -175,7 +178,9 @@ func _generate(player_input: String, npc_name: String, hostility: int, friendshi
 		# entra nel system prompt con la stessa formattazione di build_prompt.
 		var system_msg := OraculusLogic.build_system_msg(npc_name, hostility, friendship,
 			language, npc_data, context_vars) + OraculusLogic.build_history_block(history)
-		raw = await local.generate(system_msg, player_input, LOCAL_TIMEOUT)
+		raw = await local.generate(system_msg,
+			OraculusLogic.decorate_user_msg(player_input, language), LOCAL_TIMEOUT,
+			{"max_tokens": OraculusData.MAX_TOKENS})
 
 	if raw.is_empty():
 		return ""
@@ -193,11 +198,20 @@ func generate_door_riddle(params: Dictionary) -> Dictionary:
 	var theme := String(params.get("theme", ""))
 	var session_id := String(params.get("session_id", ""))
 
-	var result: Variant = await _generate_riddle(door_id, language, theme, session_id)
-	if typeof(result) == TYPE_DICTIONARY:
-		var ok: Dictionary = result
-		print("[Riddle] door=%s session=%s answer=%s" % [door_id, session_id, ok["answer"]])
-		return ok
+	# Un solo tentativo non basta: il modello rispetta il formato
+	# RIDDLE:/ANSWER: quasi sempre, ma non sempre — capita che scriva
+	# l'indovinello e si fermi prima della riga ANSWER, e allora
+	# parse_riddle_response() (giustamente severa: senza risposta la porta non
+	# si apre) torna null e il giocatore riceve un indovinello di riserva
+	# anche con il modello acceso e funzionante. Ritentare costa ~1 s in
+	# locale ed e' l'unica cosa che serve, perche' il fallimento e' casuale.
+	for tentativo in RIDDLE_ATTEMPTS:
+		var result: Variant = await _generate_riddle(door_id, language, theme, session_id)
+		if typeof(result) == TYPE_DICTIONARY:
+			var ok: Dictionary = result
+			print("[Riddle] door=%s session=%s answer=%s (tentativo %d)" % [
+				door_id, session_id, ok["answer"], tentativo + 1])
+			return ok
 
 	var pool: Array = OraculusData.RIDDLE_FALLBACKS.get(language, OraculusData.RIDDLE_FALLBACKS["inglese"])
 	var idx: int = _seed_for(door_id + session_id) % pool.size()
@@ -235,6 +249,7 @@ func _generate_riddle(door_id: String, language: String, theme: String, session_
 			"temperature": OraculusData.RIDDLE_TEMPERATURE,
 			"top_p": OraculusData.RIDDLE_TOP_P,
 			"top_k": OraculusData.RIDDLE_TOP_K,
+			"max_tokens": OraculusData.RIDDLE_MAX_TOKENS,
 		})
 
 	if raw.is_empty():

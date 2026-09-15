@@ -261,7 +261,7 @@ func take_damage(amount: int):
 		die()
 	else:
 		if friendship_level < 3 and player and is_instance_valid(player):
-			dialogue_box.show_text("*Angry* You betray?!")
+			_react_to_hit()
 
 func die():
 	state = "dead"
@@ -274,6 +274,10 @@ func die():
 func say_launch_message():
 	_send_to_ai_server("Announce presence in ONE short sentence (max 10 words). Angry, hungry, aggressive orc.")
 
+## Non piu' collegata: era il dialogo ambientale, che partiva all'ingresso
+## nell'area e poi ogni ai_update_interval secondi. Resta qui perche' e'
+## il testo dei prompt, se un giorno si vuole rimetterla dietro a un
+## innesco esplicito (un tasto "parla", per esempio).
 func ask_riddle():
 	_send_to_ai_server("Growl or threaten in ONE short sentence (max 8 words). Angry orc.")
 
@@ -349,7 +353,8 @@ func _on_body_entered(body: Node2D):
 		state = "attacking"
 		can_attack = true
 		attack_timer = 0.0
-		_send_to_ai_server("Saw human. Hate them. ONE short angry growl (max 8 words).")
+		# Carica, ma non parla: la battuta arriva solo se lo colpisci o se gli
+		# scrivi. Vederti non e' piu' un motivo per generare.
 
 func _on_timeout():
 	if is_waiting_for_response:
@@ -384,7 +389,7 @@ func _send_to_ai_server(player_message: String) -> void:
 		"player_input": player_message,
 		"hostility": hostility,
 		"friendship": friendship_level * 20,
-		"language": "inglese",
+		"language": GameState.ai_language,
 		"max_tokens": 40,
 		"temperature": 0.7,
 		"max_length": 50
@@ -454,3 +459,17 @@ func _stop_thinking_dots() -> void:
 	if _thinking_tween:
 		_thinking_tween.kill()
 		_thinking_tween = null
+
+## Reazione al colpo: e' uno dei tre soli momenti in cui l'NPC interpella il
+## modello (gli altri due sono il caricamento della scena e il messaggio del
+## giocatore).
+##
+## Il ripiego scritto a mano resta, e non solo per quando il server manca:
+## is_waiting_for_response impedisce una seconda richiesta mentre la prima e'
+## in volo, cosi' una raffica di colpi non accoda una raffica di generazioni.
+## Essere colpiti deve comunque produrre SEMPRE una reazione immediata.
+func _react_to_hit() -> void:
+	if _server_ready and not is_waiting_for_response:
+		_send_to_ai_server("Human hit you. ONE short furious growl (max 8 words).")
+	elif dialogue_box:
+		dialogue_box.show_text("*Angry* You betray?!")

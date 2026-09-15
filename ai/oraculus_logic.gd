@@ -395,7 +395,30 @@ static func build_system_msg(npc_name: String, hostility: int, friendship: int, 
 		+ "4. Do NOT write meta-comments. Stay in character.\n"
 		+ "5. Do NOT start with your own name followed by ':'.\n"
 		+ "6. ALWAYS use the exact army name \"" + army_name_local + "\" when referring to the army.\n"
-		+ "7. End each response with a period.\n")
+		+ "7. End each response with a period.\n"
+		+ "8. The player may write in any language; your reply is always in " + language + ".\n"
+		+ "\n" + lang_directive(language) + "\n")
+
+
+## Ultima riga del system prompt, scritta NELLA lingua richiesta. La regola 1
+## e' in inglese in cima a 9 KB di contesto inglese, e un modello da 1B segue
+## la lingua della domanda invece dell'istruzione: questa riga, in fondo, e'
+## quella che viene rispettata davvero.
+static func lang_directive(language: String) -> String:
+	if OraculusData.LANG_DIRECTIVE.has(language):
+		return String(OraculusData.LANG_DIRECTIVE[language])
+	return String(OraculusData.LANG_DIRECTIVE["inglese"])
+
+
+## Il turno del giocatore con l'istruzione di lingua in coda.
+##
+## Serve perche' il modello segue la lingua della DOMANDA piu' di qualunque
+## regola: con "Who guards this place?" risponde in inglese anche se il system
+## prompt chiede l'italiano — verificato sia sul 1B locale sia sull'8B remoto.
+## Questa riga e' l'ultima cosa che legge prima di rispondere, ed e' la
+## posizione in cui viene rispettata.
+static func decorate_user_msg(player_input: String, language: String) -> String:
+	return player_input + "\n\n" + lang_directive(language)
 
 
 # --- indovinelli --------------------------------------------------------
@@ -412,10 +435,13 @@ static func build_riddle_system(theme: String, language: String) -> String:
 		+ "- Length: 2-3 short, simple sentences\n"
 		+ "- NEVER directly mention the answer in the riddle\n"
 		+ "- Every riddle must be unique and different from any you have created before\n"
-		+ "- Respond in " + language + "\n\n"
+		+ "- Respond in " + language + "\n"
+		+ lang_directive(language) + "\n\n"
 		+ "Respond ONLY in this exact format, nothing else:\n"
 		+ "RIDDLE: [riddle text]\n"
-		+ "ANSWER: [single word]")
+		+ "ANSWER: [single word]\n"
+		+ "Keep the two labels RIDDLE: and ANSWER: in English exactly as written; "
+		+ "the riddle and the answer word are in " + language + ".")
 
 
 static func build_riddle_user(language: String, theme: String, session_id: String) -> String:

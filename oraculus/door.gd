@@ -93,7 +93,7 @@ func _on_server_started() -> void:
 func _fetch_ai_riddle(server: Node) -> void:
 	var result = await server.make_request("riddle", {
 		"door_id":    door_id,
-		"language":   "inglese",
+		"language":   GameState.ai_language,
 		"theme":      riddle_theme,
 		"session_id": GameState.session_id,
 	})

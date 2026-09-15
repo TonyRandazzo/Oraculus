@@ -23,6 +23,7 @@ serve ancora al proxy su Render.
 | `oraculus_engine.gd` | `NPCDialogueEngine`: memoria per NPC, scelta del backend, fallback, sblocco di Malakai, indovinelli. |
 | `oraculus_backend_local.gd` | Inferenza locale via NobodyWho (llama.cpp). Sostituisce `llama_cpp.Llama`. |
 | `oraculus_backend_remote.gd` | Inferenza remota via `HTTPRequest`. Sostituisce `InferenceClient.chat_completion`. |
+| `tests/remote_check.gd` | Collaudo del proxy su Render visto da GDScript. |
 | `../AIServerManager.gd` | Facciata sottile. Firma pubblica invariata: `make_request`, `is_server_ready`, `is_using_remote`, `server_started`, `server_failed`. |
 | `inference.py`, `ai_server.py` | Restano per il proxy su Render, piu' l'endpoint `POST /v1/chat/completions`. |
 
@@ -79,6 +80,21 @@ Stato attuale: **16/16 controlli superati** (~1 minuto su CPU: carica un
 modello da 1 GB e fa sei generazioni vere). Senza addon o senza modello si
 dichiara saltato invece di fallire.
 
+Il quarto test e' l'unico che esercita il **proxy su Render da GDScript**:
+`probe()`, `chat_completion()` e la catena completa `build_system_msg` → HTTP
+→ `pulisci()` / `parse_riddle_response()`. Si costruisce un `OraculusEngine`
+suo e lo forza sul ramo remoto, perche' l'autoload preferirebbe il locale.
+
+```
+godot --headless --path . res://ai/tests/remote_check.tscn
+```
+
+Stato attuale: **12/12 controlli superati**, incluso il caso italiano (lingua
+rilevata, risposta in italiano, nome dell'esercito corretto da
+`enforce_army_name`). Senza rete o con il proxy senza inferenza si dichiara
+saltato invece di fallire — e in quel caso stampa il `last_error` del proxy,
+che e' il posto dove guardare per primo.
+
 Per controllare che tutti gli script del progetto compilino:
 
 ```
@@ -120,13 +136,29 @@ Sono le tre cose che facevano fallire il ramo locale in silenzio:
   `Model node was not set` e il worker muore, ma niente solleva un errore:
   ora se la proprieta' non esiste `setup()` fallisce e si passa al remoto;
 - **`NobodyWhoSampler` non esiste piu'**. La catena di sampling
-  (`penalties` → `top_k` → `top_p` → `temperature` → `dist`, gli stessi
-  valori che `inference.py` passava a `llama_cpp`) si costruisce con
+  (`penalties` → `top_k` → `top_p` → `temperature` → `seed` → `dist`, gli
+  stessi valori che `inference.py` passava a `llama_cpp`) si costruisce con
   `NobodyWhoSamplerBuilder` e si passa a `set_sampler_config()`;
 - il sampler va configurato **dopo** `start_worker()`: a worker fermo l'addon
   lo scarta con un warning e usa i suoi default. `_apply_sampler()` adesso si
   rifiuta di girare prima dell'avvio, cosi' un riordino futuro rompe il test
   invece delle risposte.
+
+### Il seed fisso (la trappola meno visibile)
+
+Se non glielo si dice, l'addon usa **seed 1234**, sempre. Il ramo locale era
+quindi completamente deterministico: lo stesso NPC, alla stessa domanda,
+ripeteva la battuta parola per parola anche in partite diverse, e un
+indovinello che usciva senza la riga `ANSWER:` usciva senza quella riga per
+sempre — `parse_riddle_response()` tornava `null` e il giocatore vedeva un
+indovinello di `RIDDLE_FALLBACKS` **con il modello acceso e funzionante**. Era
+riproducibile: `local_check` falliva l'indovinello di `door_entrance` a ogni
+esecuzione.
+
+`llama_cpp`, in `inference.py`, usava il proprio default (seed casuale).
+`_apply_sampler()` adesso ne riceve uno nuovo a ogni generazione: le risposte
+tornano a variare, e un secondo tentativo ha senso perche' esplora un'uscita
+diversa invece di ricalcolare la stessa.
 
 In piu' `say()` e' deprecato in favore di `ask()` (proviamo prima `ask`), e
 `setup()` aspetta il segnale `worker_started`: il `.gguf` viene caricato in un
@@ -154,6 +186,146 @@ Per gli export conviene togliere `models/*.gguf` da `include_filter` in
 `export_presets.cfg` e spedire il `.gguf` accanto all'eseguibile (percorso 3).
 `ai/*.py` e' gia' stato tolto dal filtro: il gioco non lancia piu' Python.
 
+## Quando un NPC interpella il modello
+
+Tre momenti, e solo quelli:
+
+| Momento | Da dove parte |
+| --- | --- |
+| caricamento della scena | `say_launch_message()` / `_on_server_started()` |
+| l'NPC viene colpito | `take_damage()` → `_react_to_hit()` |
+| il giocatore gli scrive | `receive_player_answer()` |
+
+**Entrare nell'area non genera piu' nulla.** Prima ne generava due volte:
+
+- `_on_body_entered()` faceva partire una battuta appena il giocatore entrava
+  nel raggio di rilevamento (sei NPC su nove: `ask_riddle()` per demon,
+  falciatore, gorgon e wizard; un ringhio a vista per ogre e skeletons);
+- peggio, `_process()` chiamava `execute_ai_decision()` ogni
+  `ai_update_interval` secondi **finche' il giocatore restava a portata**, e il
+  ramo `"talk"` generava. Era la fonte principale: un NPC vicino produceva una
+  richiesta ogni pochi secondi, per sempre, e con piu' NPC nella stanza si
+  sommavano.
+
+Essere colpiti, invece, prima **non** generava: mostrava una battuta presa da
+`aggressive_hit_responses`. Ora passa dal modello, e quella lista resta come
+ripiego — serve anche a bocce ferme, perche' `_react_to_hit()` non parte se una
+richiesta e' gia' in volo (`is_waiting_for_response`): una raffica di colpi non
+accoda una raffica di generazioni, ma una reazione si vede sempre.
+
+Due dettagli che valgono la pena:
+
+- `_on_body_entered()` non mette piu' lo stato a `"riddle"`. Quello stato non
+  era fra quelli che `receive_player_answer()` accetta, quindi se la
+  generazione non arrivava l'NPC restava muto **e sordo**;
+- `receive_player_answer()` ora accetta anche lo stato `"idle"`. Lo stato
+  passava a `"ready"` solo quando tornava una battuta generata: un NPC che non
+  aveva ancora parlato (server lento, messaggio di caricamento fallito) non
+  sentiva il giocatore. Farsi scrivere deve funzionare sempre.
+
+`ask_riddle()`, `initiate_random_dialogue()` e `share_castle_knowledge()`
+restano definite ma non sono collegate a niente: sono il testo dei prompt, se
+un giorno si vuole rimettere il dialogo ambientale dietro a un innesco
+esplicito (un tasto "parla").
+
+La regola e' verificata da un controllo statico:
+
+```
+python3 tools/check_npc_triggers.py
+```
+
+Non cerca le stringhe: costruisce il grafo delle chiamate di ogni file e
+verifica che da `_on_body_entered` e dal ciclo periodico non si arrivi a una
+generazione **per nessun cammino**, e che i tre inneschi previsti ci arrivino.
+Cosi' una funzione scollegata che contiene ancora i prompt non conta come
+violazione, mentre una riconnessa domani viene segnalata con il cammino
+esatto (`demon.gd: _on_body_entered -> ask_riddle`).
+
+## La lingua degli spiriti
+
+La tendina in alto a destra nel menu (`LanguageSelect` in `menu.tscn`) sceglie
+la lingua in cui gli NPC rispondono: **EN, IT, FR, ES, DE** — le cinque chiavi
+di `LANG_SIGNATURES`. La sigla e' solo per il menu; quello che viaggia fino al
+prompt e' il nome esteso (`"italiano"`, ...), perche' e' la stringa che finisce
+in `Always speak in <lingua>`.
+
+La scelta vive in `GameState.ai_language`, si salva in `user://settings.cfg` e
+sopravvive al cambio scena e alla chiusura del gioco. Prima ogni NPC aveva
+`"language": "inglese"` scritto nel payload: quei dieci punti (nove NPC piu'
+`door.gd`) ora leggono `GameState.ai_language`.
+
+Cambiare lingua a partita in corso **azzera la memoria degli NPC**
+(`AIServerManager._on_language_changed`): lo storico e' nella lingua di prima,
+e il modello tende a proseguire in quella.
+
+### Perche' non basta dirlo nelle RULES
+
+La regola 1 diceva gia' `Always speak in <lingua>`, e non funzionava: e'
+scritta in inglese, in cima a 9 KB di contesto anch'esso in inglese, e **il
+modello segue la lingua della domanda**. Con la tendina su IT e la domanda
+"Who guards this place?", la risposta arrivava in inglese. Verificato su
+entrambi i rami, 1B locale e 8B remoto.
+
+Servono due cose, entrambe in `build_system_msg()` / `decorate_user_msg()`:
+
+- una riga finale **nella lingua richiesta** (`LANG_DIRECTIVE`: "Rispondi in
+  italiano.", "Réponds en français.", ...). In inglese non basta;
+- la stessa riga in coda al **turno del giocatore**, che e' l'ultima cosa che
+  il modello legge prima di rispondere. E' la posizione decisiva: senza,
+  l'8B remoto continuava a rispondere in inglese a tutte e cinque le lingue.
+
+### Quanto regge, in pratica
+
+| | dialoghi | indovinelli |
+| --- | --- | --- |
+| remoto, Llama-3.1-8B | tutte e 5 | tutte e 5 |
+| locale, Llama-3.2-1B | tutte e 5 | EN e IT buoni; FR/ES/DE incerti |
+
+Il ramo remoto e' affidabile in tutte e cinque. Il 1B locale ormai risponde
+nella lingua giusta, ma sugli indovinelli non inglesi produce a volte parole
+inventate come risposta — e la risposta e' quella che il giocatore deve
+digitare per aprire la porta. E' il tetto di un modello da 1 miliardo di
+parametri, non un problema di prompt: la posizione piu' forte e' gia' usata.
+Se serve il multilingua affidabile offline, la strada e' un `.gguf` piu'
+grande in `models/`, non un prompt diverso.
+
+`RIDDLE_FALLBACKS` ha voci solo per `inglese` e `italiano`: nelle altre lingue
+il ripiego e' in inglese.
+
+## Velocita' delle risposte
+
+`inference.py` passava `max_tokens` a `llama_cpp`; il ramo locale in GDScript
+aveva perso quel limite, e **NobodyWho non ha un'opzione equivalente**. Il
+modello tirava dritto fino all'EOS: misurato **4702 caratteri in 11,7 s**, di
+cui `pulisci()` ne teneva 240. Il resto era tempo buttato.
+
+Il limite si applica ora in streaming: `response_updated` emette un token per
+evento, `oraculus_backend_local.gd` li conta e ferma il worker al budget
+(`MAX_TOKENS` per i dialoghi, `RIDDLE_MAX_TOKENS` per gli indovinelli — gli
+stessi numeri del Python).
+
+| | prima | dopo |
+| --- | --- | --- |
+| domanda che fa divagare il modello | 11 737 ms | 1 787 ms |
+| media su quattro domande | — | **1 574 ms** |
+| indovinello | — | ~1 300 ms |
+
+Un dettaglio che costa caro se lo si sbaglia: dopo `stop_generation()` bisogna
+**aspettare comunque `response_finished`**. Lasciarlo pendente lo fa arrivare
+durante la richiesta successiva, che si chiude all'istante con il testo di
+quella prima — misurato: 14 ms e la risposta sbagliata. Il ciclo di attesa lo
+drena con una finestra breve (`STOP_GRACE`).
+
+Per confronto, il ramo remoto sta sui **2,5-2,9 s** a richiesta (rete piu'
+latenza HF), piu' il risveglio di Render se il servizio era fermo. Il ramo
+locale e' ora il piu' veloce dei due.
+
+Quel che resta del secondo e' diviso fra ~850 ms per rileggere gli 11 KB di
+system prompt a ogni richiesta e ~500 ms di generazione vera. Il prompt si
+rilegge perche' `reset_context()` butta la cache, e si deve buttare perche'
+`_mood_line()` scrive l'ostilita' esatta nel prompt, che cambia a ogni turno.
+Chi volesse scendere sotto il secondo deve partire da li'.
+
 ## Inferenza remota
 
 `oraculus_backend_remote.gd` fa un POST su
@@ -169,6 +341,66 @@ continua a funzionare per qualunque client vecchio.
 
 Il proxy serve anche a qualcosa che non e' pigrizia: tiene `HF_TOKEN` lato
 server. Messo nel client sarebbe estraibile dal `.pck`.
+
+### Quale modello usa il proxy
+
+Hugging Face ha smesso di servire `meta-llama/Llama-3.2-1B-Instruct` (il
+gemello del `.gguf` locale) e `Qwen/Qwen2.5-7B-Instruct`, i due candidati che
+`inference.py` aveva cablati. Il router rispondeva:
+
+```
+The requested model '...' is not supported by any provider you have enabled.
+```
+
+Il risultato era silenzioso e fuorviante: `/health` diceva `"status": "ok"`
+(il processo HTTP era vivo), ma ogni POST su `/v1/chat/completions` tornava
+**503**, quindi `chat_completion()` in GDScript restituiva `""` e il motore
+ripiegava su `FALLBACK` — dialoghi di riserva con il server "acceso".
+
+Ora i candidati sono modelli vivi sul router, e quando finiscono **il proxy
+chiede al router quali modelli sta servendo adesso** e prova quelli
+(`discover_router_models()`, solo `urllib`, nessuna dipendenza in piu'). Cosi'
+il prossimo modello ritirato non spegne di nuovo i dialoghi.
+
+I modelli scoperti vengono ordinati: prima quelli istruiti (a un modello base
+il formato `RIDDLE:`/`ANSWER:` non lo strappi), poi i piu' piccoli (le battute
+sono di 80 token e il giocatore aspetta davanti alla casella di dialogo);
+`coder`, `thinking`, `guard`, `vl` restano in fondo — scrivono codice, o
+antepongono il ragionamento alla risposta, che `pulisci()` poi taglia a meta'.
+
+Le variabili d'ambiente, tutte opzionali tranne la prima:
+
+| Variabile | Default | A cosa serve |
+| --- | --- | --- |
+| `HF_TOKEN` | — | **Obbligatoria.** Senza, il proxy non ha inferenza. |
+| `HF_MODEL` | `meta-llama/Llama-3.1-8B-Instruct` | Primo candidato. |
+| `HF_MODEL_FALLBACKS` | tre modelli, separati da virgola | Candidati successivi. |
+| `HF_AUTODISCOVER` | `1` | `0` disattiva la scoperta dal router. |
+| `HF_DISCOVER_LIMIT` | `6` | Quanti modelli scoperti provare. |
+| `HF_PROVIDER` | `auto` | Provider di inferenza HF. |
+| `HF_RETRY_COOLDOWN` | `60` | Secondi fra due tentativi di ricaricamento. |
+| `RIDDLE_ATTEMPTS` | `3` | Tentativi prima di `RIDDLE_FALLBACKS`. |
+
+Nota sui costi: HF non ha piu' un piano di inferenza gratuito illimitato
+(nella lista del router non c'e' piu' nessun modello con `is_free: true`), per
+cui il token deve appartenere a un account con credito. Se il credito finisce,
+`/health` lo dice in `last_error` e il gioco continua con i fallback.
+
+### Cosa serve nel `requirements.txt`
+
+Una sola riga: `huggingface_hub>=0.34,<2`.
+
+Tutto il resto del proxy e' libreria standard — `http.server` per il server,
+`json`, `urllib` per la scoperta dei modelli. Il limite inferiore serve perche'
+`inference.py` passa `provider=` a `InferenceClient` (esiste dalla 0.28); il
+limite superiore evita che una major non annunciata rompa il deploy senza che
+nessuno abbia toccato il codice — la 1.0 ha gia' cambiato il motore HTTP da
+`requests` a `httpx`. Verificato con la 1.31.0.
+
+**`llama-cpp-python` non va nel `requirements.txt` di Render**: su Render non
+c'e' il `.gguf` da 1 GB e la compilazione farebbe fallire la build. Sta in
+`requirements-local.txt`, che serve solo a far girare `inference.py` con il
+modello sul proprio PC — cosa che il gioco non fa piu' comunque.
 
 ## Export Web
 

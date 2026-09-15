@@ -243,7 +243,7 @@ func _send_to_ai_server(player_message: String) -> void:
 		"player_input":         player_message,
 		"hostility":            hostility,
 		"friendship":           friendship_level * 20,
-		"language":             "inglese",
+		"language":             GameState.ai_language,
 		"max_tokens":           30,
 		"temperature":          0.9,
 		"conversation_history": conversation_history,

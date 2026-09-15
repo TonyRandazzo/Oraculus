@@ -1723,5 +1723,22 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_sw15m")
 text = "Ask me anything..."
 autowrap_mode = 3
 
+[node name="LanguageSelect" type="OptionButton" parent="."]
+z_index = 4095
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -104.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = 48.0
+grow_horizontal = 0
+tooltip_text = "Lingua degli spiriti"
+theme_override_fonts/font = ExtResource("55_gcax4")
+theme_override_font_sizes/font_size = 28
+fit_to_longest_item = false
+
 [connection signal="pressed" from="Title/Start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="Title/Options" to="." method="_on_options_pressed"]
+[connection signal="item_selected" from="LanguageSelect" to="." method="_on_language_selected"]

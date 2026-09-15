@@ -28,7 +28,7 @@ const RIDDLE_TEMPERATURE: float = 0.85
 const RIDDLE_TOP_P: float = 0.9
 const RIDDLE_TOP_K: int = 40
 
-const HF_MODEL: String = "meta-llama/Llama-3.2-1B-Instruct"
+const HF_MODEL: String = "meta-llama/Llama-3.1-8B-Instruct"
 const HF_PROVIDER: String = "auto"
 
 # --- nomi degli eserciti --------------------------------------------------
@@ -813,6 +813,14 @@ const DEFAULT_RIDDLE_THEMES: Array = [
 	"blood, ancient curses, and dark medieval magic from year 1300",
 	"time, memory, and the weight of sins never forgiven",
 ]
+
+const LANG_DIRECTIVE: Dictionary = {
+	"italiano": "Rispondi in italiano.",
+	"inglese": "Answer in English.",
+	"francese": "Réponds en français.",
+	"spagnolo": "Responde en español.",
+	"tedesco": "Antworte auf Deutsch.",
+}
 
 # --- token di stop e trigger --------------------------------------------
 

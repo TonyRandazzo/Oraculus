@@ -329,31 +329,10 @@ def riddle_canon(res):
 for r in RIDDLE_RAW:
     add("parse_riddle_response", {"raw": r}, riddle_canon(inf.parse_riddle_response(r)))
 
-# Il prompt dell'indovinello e' costruito dentro generate_riddle: lo
-# ricomponiamo qui con lo stesso testo, cosi' la parita' e' verificabile.
-def riddle_system(theme, language):
-    return (
-        f"You are an ancient spirit guardian of Oraculus Castle, year 1300.\n"
-        f"{inf.STORY_CONTEXT}\n\n"
-        f"You guard a door with a riddle. Create ONE riddle following these rules:\n"
-        f"- Theme: {theme}\n"
-        f"- Tone: dark, mysterious, medieval fantasy — but the riddle itself must be SIMPLE and EASY to understand\n"
-        f"- The answer must be a single common, everyday word (an object, animal, or simple concept a child would know)\n"
-        f"- Describe the answer using clear, concrete, literal clues (what it looks like, what it does, where you find it)\n"
-        f"- Do NOT use abstract philosophy, obscure metaphors, or wordplay — a player should be able to guess it after reading it once\n"
-        f"- Length: 2-3 short, simple sentences\n"
-        f"- NEVER directly mention the answer in the riddle\n"
-        f"- Every riddle must be unique and different from any you have created before\n"
-        f"- Respond in {language}\n\n"
-        f"Respond ONLY in this exact format, nothing else:\n"
-        f"RIDDLE: [riddle text]\n"
-        f"ANSWER: [single word]"
-    )
-
-
-def riddle_user(language, theme, session_id):
-    variation_hint = f" (session: {session_id})" if session_id else ""
-    return f"Generate a new, unique riddle in {language} about: {theme}{variation_hint}"
+# Niente copia del prompt qui dentro: inference.py espone build_riddle_system
+# e build_riddle_user, quindi il riferimento e' la funzione vera.
+riddle_system = inf.build_riddle_system
+riddle_user = inf.build_riddle_user
 
 
 for theme, lang in itertools.product(list(inf.DEFAULT_RIDDLE_THEMES[:2]) + [""], ["inglese", "italiano"]):

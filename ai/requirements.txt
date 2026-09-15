@@ -1,1 +1,16 @@
-huggingface_hub>=0.24
+# Dipendenze del proxy su Render (ai/ai_server.py).
+#
+# Ne serve UNA sola. Il server HTTP e' http.server della libreria standard,
+# il JSON e' json, la scoperta dei modelli vivi sul router e' urllib: l'unica
+# cosa che non sta nella stdlib e' il client di Hugging Face.
+#
+# NON aggiungere llama-cpp-python qui: su Render non c'e' il .gguf (1 GB) e
+# compilarlo farebbe fallire la build. Sta in requirements-local.txt, che
+# serve solo a chi vuole far girare inference.py con il modello sul proprio PC.
+#
+# Il limite inferiore non e' decorativo: il parametro `provider=` di
+# InferenceClient (inference.py lo passa) esiste dalla 0.28. Il limite
+# superiore blocca la prossima major: la 1.0 ha gia' cambiato il motore HTTP
+# da requests a httpx, e una 2.0 non annunciata romperebbe il deploy senza che
+# nessuno abbia toccato il codice. Verificato con 1.31.0.
+huggingface_hub>=0.34,<2

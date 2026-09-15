@@ -26,6 +26,13 @@ func _ready() -> void:
 	add_child(_engine)
 	await _engine.setup()
 	_ready_flag = true
+
+	# Dopo l'await, non prima: negli autoload AIServerManager viene creato
+	# prima di GameState, quindi in cima a _ready() il nodo non esiste ancora.
+	var gs := get_node_or_null("/root/GameState")
+	if gs != null and gs.has_signal("language_changed"):
+		gs.language_changed.connect(_on_language_changed)
+
 	if _engine.is_available():
 		server_started.emit()
 	else:
@@ -33,6 +40,14 @@ func _ready() -> void:
 		# Anche senza modello il gioco resta giocabile: le risposte arrivano
 		# da FALLBACK e gli indovinelli da RIDDLE_FALLBACKS.
 		server_started.emit()
+
+
+## Cambiare lingua a partita in corso lascerebbe nello storico le battute
+## nella lingua precedente, e il modello tende a proseguire in quella: la
+## memoria riparte pulita, cosi' la lingua nuova vale da subito.
+func _on_language_changed(lingua: String) -> void:
+	reset_memory()
+	print("[ServerManager] lingua degli spiriti: ", lingua, " (memoria azzerata)")
 
 
 func is_server_ready() -> bool:

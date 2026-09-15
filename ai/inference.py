@@ -17,27 +17,120 @@ TOP_K          = 40
 TOP_P          = 0.9
 REPEAT_PENALTY = 1.1
 
-# Stesso identico modello del file locale (Llama-3.2-1B-Instruct), servito
-# via API invece che caricato in RAM: permette il deploy su Render senza
-# scaricare/eseguire il gguf in locale.
-HF_MODEL    = os.environ.get("HF_MODEL", "meta-llama/Llama-3.2-1B-Instruct")
+# Il modello locale (Llama-3.2-1B-Instruct) NON esiste piu' fra i modelli
+# serviti dagli Inference Provider di Hugging Face: il router risponde
+# "not supported by any provider you have enabled" e il proxy resta muto,
+# quindi il gioco vede solo risposte di FALLBACK. Il default remoto e' percio'
+# un modello vivo sul router, non piu' il gemello del .gguf locale: il ramo
+# locale continua a usare il 1B, il ramo remoto usa quello che HF serve
+# davvero. Il prompt e' lo stesso, la persona degli NPC pure.
+HF_MODEL    = os.environ.get("HF_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
 HF_PROVIDER = os.environ.get("HF_PROVIDER", "auto")
 
-# Llama-3.2-1B-Instruct e' un repo "gated": se il proprietario di HF_TOKEN non
-# ha ottenuto l'accesso, oppure il provider a cui "auto" instrada e' in avaria,
-# la validazione all'avvio fallisce e il server resta muto per tutta la vita
-# del processo. Teniamo quindi una catena di modelli: il primo che risponde
-# vince. Il default di riserva non e' gated ed e' servito da piu' provider.
+# Una catena di modelli invece di uno solo: il primo che risponde vince. I
+# modelli spariscono dal router senza preavviso (e' esattamente cio' che e'
+# successo a Llama-3.2-1B e a Qwen2.5-7B), quindi la lista contiene famiglie
+# diverse servite da provider diversi.
 HF_MODEL_FALLBACKS = [
     m.strip() for m in os.environ.get(
-        "HF_MODEL_FALLBACKS", "Qwen/Qwen2.5-7B-Instruct"
+        "HF_MODEL_FALLBACKS",
+        "Qwen/Qwen3-4B-Instruct-2507,"
+        "Qwen/Qwen2.5-72B-Instruct,"
+        "meta-llama/Llama-3.3-70B-Instruct"
     ).split(",") if m.strip()
 ]
 HF_MODEL_CANDIDATES = [HF_MODEL] + [m for m in HF_MODEL_FALLBACKS if m != HF_MODEL]
 
+# Anche una lista scritta a mano invecchia. Quando tutti i candidati falliscono
+# chiediamo al router quali modelli sta servendo adesso per questo token e
+# proviamo quelli: cosi' il prossimo modello ritirato non spegne di nuovo i
+# dialoghi. Si disattiva con HF_AUTODISCOVER=0.
+HF_ROUTER_MODELS_URL = os.environ.get(
+    "HF_ROUTER_MODELS_URL", "https://router.huggingface.co/v1/models")
+HF_AUTODISCOVER = os.environ.get("HF_AUTODISCOVER", "1").strip().lower() not in ("0", "false", "no", "")
+HF_DISCOVER_LIMIT = int(os.environ.get("HF_DISCOVER_LIMIT", 6))
+
 # Quando il caricamento remoto fallisce non e' detto che sia definitivo (rete,
 # rate limit, provider che rientra): riproviamo, ma non a ogni richiesta.
 HF_RETRY_COOLDOWN = float(os.environ.get("HF_RETRY_COOLDOWN", 60))
+
+# Quante volte chiedere un indovinello prima di ripiegare su RIDDLE_FALLBACKS.
+RIDDLE_ATTEMPTS = int(os.environ.get("RIDDLE_ATTEMPTS", 3))
+
+
+def _model_size_hint(model_id):
+    """Miliardi di parametri dedotti dal nome, per preferire i modelli piccoli.
+
+    Le battute degli NPC sono di 80 token e il proxy gira su Render: un 8B
+    risponde in un paio di secondi, un 400B fa aspettare il giocatore davanti
+    alla casella di dialogo. Se il nome non dice nulla, mettiamolo in mezzo.
+    """
+    taglie = [float(n) for n in re.findall(r"(\d+(?:\.\d+)?)[bB](?![a-zA-Z])", model_id)]
+    return min(taglie) if taglie else 50.0
+
+
+def discover_router_models(token=None, limit=HF_DISCOVER_LIMIT):
+    """Modelli testuali che il router HF sta servendo ora, dal piu' piccolo.
+
+    Usa solo la libreria standard: il proxy non guadagna nulla ad avere una
+    dipendenza in piu' per una GET. Con il token la lista rispecchia i
+    provider abilitati sull'account; senza, i provider pubblici.
+    """
+    import urllib.request
+
+    intestazioni = {"User-Agent": "oraculus-proxy"}
+    if token:
+        intestazioni["Authorization"] = "Bearer %s" % token
+    richiesta = urllib.request.Request(HF_ROUTER_MODELS_URL, headers=intestazioni)
+    with urllib.request.urlopen(richiesta, timeout=15) as risposta:
+        dati = json.loads(risposta.read().decode("utf-8"))
+
+    vivi = []
+    for modello in dati.get("data", []):
+        nome = modello.get("id", "")
+        if not nome:
+            continue
+        architettura = modello.get("architecture", {}) or {}
+        uscite = architettura.get("output_modalities") or ["text"]
+        if "text" not in uscite:
+            continue
+        if not any((p or {}).get("status") == "live" for p in modello.get("providers", [])):
+            continue
+        vivi.append(nome)
+
+    # Non tutti i modelli "vivi" sanno fare la parte di uno spirito del 1300:
+    #  - i "coder" scrivono codice e ignorano il tono;
+    #  - i "thinking"/"reasoning" antepongono il ragionamento alla risposta, che
+    #    pulisci() poi taglia a meta';
+    #  - "guard"/"embed"/"rerank" non sono nemmeno modelli di chat.
+    # Restano indietro, ma non li buttiamo: meglio un coder che il silenzio.
+    SCARSI = re.compile(r"coder|thinking|reason|guard|embed|rerank|math|-vl-|vision",
+                        re.IGNORECASE)
+
+    def chiave(nome):
+        # "Instruct"/"Chat" prima dei modelli base: a un modello base il
+        # formato RIDDLE:/ANSWER: non lo strappi.
+        istruito = 0 if re.search(r"instruct|chat|-it\b", nome, re.IGNORECASE) else 1
+        inadatto = 1 if SCARSI.search(nome) else 0
+        return (inadatto, istruito, _model_size_hint(nome), nome)
+
+    return sorted(vivi, key=chiave)[:limit]
+
+# L'ultima riga del system prompt, scritta NELLA lingua richiesta.
+#
+# La regola 1 ("Always speak in <lingua>") non basta a un modello da 1B: e'
+# in inglese, sta in cima a 9 KB di contesto anch'esso in inglese, e se il
+# giocatore scrive in inglese il modello segue la lingua della domanda. Una
+# riga nella lingua di destinazione, in fondo al prompt, e' invece rispettata
+# — verificato su Llama-3.2-1B per italiano, francese, spagnolo e tedesco,
+# dove ogni variante in inglese falliva.
+LANG_DIRECTIVE = {
+    "italiano": "Rispondi in italiano.",
+    "inglese":  "Answer in English.",
+    "francese": "Réponds en français.",
+    "spagnolo": "Responde en español.",
+    "tedesco":  "Antworte auf Deutsch.",
+}
 
 ARMY_NAME = "Esercito della Sacra Croce"
 ARMY_NAME_EN = "Army of the Holy Cross"
@@ -682,7 +775,52 @@ def build_system_msg(npc_name, hostility, friendship, language, npc_data, contex
         f"5. Do NOT start with your own name followed by ':'.\n"
         f"6. ALWAYS use the exact army name \"{army_name_local}\" when referring to the army.\n"
         f"7. End each response with a period.\n"
+        f"8. The player may write in any language; your reply is always in {language}.\n"
+        f"\n{LANG_DIRECTIVE.get(language, LANG_DIRECTIVE['inglese'])}\n"
     )
+
+
+# Il prompt dell'indovinello stava scritto dentro generate_riddle, e
+# tools/parity_dump.py ne teneva una seconda copia per poterlo confrontare:
+# due testi da aggiornare a mano insieme, piu' quello GDScript. Estratto qui,
+# la copia in parity_dump sparisce e le versioni da tenere allineate tornano
+# due — Python e GDScript — come per tutte le altre funzioni di prompt.
+def build_riddle_system(theme, language):
+    return (
+        f"You are an ancient spirit guardian of Oraculus Castle, year 1300.\n"
+        f"{STORY_CONTEXT}\n\n"
+        f"You guard a door with a riddle. Create ONE riddle following these rules:\n"
+        f"- Theme: {theme}\n"
+        f"- Tone: dark, mysterious, medieval fantasy — but the riddle itself must be SIMPLE and EASY to understand\n"
+        f"- The answer must be a single common, everyday word (an object, animal, or simple concept a child would know)\n"
+        f"- Describe the answer using clear, concrete, literal clues (what it looks like, what it does, where you find it)\n"
+        f"- Do NOT use abstract philosophy, obscure metaphors, or wordplay — a player should be able to guess it after reading it once\n"
+        f"- Length: 2-3 short, simple sentences\n"
+        f"- NEVER directly mention the answer in the riddle\n"
+        f"- Every riddle must be unique and different from any you have created before\n"
+        f"- Respond in {language}\n"
+        f"{LANG_DIRECTIVE.get(language, LANG_DIRECTIVE['inglese'])}\n\n"
+        f"Respond ONLY in this exact format, nothing else:\n"
+        f"RIDDLE: [riddle text]\n"
+        f"ANSWER: [single word]\n"
+        f"Keep the two labels RIDDLE: and ANSWER: in English exactly as written; "
+        f"the riddle and the answer word are in {language}."
+    )
+
+
+def decorate_user_msg(player_input, language):
+    """Il turno del giocatore con l'istruzione di lingua in coda.
+
+    Il modello segue la lingua della DOMANDA piu' di qualunque regola: con
+    "Who guards this place?" risponde in inglese anche se il system prompt
+    chiede l'italiano. Questa riga e' l'ultima che legge, ed e' la posizione
+    in cui viene rispettata."""
+    return f"{player_input}\n\n{LANG_DIRECTIVE.get(language, LANG_DIRECTIVE['inglese'])}"
+
+
+def build_riddle_user(language, theme, session_id):
+    variation_hint = f" (session: {session_id})" if session_id else ""
+    return f"Generate a new, unique riddle in {language} about: {theme}{variation_hint}"
 
 
 STOP_TOKENS_MAP = {
@@ -837,7 +975,15 @@ class LlamaCppWrapper:
             self._hf_client = InferenceClient(token=hf_token)
 
         errori = []
-        for candidate in HF_MODEL_CANDIDATES:
+        provati = set()
+
+        def prova(candidate):
+            """True se il modello risponde davvero: la validazione e' una vera
+            chat_completion, non una GET sui metadati, perche' un repo puo'
+            esistere su HF e non essere servito da nessun provider."""
+            if candidate in provati:
+                return False
+            provati.add(candidate)
             try:
                 self._hf_client.chat_completion(
                     model=candidate,
@@ -848,7 +994,7 @@ class LlamaCppWrapper:
                 errori.append(f"{candidate}: {type(e).__name__}: {e}")
                 print(f"[llama.cpp] modello '{candidate}' non utilizzabile "
                       f"({type(e).__name__}): {e}")
-                continue
+                return False
 
             self._remote_model = candidate
             self._available = True
@@ -856,7 +1002,26 @@ class LlamaCppWrapper:
             self._last_error = None
             print(f"[llama.cpp] Modalita' remota attiva e validata "
                   f"(provider={HF_PROVIDER}, model={candidate})")
-            return
+            return True
+
+        for candidate in HF_MODEL_CANDIDATES:
+            if prova(candidate):
+                return
+
+        # Nessuno dei modelli configurati risponde: quasi sempre vuol dire che
+        # sono stati ritirati dal router. Chiediamo la lista viva e proviamo
+        # quelli, invece di restare muti fino al prossimo deploy.
+        if HF_AUTODISCOVER:
+            try:
+                scoperti = discover_router_models(hf_token)
+                print(f"[llama.cpp] candidati configurati esauriti: il router "
+                      f"propone {scoperti}")
+                for candidate in scoperti:
+                    if prova(candidate):
+                        return
+            except Exception as e:
+                errori.append(f"autodiscover: {type(e).__name__}: {e}")
+                print(f"[llama.cpp] autodiscover fallito ({type(e).__name__}): {e}")
 
         self._last_error = "remote: " + " | ".join(errori)
         self._available = False
@@ -931,7 +1096,8 @@ class LlamaCppWrapper:
             for h in history[-3:]:
                 messages.append({"role": "user",      "content": h["player"]})
                 messages.append({"role": "assistant", "content": h["npc"]})
-            messages.append({"role": "user", "content": player_input})
+            messages.append({"role": "user",
+                             "content": decorate_user_msg(player_input, language)})
 
             result = self._hf_client.chat_completion(
                 model=self._remote_model,
@@ -990,26 +1156,8 @@ class LlamaCppWrapper:
             idx = abs(hash(door_id)) % len(DEFAULT_RIDDLE_THEMES)
             theme = DEFAULT_RIDDLE_THEMES[idx]
 
-        variation_hint = f" (session: {session_id})" if session_id else ""
-
-        system = (
-            f"You are an ancient spirit guardian of Oraculus Castle, year 1300.\n"
-            f"{STORY_CONTEXT}\n\n"
-            f"You guard a door with a riddle. Create ONE riddle following these rules:\n"
-            f"- Theme: {theme}\n"
-            f"- Tone: dark, mysterious, medieval fantasy — but the riddle itself must be SIMPLE and EASY to understand\n"
-            f"- The answer must be a single common, everyday word (an object, animal, or simple concept a child would know)\n"
-            f"- Describe the answer using clear, concrete, literal clues (what it looks like, what it does, where you find it)\n"
-            f"- Do NOT use abstract philosophy, obscure metaphors, or wordplay — a player should be able to guess it after reading it once\n"
-            f"- Length: 2-3 short, simple sentences\n"
-            f"- NEVER directly mention the answer in the riddle\n"
-            f"- Every riddle must be unique and different from any you have created before\n"
-            f"- Respond in {language}\n\n"
-            f"Respond ONLY in this exact format, nothing else:\n"
-            f"RIDDLE: [riddle text]\n"
-            f"ANSWER: [single word]"
-        )
-        user_msg = f"Generate a new, unique riddle in {language} about: {theme}{variation_hint}"
+        system = build_riddle_system(theme, language)
+        user_msg = build_riddle_user(language, theme, session_id)
 
         if self._using_remote:
             return self._generate_riddle_remote(system, user_msg)
@@ -1128,10 +1276,17 @@ class NPCDialogueEngine:
         }
 
     def generate_door_riddle(self, door_id: str, language: str = "inglese", theme: str = "", session_id: str = "") -> dict:
-        result = self.llama.generate_riddle(door_id, language, theme, session_id)
-        if result:
-            print(f"[Riddle] door={door_id} session={session_id} answer={result['answer']}")
-            return result
+        # Piu' di un tentativo: il modello rispetta il formato RIDDLE:/ANSWER:
+        # quasi sempre, ma ogni tanto scrive l'indovinello e si ferma prima
+        # della riga ANSWER. parse_riddle_response() allora torna None (ed e'
+        # giusto: senza risposta la porta non si aprirebbe) e il giocatore
+        # riceve un indovinello di riserva pur avendo il modello acceso.
+        for tentativo in range(RIDDLE_ATTEMPTS):
+            result = self.llama.generate_riddle(door_id, language, theme, session_id)
+            if result:
+                print(f"[Riddle] door={door_id} session={session_id} "
+                      f"answer={result['answer']} (tentativo {tentativo + 1})")
+                return result
         fallback_list = RIDDLE_FALLBACKS.get(language, RIDDLE_FALLBACKS["inglese"])
         idx = abs(hash(door_id + session_id)) % len(fallback_list)
         chosen = fallback_list[idx]

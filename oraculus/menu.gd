@@ -2,6 +2,7 @@ extends Control
 
 @onready var question_text_edit = $Label
 @onready var answer_text_edit = $Dialogue
+@onready var language_select: OptionButton = $LanguageSelect
 
 var npc_name: String = "Tutorial"
 var max_tokens: int = 25
@@ -26,6 +27,7 @@ func _ready() -> void:
 	_thinking_timer.timeout.connect(_cycle_thinking_dots)
 	add_child(_thinking_timer)
 	answer_text_edit.text = "Ask me anything..."
+	_setup_language_select()
 	var server_manager = get_node_or_null("/root/AIServerManager")
 	if not server_manager:
 		answer_text_edit.text = "Server AI not available."
@@ -36,6 +38,27 @@ func _ready() -> void:
 		server_manager.server_failed.connect(_on_server_failed)
 	if server_manager.is_server_ready():
 		_on_server_started()
+
+## La tendina mostra le sigle (EN, IT, ...) ma quello che viaggia fino al
+## prompt e' il nome esteso: e' la stringa che finisce in "Always speak in
+## <lingua>", quindi deve restare quella che il motore conosce.
+func _setup_language_select() -> void:
+	if language_select == null:
+		return
+	language_select.clear()
+	for voce in GameState.LANGUAGES:
+		language_select.add_item(String(voce["code"]))
+	var i := GameState.language_index()
+	language_select.select(i if i >= 0 else 0)
+
+func _on_language_selected(indice: int) -> void:
+	if indice < 0 or indice >= GameState.LANGUAGES.size():
+		return
+	GameState.set_ai_language(String(GameState.LANGUAGES[indice]["name"]))
+	# La conversazione del menu e' nella lingua di prima: ripartiamo puliti,
+	# altrimenti il modello continua nella lingua dello storico.
+	conversation_history.clear()
+	answer_text_edit.text = "Ask me anything..."
 
 func _on_question_gui_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER):
@@ -67,12 +90,14 @@ func _process_player_input(text: String) -> void:
 		return
 	_player_input_buffer = text
 	question_text_edit.text = ""
-	_send_ai_request(text, "inglese")
+	_send_ai_request(text, GameState.ai_language)
 
-func _send_ai_request(player_message: String, language: String = "inglese") -> void:
+func _send_ai_request(player_message: String, language: String = "") -> void:
 	if not _server_ready:
 		_use_fallback_response("Server not available.")
 		return
+	if language.is_empty():
+		language = GameState.ai_language
 	is_waiting_for_response = true
 	_start_thinking_dots()
 	# Un solo percorso: make_request() e' asincrona sia in locale sia in remoto.

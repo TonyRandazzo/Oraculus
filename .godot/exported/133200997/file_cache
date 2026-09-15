@@ -5,12 +5,12 @@ res://oraculus/NPC/flying_demon2.tscn::94005c9d4bd752a5f586c14a0c89d32b::1754507
 res://oraculus/NPC/flying_demon.tscn::aacd0e6792cc5174b715217942056516::1783782646::res://.godot/exported/133200997/export-1eba6fd9b220614ee4236cad41b4292d-flying_demon.scn
 res://oraculus/NPC/ghost.tscn::f18609953917fea4690b94c8ece0350d::1782743070::res://.godot/exported/133200997/export-208108ffb831f6a2fad5ba592aff9f74-ghost.scn
 res://oraculus/NPC/ogre.tscn::9a23f0d6dc18a0a1860b8237028b44a2::1782742433::res://.godot/exported/133200997/export-3aa6e7c12cad95ae76c8ef3912cb8915-ogre.scn
-res://oraculus/PlayerCharacter/player.tscn::1825aa7c9359a2e0bbc5eec29cdb5a1e::1787161620::res://.godot/exported/133200997/export-a9e1f67a793799a9de39df4621c7c7a5-player.scn
+res://oraculus/PlayerCharacter/player.tscn::6b05ae4675f23df60f28a7f6bbab1fc4::1788809512::res://.godot/exported/133200997/export-a9e1f67a793799a9de39df4621c7c7a5-player.scn
 res://oraculus/door.tscn::6145fa779bd43572aa5a999d51eff264::1783782646::res://.godot/exported/133200997/export-754238fc0ff0fb84ccdd046982f34c98-door.scn
 res://oraculus/exit.tscn::583895626b077a29aed1e214fdcd39b7::1754513423::res://.godot/exported/133200997/export-827ae0660c18a5ad1a5664537033db0e-exit.scn
 res://oraculus/hud.tscn::3a3ac093c165de96914c032233e5e9a9::1788446549::res://.godot/exported/133200997/export-22d588b1c400d0e174fa79cb30c399dd-hud.scn
-res://oraculus/main.tscn::924fd646cb853cd1f0950f0357b4b53f::1788711051::res://.godot/exported/133200997/export-5cd31fde365c0b99038a4a6daadca315-main.scn
-res://oraculus/menu.tscn::74df86997f6fce52ec5a29119f10e2fe::1783782646::res://.godot/exported/133200997/export-84138e3ee32f1cb29d64652f66a77dcd-menu.scn
+res://oraculus/main.tscn::90e6c0f0327a9e05eddb3c78e5c73c79::1789467237::res://.godot/exported/133200997/export-5cd31fde365c0b99038a4a6daadca315-main.scn
+res://oraculus/menu.tscn::8e3e2d5f254aa21a12b20ff425d5c894::1789465331::res://.godot/exported/133200997/export-84138e3ee32f1cb29d64652f66a77dcd-menu.scn
 res://oraculus/options.tscn::61e072a522f37fdeae40d588eef48a24::1774097842::res://.godot/exported/133200997/export-9c15f7c2f9e3f07260cd0f570bc08538-options.scn
 res://default_bus_layout.tres::4ee36d8ebe5747f75880a68c269edc76::1754495659::res://.godot/exported/133200997/export-19246414aa9fb561ced4b8dce477acec-default_bus_layout.res
 res://oraculus/NPC/defense_oil.tscn::7f209fc5e384912c71f79eaa151f9aeb::1777971429::res://.godot/exported/133200997/export-f01dc3c3dd924987ef5d806d8592e36b-defense_oil.scn
@@ -30,4 +30,9 @@ res://oraculus/Minigames/puzzle.tscn::e8fb343e63df0ca3e066ce0190ea7c37::17854216
 res://oraculus/NPC/larry.tscn::8074a32c972f9a24bc39f7407fb1cc57::1783782646::res://.godot/exported/133200997/export-a80a60995352713bc8bbb002a345c234-larry.scn
 res://oraculus/NPC/key.tscn::83e79cc924bb8dcace26813780b05e20::1783782647::res://.godot/exported/133200997/export-3b417ba8eb4c9fb2369398625ada3434-key.scn
 res://oraculus/liana.tscn::97c978ad8a9a6497be9cfd5c9c47ab97::1788256034::res://.godot/exported/133200997/export-ae21ffde045e9fedaa0b87bec04cb33f-liana.scn
-res://oraculus/trampoline.tscn::19c86380527c51e85197d45113701912::1788445216::res://.godot/exported/133200997/export-469accd4cefb6236e89804ceae02dd23-trampoline.scn
+res://oraculus/trampoline.tscn::46fa39390f5a200fff7e8694ae3e6026::1789039409::res://.godot/exported/133200997/export-469accd4cefb6236e89804ceae02dd23-trampoline.scn
+res://ai/tests/local_check.tscn::d045a9266c5a93b7b6f076c87f721107::1789137594::res://.godot/exported/133200997/export-63405b5a9a3beb8bf8e3791954d08502-local_check.scn
+res://ai/tests/parity_check.tscn::0c8b9a7d4a15a86c86c4eb708aeb589d::1789083710::res://.godot/exported/133200997/export-3c027148048c143144dafac6a83d0356-parity_check.scn
+res://ai/tests/remote_check.tscn::ef230feb9c039d0c01ef3813fbf70ff7::1789464389::res://.godot/exported/133200997/export-6255edd05528dc1aa1b86e6720420da2-remote_check.scn
+res://ai/tests/smoke_check.tscn::b2665222c58015049414bdd7ca71b53e::1789084579::res://.godot/exported/133200997/export-b48210741c4f6845069514a31e0dd126-smoke_check.scn
+res://oraculus/instant_game_over.tscn::b396b66009c64c97faf161cf71e3ba2a::1789039873::res://.godot/exported/133200997/export-5394d8a37d05b4791015b9540cffa159-instant_game_over.scn

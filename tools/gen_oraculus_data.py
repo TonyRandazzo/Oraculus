@@ -146,8 +146,12 @@ parts.append("const RIDDLE_MAX_TOKENS: int = 150\n")
 parts.append("const RIDDLE_TEMPERATURE: float = 0.85\n")
 parts.append("const RIDDLE_TOP_P: float = 0.9\n")
 parts.append("const RIDDLE_TOP_K: int = 40\n\n")
-parts.append('const HF_MODEL: String = %s\n' % esc("meta-llama/Llama-3.2-1B-Instruct"))
-parts.append('const HF_PROVIDER: String = %s\n\n' % esc("auto"))
+# Presi da inference.py invece che riscritti a mano: il modello remoto cambia
+# quando HF ritira quello vecchio, e una copia hardcoded qui si limiterebbe a
+# mentire (il proxy ignora comunque il campo "model" del payload, ma il valore
+# finisce nei log del client ed e' l'unico posto dove il gioco lo dichiara).
+parts.append('const HF_MODEL: String = %s\n' % esc(inf.HF_MODEL))
+parts.append('const HF_PROVIDER: String = %s\n\n' % esc(inf.HF_PROVIDER))
 
 parts.append("# --- nomi degli eserciti --------------------------------------------------\n\n")
 parts.append('const ARMY_NAME: String = %s\n' % esc(inf.ARMY_NAME))
@@ -171,6 +175,7 @@ parts.append("# --- risposte di riserva ----------------------------------------
 parts.append(const("FALLBACK", inf.FALLBACK, "Dictionary"))
 parts.append(const("RIDDLE_FALLBACKS", inf.RIDDLE_FALLBACKS, "Dictionary"))
 parts.append(const("DEFAULT_RIDDLE_THEMES", inf.DEFAULT_RIDDLE_THEMES, "Array"))
+parts.append(const("LANG_DIRECTIVE", inf.LANG_DIRECTIVE, "Dictionary"))
 
 parts.append("# --- token di stop e trigger --------------------------------------------\n\n")
 parts.append(const("STOP_TOKENS_MAP", inf.STOP_TOKENS_MAP, "Dictionary"))

@@ -26,6 +26,8 @@ const CLASS_SAMPLER_BUILDER := "NobodyWhoSamplerBuilder"
 const ENV_MODEL_PATH := "ORACULUS_MODEL_PATH"
 const COPY_CHUNK := 4 * 1024 * 1024
 const WORKER_TIMEOUT := 120.0
+## Quanto aspettare response_finished dopo aver fermato noi la generazione.
+const STOP_GRACE := 3.0
 ## llama.cpp guarda indietro di 64 token per la penalita' di ripetizione:
 ## e' anche il default di llama-cpp-python, che inference.py non cambiava.
 const PENALTY_LAST_N := 64
@@ -103,7 +105,7 @@ func setup() -> bool:
 	# Dopo l'avvio, non prima: a worker fermo l'addon scarta la
 	# configurazione del sampler con un semplice warning.
 	sampler_configured = _apply_sampler(
-		OraculusData.TEMPERATURE, OraculusData.TOP_P, OraculusData.TOP_K)
+		OraculusData.TEMPERATURE, OraculusData.TOP_P, OraculusData.TOP_K, _new_seed())
 	if not sampler_configured:
 		push_warning("[Oraculus/locale] sampling ai valori di default dell'addon: " + last_error)
 
@@ -158,10 +160,19 @@ func _start_worker() -> bool:
 
 
 ## Catena di sampling equivalente a quella che inference.py passava a
-## llama_cpp: penalties -> top_k -> top_p -> temperature -> dist.
+## llama_cpp: penalties -> top_k -> top_p -> temperature -> seed -> dist.
 ## In v11 non esiste piu' NobodyWhoSampler: si costruisce con un builder e si
 ## passa a set_sampler_config(). Ripieghiamo sui preset se il builder manca.
-func _apply_sampler(temperature: float, top_p: float, top_k: int) -> bool:
+##
+## Il seed non e' un dettaglio: l'addon, se non glielo si dice, ne usa uno
+## fisso (1234). Con un seed fisso lo stesso prompt produce SEMPRE la stessa
+## identica risposta — lo stesso NPC, interrogato due volte allo stesso modo,
+## ripete la battuta parola per parola anche in partite diverse, e un
+## indovinello che esce malformato resta malformato per sempre, quindi
+## ritentarlo e' inutile. llama_cpp, in inference.py, usava il proprio default
+## (seed casuale): passandone uno nuovo a ogni generazione torniamo a quel
+## comportamento.
+func _apply_sampler(temperature: float, top_p: float, top_k: int, seed: int) -> bool:
 	if not _worker_ready:
 		# A worker fermo l'addon scarta la configurazione e va avanti con i
 		# suoi default: meglio accorgersene qui che chiedersi perche' le
@@ -169,7 +180,7 @@ func _apply_sampler(temperature: float, top_p: float, top_k: int) -> bool:
 		last_error = "sampler configurato prima dell'avvio del worker"
 		return false
 
-	var wanted := {"t": temperature, "p": top_p, "k": top_k}
+	var wanted := {"t": temperature, "p": top_p, "k": top_k, "s": seed}
 	if _sampler_applied == wanted:
 		return true
 
@@ -181,6 +192,8 @@ func _apply_sampler(temperature: float, top_p: float, top_k: int) -> bool:
 			cfg = cfg.call("top_k", top_k)
 			cfg = cfg.call("top_p", top_p, 1)
 			cfg = cfg.call("temperature", temperature)
+			if builder.has_method("seed"):
+				cfg = cfg.call("seed", seed)
 			cfg = cfg.call("dist")
 			if cfg != null:
 				_chat.call("set_sampler_config", cfg)
@@ -217,10 +230,14 @@ func generate(system_prompt: String, user_msg: String, timeout: float = 60.0,
 		return ""
 	_busy = true
 
+	# Seed nuovo a ogni richiesta: e' cio' che rende diverse due risposte alla
+	# stessa domanda, e cio' che da' un senso a un secondo tentativo quando il
+	# primo esce nel formato sbagliato.
 	_apply_sampler(
 		float(sampling.get("temperature", OraculusData.TEMPERATURE)),
 		float(sampling.get("top_p", OraculusData.TOP_P)),
-		int(sampling.get("top_k", OraculusData.TOP_K)))
+		int(sampling.get("top_k", OraculusData.TOP_K)),
+		int(sampling.get("seed", _new_seed())))
 
 	# Prima il system prompt, poi il reset: reset_context() ricostruisce il
 	# contesto a partire dal system prompt corrente, quindi l'ordine inverso
@@ -228,10 +245,33 @@ func generate(system_prompt: String, user_msg: String, timeout: float = 60.0,
 	_set_first(_chat, ["system_prompt"], system_prompt)
 	_call_first(_chat, ["reset_context", "reset_chat", "reset"])
 
-	var box := {"done": false, "text": ""}
+	# Tetto ai token generati. inference.py passava max_tokens a llama_cpp;
+	# NobodyWho non ha un'opzione equivalente, quindi il limite si applica in
+	# streaming: response_updated emette un token per evento, li contiamo e
+	# fermiamo il worker al budget. Senza, il modello tira dritto fino all'EOS
+	# — misurato: 4702 caratteri in 11,7 s, di cui pulisci() ne tiene 240.
+	# Con il tetto la stessa richiesta chiude in 1,5 s.
+	var budget: int = int(sampling.get("max_tokens", OraculusData.MAX_TOKENS))
+	var box := {"done": false, "text": "", "token": 0, "troncata": false}
+
+	var on_updated := func(frammento: String) -> void:
+		box["token"] = int(box["token"]) + 1
+		box["text"] = String(box["text"]) + frammento
+		if budget > 0 and int(box["token"]) >= budget and not bool(box["troncata"]):
+			box["troncata"] = true
+			_call_first(_chat, ["stop_generation", "stop"])
+
 	var on_finished := func(response: String) -> void:
-		box["text"] = response
+		# Quando fermiamo noi, il testo buono e' quello accumulato: la
+		# risposta finale dell'addon a generazione interrotta puo' essere
+		# vuota o parziale.
+		if not bool(box["troncata"]):
+			box["text"] = response
 		box["done"] = true
+
+	var streaming := _chat.has_signal("response_updated")
+	if streaming:
+		_chat.connect("response_updated", on_updated)
 	_chat.connect("response_finished", on_finished, CONNECT_ONE_SHOT)
 
 	# v11 ha rinominato say() in ask(); say() esiste ancora ma avvisa che
@@ -242,28 +282,52 @@ func generate(system_prompt: String, user_msg: String, timeout: float = 60.0,
 			ask_method = candidate
 			break
 	if ask_method.is_empty():
+		if streaming and _chat.is_connected("response_updated", on_updated):
+			_chat.disconnect("response_updated", on_updated)
 		_chat.disconnect("response_finished", on_finished)
 		_busy = false
 		last_error = "nessun metodo di richiesta (ask/say) su " + CLASS_CHAT
 		return ""
 	_chat.call(ask_method, user_msg)
 
+	# Si aspetta response_finished anche quando siamo stati noi a fermare il
+	# worker: e' il modo di "drenare" il segnale. Se lo lasciassimo pendente,
+	# arriverebbe durante la richiesta successiva e la chiuderebbe all'istante
+	# con il testo sbagliato (misurato: 14 ms e la risposta di prima).
 	var elapsed := 0.0
-	while not bool(box["done"]) and elapsed < timeout:
+	var scadenza := timeout
+	while not bool(box["done"]) and elapsed < scadenza:
 		await get_tree().process_frame
 		elapsed += get_process_delta_time()
+		if bool(box["troncata"]) and scadenza == timeout:
+			# Da qui in poi aspettiamo solo che il worker si fermi, non che
+			# finisca di scrivere: bastano pochi decimi.
+			scadenza = minf(timeout, elapsed + STOP_GRACE)
+
+	if streaming and _chat.is_connected("response_updated", on_updated):
+		_chat.disconnect("response_updated", on_updated)
 
 	if not bool(box["done"]):
 		if _chat.is_connected("response_finished", on_finished):
 			_chat.disconnect("response_finished", on_finished)
 		_call_first(_chat, ["stop_generation", "stop"])
 		_busy = false
+		# Se il taglio era nostro il testo raccolto e' valido: l'attesa scaduta
+		# riguarda solo la conferma dell'addon, non la risposta.
+		if bool(box["troncata"]):
+			return String(box["text"]).strip_edges()
 		last_error = "timeout generazione locale (%.0fs)" % timeout
 		push_warning("[Oraculus/locale] " + last_error)
 		return ""
 
 	_busy = false
 	return String(box["text"]).strip_edges()
+
+
+## Seed positivo a 31 bit: randi() copre tutto l'intervallo con segno e un
+## valore negativo l'addon lo rifiuterebbe.
+func _new_seed() -> int:
+	return randi() & 0x7fffffff
 
 
 # --- percorso del modello -------------------------------------------------

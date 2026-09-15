@@ -6,6 +6,66 @@ var session_id: String = ""
 func _ready() -> void:
 	randomize()   # seed the global RNG — senza questo shuffle() è deterministico
 	_new_session()
+	_load_settings()
+
+# ── Lingua dell'AI ────────────────────────────────────────────────────────────
+# Le cinque lingue che il motore di dialogo sa gestire: sono le chiavi di
+# LANG_SIGNATURES in ai/oraculus_data.gd, e il nome esteso è quello che finisce
+# nel prompt ("Always speak in <lingua>"), quindi va scritto così com'è.
+# La sigla è solo per il menù a tendina.
+
+const LANGUAGES: Array = [
+	{"code": "EN", "name": "inglese"},
+	{"code": "IT", "name": "italiano"},
+	{"code": "FR", "name": "francese"},
+	{"code": "ES", "name": "spagnolo"},
+	{"code": "DE", "name": "tedesco"},
+]
+
+const SETTINGS_PATH := "user://settings.cfg"
+
+signal language_changed(language: String)
+
+var ai_language: String = "inglese"
+
+func set_ai_language(language: String) -> void:
+	if language == ai_language or language_index(language) < 0:
+		return
+	ai_language = language
+	_save_settings()
+	# Lo storico accumulato è nella lingua di prima: lasciarlo nel prompt
+	# spingerebbe il modello a continuare in quella, ed è proprio ciò che il
+	# giocatore ha appena chiesto di cambiare.
+	language_changed.emit(ai_language)
+
+## Indice in LANGUAGES, oppure -1 se la lingua non è fra quelle gestite.
+func language_index(language: String = "") -> int:
+	var cercata := language if not language.is_empty() else ai_language
+	for i in LANGUAGES.size():
+		if String(LANGUAGES[i]["name"]) == cercata:
+			return i
+	return -1
+
+## Sigla della lingua attuale ("EN", "IT", ...), per la tendina.
+func language_code() -> String:
+	var i := language_index()
+	return String(LANGUAGES[i]["code"]) if i >= 0 else "EN"
+
+func _load_settings() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(SETTINGS_PATH) != OK:
+		return
+	var salvata := String(cfg.get_value("ai", "language", ai_language))
+	if language_index(salvata) >= 0:
+		ai_language = salvata
+
+func _save_settings() -> void:
+	var cfg := ConfigFile.new()
+	# Rileggiamo prima di scrivere: il file è condiviso con altre impostazioni
+	# e sovrascriverlo in blocco le cancellerebbe.
+	cfg.load(SETTINGS_PATH)
+	cfg.set_value("ai", "language", ai_language)
+	cfg.save(SETTINGS_PATH)
 
 func _new_session() -> void:
 	session_id = "%d_%d" % [randi(), Time.get_unix_time_from_system()]

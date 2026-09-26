@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://cya6p1va7vg84"
+path="res://.godot/imported/Fantasy_UI (18).wav-651fb06343b8314738b7fdf5e0e0c6c5.sample"
+
+[deps]
+
+source_file="res://oraculus/SFX/Fantasy UI SFX/Fantasy/Fantasy_UI (18).wav"
+dest_files=["res://.godot/imported/Fantasy_UI (18).wav-651fb06343b8314738b7fdf5e0e0c6c5.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

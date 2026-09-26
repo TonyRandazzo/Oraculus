@@ -5,8 +5,9 @@ var item_description = "there are no item in your inventory"
 
 
 
+## Il pulsante a schermo apre il dialogo e, se e' gia' aperto, lo chiude.
 func _on_interact_pressed() -> void:
-	$"../..".open_chat()
+	$"../..".toggle_chat()
 
 
 func _physics_process(delta: float) -> void:
@@ -77,10 +78,21 @@ func _on_item_8_pressed() -> void:
 	item_description = $Inventory/Buttons/Item8.item_description
 
 
+## La porta vicino al giocatore. Quella a indovinello e' anche il suo
+## current_demon; quella a minigioco no, perche' door.gd toglie la sua area da
+## "demon_detection", quindi la si cerca fra le porte della scena.
+func _door_in_range() -> Node:
+	var door = $"../..".current_demon
+	if door != null and door.has_method("unlock_with_scroll"):
+		return door
+	for d in get_tree().get_nodes_in_group("doors"):
+		if d.player_in_range and not d.door_unlocked:
+			return d
+	return null
+
 func _try_use_door_scroll() -> bool:
-	var player = $"../.."
-	var door = player.current_demon
-	if door == null or not door.has_method("unlock_with_scroll"):
+	var door = _door_in_range()
+	if door == null:
 		return false
 
 	for slot in $Inventory/Buttons.get_children():
@@ -88,6 +100,7 @@ func _try_use_door_scroll() -> bool:
 			continue
 		if slot.is_in_group("door scroll"):
 			if door.unlock_with_scroll():
+				_suona_uso()
 				slot.remove_from_group("door scroll")
 				slot.texture_normal = null
 				slot.texture_pressed = null
@@ -101,6 +114,18 @@ func _try_use_door_scroll() -> bool:
 func _on_selected_item_pressed() -> void:
 	if _try_use_door_scroll():
 		return
+	if _usa_pozione():
+		_suona_uso()
+
+## Il suono di un oggetto usato: solo quando l'oggetto e' stato consumato
+## davvero (una pozione a salute piena resta nell'inventario, e tace).
+func _suona_uso() -> void:
+	var suoni := get_node_or_null("/root/UiSounds")
+	if suoni != null:
+		suoni.play_use()
+
+## Beve la pozione (o usa l'olio) selezionata. true se ne ha consumata una.
+func _usa_pozione() -> bool:
 	if $Inventory/Buttons/Item1.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
 		$"../..".current_health = $"../..".max_health
 		$"../..".update_health()
@@ -111,7 +136,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item1.texture_pressed = null
 		$Inventory/Buttons/Item1.item_name = "no item"
 		$Inventory/Buttons/Item1.item_description = "there are no item in your inventory"
-		return
+		return true
 	if $Inventory/Buttons/Item1.is_in_group("defense potion"):
 		$"../..".defense_potion_active = true
 		$"../..".defense_potion_timer.start(15.0)
@@ -124,7 +149,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item1.texture_pressed = null
 		$Inventory/Buttons/Item1.item_name = "no item"
 		$Inventory/Buttons/Item1.item_description = "there are no item in your inventory"
-		return
+		return true
 
 	if $Inventory/Buttons/Item2.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
 		$"../..".current_health = $"../..".max_health
@@ -136,7 +161,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item2.remove_from_group("life potion")
 		$Inventory/Buttons/Item2.item_name = "no item"
 		$Inventory/Buttons/Item2.item_description = "there are no item in your inventory"
-		return
+		return true
 
 
 	if $Inventory/Buttons/Item3.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -149,7 +174,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item3.remove_from_group("life potion")
 		$Inventory/Buttons/Item3.item_name = "no item"
 		$Inventory/Buttons/Item3.item_description = "there are no item in your inventory"
-		return
+		return true
 
 
 	if $Inventory/Buttons/Item4.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -162,7 +187,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item4.remove_from_group("life potion")
 		$Inventory/Buttons/Item4.item_name = "no item"
 		$Inventory/Buttons/Item4.item_description = "there are no item in your inventory"
-		return
+		return true
 
 
 	if $Inventory/Buttons/Item5.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -175,7 +200,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item5.remove_from_group("life potion")
 		$Inventory/Buttons/Item5.item_name = "no item"
 		$Inventory/Buttons/Item5.item_description = "there are no item in your inventory"
-		return
+		return true
 
 
 	if $Inventory/Buttons/Item6.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -188,7 +213,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item6.remove_from_group("life potion")
 		$Inventory/Buttons/Item6.item_name = "no item"
 		$Inventory/Buttons/Item6.item_description = "there are no item in your inventory"
-		return
+		return true
 
 
 	if $Inventory/Buttons/Item7.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -201,7 +226,7 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item7.remove_from_group("life potion")
 		$Inventory/Buttons/Item7.item_name = "no item"
 		$Inventory/Buttons/Item7.item_description = "there are no item in your inventory"
-		return
+		return true
 
 
 	if $Inventory/Buttons/Item8.is_in_group("life potion") and $"../..".current_health < $"../..".max_health:
@@ -214,4 +239,5 @@ func _on_selected_item_pressed() -> void:
 		$Inventory/Buttons/Item8.remove_from_group("life potion")
 		$Inventory/Buttons/Item8.item_name = "no item"
 		$Inventory/Buttons/Item8.item_description = "there are no item in your inventory"
-		return
+		return true
+	return false

@@ -272,14 +272,14 @@ func die():
 	queue_free()
 
 func say_launch_message():
-	_send_to_ai_server("Announce presence in ONE short sentence (max 10 words). Angry, hungry, aggressive orc.")
+	_send_to_ai_server("", "Announce presence in ONE short sentence (max 10 words). Angry, hungry, aggressive orc.")
 
 ## Non piu' collegata: era il dialogo ambientale, che partiva all'ingresso
 ## nell'area e poi ogni ai_update_interval secondi. Resta qui perche' e'
 ## il testo dei prompt, se un giorno si vuole rimetterla dietro a un
 ## innesco esplicito (un tasto "parla", per esempio).
 func ask_riddle():
-	_send_to_ai_server("Growl or threaten in ONE short sentence (max 8 words). Angry orc.")
+	_send_to_ai_server("", "Growl or threaten in ONE short sentence (max 8 words). Angry orc.")
 
 func receive_player_answer(answer: String):
 	if is_waiting_for_response:
@@ -287,7 +287,7 @@ func receive_player_answer(answer: String):
 	state = "attacking"
 	can_attack = true
 	attack_timer = 0.0
-	_send_to_ai_server("Someone said: '" + answer + "'. Respond with ONE short angry growl (max 8 words).")
+	_send_to_ai_server(answer, "Respond with ONE short angry growl (max 8 words).")
 
 func analyze_answer_for_friendship(answer: String):
 	var lower_answer = answer.to_lower()
@@ -371,7 +371,10 @@ func _use_fallback_response(text: String):
 	is_interacting = false
 	is_waiting_for_response = false
 
-func _send_to_ai_server(player_message: String) -> void:
+## direction: istruzione di regia dello script (presentarsi, reagire a un
+## colpo). Arriva al modello come nota di scena, non come frase del
+## cavaliere, e non entra nella memoria dell'NPC.
+func _send_to_ai_server(player_message: String, direction: String = "") -> void:
 	if not _server_ready:
 		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
 		return
@@ -387,6 +390,7 @@ func _send_to_ai_server(player_message: String) -> void:
 	var payload = {
 		"npc_name": npc_name,
 		"player_input": player_message,
+		"direction": direction,
 		"hostility": hostility,
 		"friendship": friendship_level * 20,
 		"language": GameState.ai_language,
@@ -408,7 +412,7 @@ func _request_ai(payload: Dictionary) -> void:
 		_ai_done = true
 		return
 
-	var response = await server_manager.make_request("chat", payload)
+	var response = await server_manager.make_request("chat", payload, _show_partial)
 	if not is_instance_valid(self):
 		return
 
@@ -419,6 +423,16 @@ func _request_ai(payload: Dictionary) -> void:
 		_ai_result = ""
 		_ai_new_hostility = -1
 	_ai_done = true
+
+## La battuta mentre il modello la scrive, al posto dei puntini. Quella
+## definitiva, ripulita per intero, la scrive comunque _on_ai_chat_received
+## quando la richiesta si chiude.
+func _show_partial(testo: String) -> void:
+	if not is_waiting_for_response:
+		return
+	_stop_thinking_dots()
+	if dialogue_box:
+		dialogue_box.show_text(testo)
 
 func _process(_delta: float) -> void:
 	if not _ai_done:
@@ -470,6 +484,6 @@ func _stop_thinking_dots() -> void:
 ## Essere colpiti deve comunque produrre SEMPRE una reazione immediata.
 func _react_to_hit() -> void:
 	if _server_ready and not is_waiting_for_response:
-		_send_to_ai_server("Human hit you. ONE short furious growl (max 8 words).")
+		_send_to_ai_server("", "Human hit you. ONE short furious growl (max 8 words).")
 	elif dialogue_box:
 		dialogue_box.show_text("*Angry* You betray?!")

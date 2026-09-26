@@ -112,7 +112,10 @@ var friendly_responses: Array = [
 	"*trusting* Come. I will show you what I know."
 ]
 
-func _send_to_ai_server(player_message: String):
+## direction: istruzione di regia dello script (presentarsi, reagire a un
+## colpo). Arriva al modello come nota di scena, non come frase del
+## cavaliere, e non entra nella memoria dell'NPC.
+func _send_to_ai_server(player_message: String, direction: String = ""):
 	if not _server_ready:
 		_use_fallback_response(fallback_responses[randi() % fallback_responses.size()])
 		return
@@ -125,9 +128,9 @@ func _send_to_ai_server(player_message: String):
 		return
 
 	# Un solo percorso: make_request() e' asincrona sia in locale sia in remoto.
-	_do_ai_request(player_message)
+	_do_ai_request(player_message, direction)
 
-func _do_ai_request(player_message: String):
+func _do_ai_request(player_message: String, direction: String = ""):
 	var server_manager = get_node_or_null("/root/AIServerManager")
 	if not server_manager:
 		_use_fallback_response("Connection error...")
@@ -140,6 +143,7 @@ func _do_ai_request(player_message: String):
 	var payload = {
 		"npc_name": npc_name,
 		"player_input": player_message,
+		"direction": direction,
 		"hostility": hostility,
 		"friendship": friendship_level * 20,
 		"language": GameState.ai_language,
@@ -149,7 +153,7 @@ func _do_ai_request(player_message: String):
 		"conversation_history": conversation_history,
 	}
 
-	var response = await server_manager.make_request("chat", payload)
+	var response = await server_manager.make_request("chat", payload, _show_partial)
 	if not is_instance_valid(self):
 		return
 
@@ -172,6 +176,16 @@ func _do_ai_request(player_message: String):
 		FeedbackPopup.show_stat_change(self, friendship_level - prev_friendship, hostility - prev_hostility)
 
 	_on_ai_chat_received(ai_response)
+
+## La battuta mentre il modello la scrive, al posto dei puntini. Quella
+## definitiva, ripulita per intero, la scrive comunque _on_ai_chat_received
+## quando la richiesta si chiude.
+func _show_partial(testo: String) -> void:
+	if not is_waiting_for_response:
+		return
+	_stop_thinking_dots()
+	if dialogue_box:
+		dialogue_box.show_text(testo)
 
 func _on_ai_chat_received(message: String):
 	timer.stop()
@@ -558,7 +572,7 @@ func execute_ai_decision(decision: String):
 				can_initiate_dialogue = false
 
 func say_launch_message():
-	_send_to_ai_server("Introduce yourself briefly in ONE sentence (max 10 words). You are Smirne Bombo, a gentle spirit who knew the noble family.")
+	_send_to_ai_server("", "Introduce yourself briefly in ONE sentence (max 10 words). You are Smirne Bombo, a gentle spirit who knew the noble family.")
 
 ## Non piu' collegata: era il dialogo ambientale, che partiva all'ingresso
 ## nell'area e poi ogni ai_update_interval secondi. Resta qui perche' e'
@@ -571,7 +585,7 @@ func share_castle_knowledge():
 		"Mention ONE thing you remember about the noble family (max 10 words).",
 		"Hint at something interesting elsewhere in the castle (max 10 words).",
 	]
-	_send_to_ai_server(prompts[randi() % prompts.size()])
+	_send_to_ai_server("", prompts[randi() % prompts.size()])
 
 func analyze_answer_for_friendship(answer: String):
 	var lower = answer.to_lower()
@@ -688,6 +702,6 @@ func _stop_thinking_dots() -> void:
 ## Essere colpiti deve comunque produrre SEMPRE una reazione immediata.
 func _react_to_hit() -> void:
 	if _server_ready and not is_waiting_for_response:
-		_send_to_ai_server("The knight just struck you. React in ONE short, wounded line (max 10 words). You are Smirne Bombo, gentle.")
+		_send_to_ai_server("", "The knight just struck you. React in ONE short, wounded line (max 10 words). You are Smirne Bombo, gentle.")
 	elif dialogue_box:
 		dialogue_box.show_text(aggressive_hit_responses[randi() % aggressive_hit_responses.size()])

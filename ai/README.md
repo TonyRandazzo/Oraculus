@@ -22,8 +22,12 @@ serve ancora al proxy su Render.
 | `oraculus_logic.gd` | Funzioni pure, porting 1:1 di `inference.py`: `detect_language`, `classify_intent`, `hostility_tier`, `adjust_hostility`, `pulisci`, `build_prompt`, `build_system_msg`, `enforce_army_name`, `parse_riddle_response`. |
 | `oraculus_engine.gd` | `NPCDialogueEngine`: memoria per NPC, scelta del backend, fallback, sblocco di Malakai, indovinelli. |
 | `oraculus_backend_local.gd` | Inferenza locale via NobodyWho (llama.cpp). Sostituisce `llama_cpp.Llama`. |
-| `oraculus_backend_remote.gd` | Inferenza remota via `HTTPRequest`. Sostituisce `InferenceClient.chat_completion`. |
+| `oraculus_backend_remote.gd` | Inferenza remota via `HTTPRequest`, o via `HTTPClient` quando la risposta arriva in streaming. Sostituisce `InferenceClient.chat_completion`. |
 | `tests/remote_check.gd` | Collaudo del proxy su Render visto da GDScript. |
+| `tests/stream_check.gd` | Collaudo dello streaming: pulizia parziale, lettura SSE, percorso completo. |
+| `tests/persona_check.gd` | Collaudo delle battute in personaggio: filtro, note di regia, modello locale vero. |
+| `oraculus_guide.gd` | La guida del menu: schede scritte a mano in 5 lingue su lore, comandi, obiettivi, mappa e cosa fare. Solo GDScript, senza modello. |
+| `tests/guide_check.gd` | Collaudo della guida del menu e dei suoni dell'interfaccia. |
 | `../AIServerManager.gd` | Facciata sottile. Firma pubblica invariata: `make_request`, `is_server_ready`, `is_using_remote`, `server_started`, `server_failed`. |
 | `inference.py`, `ai_server.py` | Restano per il proxy su Render, piu' l'endpoint `POST /v1/chat/completions`. |
 
@@ -73,17 +77,18 @@ i nomi di proprieta', metodi e segnali dell'addon sono quelli che
 sostituito a ogni richiesta e che la catena di sampling viene accettata.
 
 ```
-godot --headless --path . res://ai/tests/local_check.tscn
+ORACULUS_BACKEND=locale godot --headless --path . res://ai/tests/local_check.tscn
 ```
 
-Stato attuale: **16/16 controlli superati** (~1 minuto su CPU: carica un
-modello da 1 GB e fa sei generazioni vere). Senza addon o senza modello si
+Stato attuale: **19/19 controlli superati** (~1 minuto su CPU: carica un
+modello da 1 GB e fa sette generazioni vere, l'ultima in streaming). Senza addon o senza modello si
 dichiara saltato invece di fallire.
 
 Il quarto test e' l'unico che esercita il **proxy su Render da GDScript**:
 `probe()`, `chat_completion()` e la catena completa `build_system_msg` → HTTP
 → `pulisci()` / `parse_riddle_response()`. Si costruisce un `OraculusEngine`
-suo e lo forza sul ramo remoto, perche' l'autoload preferirebbe il locale.
+suo e lo forza sul ramo remoto, perche' la gara dell'autoload potrebbe
+chiuderlo (vedi "Quale ramo: la gara").
 
 ```
 godot --headless --path . res://ai/tests/remote_check.tscn
@@ -94,6 +99,59 @@ rilevata, risposta in italiano, nome dell'esercito corretto da
 `enforce_army_name`). Senza rete o con il proxy senza inferenza si dichiara
 saltato invece di fallire — e in quel caso stampa il `last_error` del proxy,
 che e' il posto dove guardare per primo.
+
+Il quinto test copre lo **streaming** (vedi sotto): che il testo mostrato
+mentre arriva non faccia mai comparire cio' che `pulisci()` togliera', che
+un flusso SSE spezzato a caso — anche a meta' di una lettera accentata — si
+ricomponga identico, e il percorso completo contro il proxy.
+
+```
+godot --headless --path . res://ai/tests/stream_check.tscn
+```
+
+Stato attuale: **20/20** contro un proxy che fa streaming, **18/18** contro
+un deploy che non lo fa ancora (verifica che il client ricada sul JSON).
+
+Il sesto test verifica che al giocatore arrivi **il personaggio, non il
+modello** (vedi "Battute in personaggio" sotto): il filtro su un corpus di
+frasi da assistente e di battute legittime, le note di regia, e il modello
+locale vero su istruzioni di regia e domande in italiano, giudicate da un
+rilevatore indipendente dal filtro.
+
+```
+ORACULUS_BACKEND=locale godot --headless --path . res://ai/tests/persona_check.tscn
+```
+
+Stato attuale: **29/29 con il 1B attuale**, compreso il controllo dal vivo, da
+quando il turno del giocatore e' una battuta citata (vedi "Battute in
+personaggio", punto 4). Prima era 17/18: il controllo dal vivo trovava rifiuti
+da assistente.
+
+Il settimo test copre la **guida del menu** (vedi sotto) e i suoni
+dell'interfaccia: schede complete nelle cinque lingue e scritte solo con
+caratteri del font del menu, 126 domande in cinque lingue riconosciute, 24
+riformulate, la risposta piu' lunga che sta nel riquadro senza coprire il campo
+di testo, il clic dei pulsanti e il suono d'invio. Non carica il modello.
+
+```
+godot --headless --path . res://ai/tests/guide_check.tscn
+```
+
+Stato attuale: **27/27 controlli superati**.
+
+L'ottavo test copre la **voce degli NPC** (`oraculus/NPC/voce_sintetica.gd` e
+`voce_parlante.gd`): il testo delle caselle compare una lettera alla volta e
+ogni lettera si sente con un suono sintetico, come in Animal Crossing, con un
+tono per NPC (e per il Tutorial nel menu). Controlla i campioni delle 26
+lettere, i profili, la comparsa graduale, il silenzio per azioni fra
+asterischi e puntini, lo streaming che prosegue senza ripetere, un NPC vero e
+il menu.
+
+```
+godot --headless --path . res://ai/tests/voce_check.tscn
+```
+
+Stato attuale: **25/25 controlli superati**.
 
 Per controllare che tutti gli script del progetto compilino:
 
@@ -122,7 +180,7 @@ della release contiene anche macOS, iOS e Android (arm64), che vanno estratti
 a parte se ti servono — la preset di export Android li richiede.
 
 Senza l'addon il progetto compila e gira comunque: il backend locale si
-dichiara non disponibile e il motore passa al ramo remoto. I nomi delle
+dichiara non disponibile e la gara la vince il remoto. I nomi delle
 proprieta' di NobodyWho sono cambiati tra le versioni, quindi
 `oraculus_backend_local.gd` accede all'addon per riflessione con una lista di
 candidati per ogni proprieta', invece di riferirsi ai tipi per nome.
@@ -195,6 +253,9 @@ Tre momenti, e solo quelli:
 | caricamento della scena | `say_launch_message()` / `_on_server_started()` |
 | l'NPC viene colpito | `take_damage()` → `_react_to_hit()` |
 | il giocatore gli scrive | `receive_player_answer()` |
+
+I primi due sono battute ambientali: se il modello e' gia' al lavoro non
+aspettano e usano `FALLBACK` (vedi "La coda al caricamento della scena").
 
 **Entrare nell'area non genera piu' nulla.** Prima ne generava due volte:
 
@@ -320,11 +381,268 @@ Per confronto, il ramo remoto sta sui **2,5-2,9 s** a richiesta (rete piu'
 latenza HF), piu' il risveglio di Render se il servizio era fermo. Il ramo
 locale e' ora il piu' veloce dei due.
 
+### La coda al caricamento della scena
+
+Il tempo per battuta non era il problema piu' grosso. Al caricamento di
+`main.tscn` **ogni NPC chiede la sua presentazione al modello**, e gli NPC sono
+~40 (16 orchi, 14 fantasmi, 4 scheletri, piu' i personaggi): 40 generazioni in
+fila sull'unico worker locale. Nel log di gioco vanno dalle 12:52:37 alle
+12:53:24, **~47 s**, e la prima frase del giocatore a Levias e' partita solo
+dopo. Sul ramo remoto sarebbero 40 richieste insieme al proxy su Render.
+
+Ora una battuta **ambientale** — senza frase del cavaliere: la presentazione e
+la reazione a un colpo — non si mette in coda: se una generazione e' gia' in
+corso (`OraculusEngine._in_volo`, dialoghi e indovinelli), l'NPC riceve subito
+una battuta di `FALLBACK` e la risposta ha `"source": "occupato"`. La frase del
+giocatore invece va sempre al modello, e aspetta al massimo la generazione in
+corso.
+
+Simulato con 40 presentazioni insieme e poi "thanks" a Levias, 1B locale:
+39 presentazioni ripiegano subito, 1 va al modello, e il giocatore legge la
+risposta completa a **~3,2 s** (prima: ~47 s di coda piu' la sua). Senza coda
+la risposta resta sul secondo e mezzo.
+
+### Dove va il tempo di una battuta
+
 Quel che resta del secondo e' diviso fra ~850 ms per rileggere gli 11 KB di
 system prompt a ogni richiesta e ~500 ms di generazione vera. Il prompt si
 rilegge perche' `reset_context()` butta la cache, e si deve buttare perche'
 `_mood_line()` scrive l'ostilita' esatta nel prompt, che cambia a ogni turno.
 Chi volesse scendere sotto il secondo deve partire da li'.
+
+## Streaming delle risposte
+
+Lo streaming non accorcia la risposta, accorcia l'attesa: l'NPC mostra le
+prime parole appena il modello le scrive, al posto dei puntini, e la battuta
+cresce sotto gli occhi del giocatore. Col proxy su Render la risposta
+intera arriva in 3-4 s; con lo streaming si comincia a leggere al primo
+token. Quanto presto arrivi dipende dal provider HF: va misurato dopo il
+deploy (`stream_check` stampa i tempi).
+
+Il percorso:
+
+| Livello | Cosa fa |
+| --- | --- |
+| `ai_server.py` | Con `"stream": true` su `/v1/chat/completions` risponde in Server-Sent Events, nel formato di OpenAI (`choices[0].delta.content`, poi `data: [DONE]`). |
+| `inference.py` | `raw_chat_stream()`: un generatore di frammenti, dal router HF o da `llama_cpp`. |
+| `oraculus_backend_remote.gd` | `chat_completion_stream()`: legge il flusso a pezzi con `HTTPClient` su desktop e con `fetch()` + `ReadableStream` su Web. |
+| `oraculus_backend_local.gd` | `generate(..., on_text)`: NobodyWho emetteva gia' un token per evento, per contarli. |
+| `oraculus_engine.gd` | Passa il testo da `pulisci_parziale()` + `enforce_army_name()`, e lo inoltra solo quando cambia. |
+| `AIServerManager.gd` | `make_request("chat", payload, on_partial)`. Il terzo argomento e' opzionale: senza, niente streaming. |
+| NPC e menu | `_show_partial()` ferma i puntini e scrive la battuta parziale. Quella definitiva arriva come prima. |
+
+Cose da sapere:
+
+- **Il testo finale puo' cambiare di poco nella coda.** Durante lo streaming
+  si mostra `pulisci_parziale()`, che toglie le stesse cose di `pulisci()` ma
+  non chiude la frase; alla fine `pulisci()` sul testo intero aggiunge il
+  punto o taglia all'ultima punteggiatura. Mostrare il punto a meta' lo
+  farebbe comparire e sparire a ogni token.
+- **Cio' che `pulisci()` togliera' non compare mai.** Un prefisso ancora a
+  meta' ("Lev" di "Levias:") o una parentesi / un `<|` non ancora chiusi
+  vengono trattenuti finche' non si sa come finiscono.
+- **Gli indovinelli non vanno in streaming**: servono interi per estrarre la
+  riga `ANSWER:`, e senza quella la porta non si apre.
+- **Il proxy va ridistribuito** (`ai_server.py` e `inference.py`). Finche' non
+  lo e', il client riceve il JSON di sempre e lo legge come prima, senza
+  parziali: niente si rompe. Il deploy nuovo si riconosce da `"stream": true`
+  in `/health`.
+- In `ai_server.py` il primo frammento si chiede **prima** di mandare gli
+  header: se il provider rifiuta la richiesta (modello ritirato, credito
+  finito) l'errore torna come JSON con il suo codice, come senza streaming.
+- Il flusso si chiude con `Connection: close`, senza `Content-Length`. Senza
+  quell'header `HTTPClient` di Godot presume keep-alive e tratta la risposta
+  come **priva di corpo** — verificato, era il primo fallimento del test.
+- Ogni flusso remoto usa un `InferenceClient` suo, chiuso a fine risposta:
+  quello condiviso tiene aperta ogni risposta nel suo `ExitStack`, e un flusso
+  interrotto (il giocatore cambia scena) non restituirebbe mai la connessione.
+- In locale il guadagno e' piccolo: il primo testo arriva dopo ~900 ms su
+  ~1000, perche' quasi tutto il tempo e' la rilettura del system prompt, non
+  la generazione.
+
+## Battute in personaggio
+
+Ogni NPC deve rispondere come il suo `personalita` in `NPC_DATA`, e al
+giocatore non deve arrivare niente del modello: ne' il prompt ripetuto, ne'
+l'assistente che rifiuta o commenta. Succedeva, per tre cause diverse.
+
+**1. Le istruzioni di regia arrivavano come frasi del cavaliere.** Gli
+script mandavano "Announce presence in ONE short sentence (max 10 words)" o
+"The knight just struck you. Snarl ONE short furious line" come
+`player_input`. Il modello le leggeva come dette dal cavaliere: ci rispondeva
+("Grazie per il messaggio!"), le ripeteva ("devi rispondere con 12 parole o
+meno"), e finivano nella memoria dell'NPC come battute del giocatore. Ora
+viaggiano in un campo a parte:
+
+```gdscript
+_send_to_ai_server("", "The knight just struck you. Snarl ONE short furious line (max 10 words).")
+_send_to_ai_server(answer, "Respond with ONE short angry growl (max 8 words).")  # ogre, skeletons
+```
+
+`direction` arriva al modello come nota fra parentesi quadre dentro il turno
+(`build_direction_msg()`), non entra nella memoria, non passa da intent e
+sblocco di Malakai, e non cambia l'ostilita'. Misurato sul 1B, 24 generazioni
+per variante: come nota nel turno **0** uscite fuori personaggio; nel system
+prompt il modello rifiutava spesso ("Non posso fornire una risposta che
+contenga contenuti espliciti"), quindi e' stata scartata.
+
+**2. `pulisci()` non vede le frasi da assistente.** Toglie prefissi e righe
+sporche, non frasi come "Mi dispiace, ma non posso continuare la storia" o
+"Posso aiutarti con qualcos'altro?". `filtra_fuori_personaggio()` le toglie
+frase per frase, prima e dopo `pulisci()` (che resta identica al Python), con
+regole strette: "Mi dispiace, ma non posso aiutarti, cavaliere" detto da un
+NPC ostile resta. Se non rimane niente la battuta si rifa' una volta
+(`CHAT_ATTEMPTS`), poi si ripiega su `FALLBACK`. In streaming un rifiuto a
+meta' non compare: le frasi che cominciano come quelle da assistente si
+mostrano solo finite.
+
+**3. Il modello da 1B non regge l'italiano con questo prompt.** E' la causa
+piu' grossa, e nessun filtro la chiude davvero: il 1B inventa ogni volta una
+forma nuova di rifiuto ("non posso continuare a giocare", "sono stato
+tradotto in italiano", "personaggi di fumetti"). Misurato su 27 generazioni
+(6 domande e 3 regie, NPC diversi), con un rilevatore indipendente dal filtro:
+
+| Modello locale | Battute sospette in italiano | in inglese | Primo testo | Risposta completa |
+| --- | --- | --- | --- | --- |
+| Llama-3.2-1B Q6_K_L (1,08 GB) | 12/27 | 1/27 | ~1,0 s | ~1,3 s |
+| Llama-3.2-3B Q4_K_M (2,02 GB) | 0/27 (1 falso allarme) | — | ~2,0 s | ~2,6 s |
+
+Tempi su RTX 3050 6 GB, tutti i layer in GPU. Il 1B in inglese regge: e' la
+combinazione di 11 KB di contesto in inglese con la risposta in italiano che
+lo manda in modalita' assistente. Una cornice di finzione nel prompt ("stai
+dando voce a un personaggio di un videogioco") e' stata provata e aiuta poco
+(12/27 -> 9/27): non e' stata adottata.
+
+Il 3B si prova senza toccare niente:
+`ORACULUS_MODEL_PATH=/percorso/Llama-3.2-3B-Instruct-Q4_K_M.gguf`. Per
+adottarlo: `MODEL_PATH` in `inference.py`, poi `python3 tools/gen_oraculus_data.py`.
+
+**4. Il turno del giocatore sembrava una richiesta all'assistente.** Il
+giocatore scrive "thanks" a Levias, e al giocatore arriva: "I cannot fulfill
+your request. I am just an AI model, it is not within my programming or
+ethical guidelines to describe scene involving romantic relationship between
+adult and minor." Il turno arrivava nudo ("thanks\n\nAnswer in English."), e
+il 1B lo leggeva come un messaggio rivolto a lui. Ora `decorate_user_msg()` lo
+scrive con la stessa cornice delle note di regia, che non uscivano mai fuori
+personaggio:
+
+```
+The knight says: "thanks"
+Reply with Levias's spoken words only, in character.
+
+Answer in English.
+```
+
+Misurato sul 1B, Levias e Rigon, 7 domande ("thanks", "grazie", "Chi sei?",
+"What did you do to the children?", ...) × 3 generazioni, rilevatore
+indipendente dal filtro, falsi allarmi ricontrollati a mano:
+
+| Turno del giocatore | Battute da assistente | Tempo medio |
+| --- | --- | --- |
+| nudo (prima) | 27/42 | ~1,6 s |
+| battuta citata (ora) | 3/42 | ~1,7 s |
+
+Anche i turni di storico del ramo remoto passano da `knight_line()`, per non
+mescolare due formati nella stessa conversazione. Con la cornice nuova il 1B
+risponde quasi sempre fra virgolette: `_ripulisci_segni()` toglie quelle che
+racchiudono l'intera battuta.
+
+Le 3 rimaste le prende il filtro: `FUORI_PERSONAGGIO` ha ora le forme del
+rifiuto di sicurezza dei Llama uscite nelle misure ("I cannot fulfill your
+request", "I can't help you with that", "content that promotes...", "Is there
+anything else I can help you with?", "linee guida", ...), e confronta le frasi
+con l'apostrofo dritto: il 1B scrive spesso `can’t`, e le regole non lo
+vedevano. `persona_check` le verifica una per una in `RIFIUTI_MISURATI`, e
+pretende che spariscano per intero.
+
+Provate e scartate, perche' le misure non le sostengono:
+
+- **Doppio BOS.** Il log di llama.cpp avvisa `check_double_bos_eos: ... the
+  final prompt starts with 2 BOS tokens`: il template di Llama 3.2 comincia con
+  `{{- bos_token }}` e il `.gguf` non ha `tokenizer.ggml.add_bos_token`, quindi
+  NobodyWho ne aggiunge un secondo. Una copia del modello con il flag a
+  `false` toglie l'avviso ma non i rifiuti (39 contro 31 su 63, nel rumore).
+  L'avviso si puo' ignorare.
+- **Personaggio di Rigon riscritto** senza l'abuso esplicito: stessi rifiuti
+  (1 e 2 su 32, con la cornice nuova).
+- **"You REFUSE to share what you know" ammorbidito**: nessun guadagno sopra la
+  cornice. Con in piu' lo `STORY_CONTEXT` spostato dopo il personaggio i
+  rifiuti sono scesi a 0/42, ma e' stata la variante piu' lenta (~2,2 s contro
+  ~1,7 s a battuta) e le 3 che restano senza la prende gia' il filtro.
+
+## La guida del menu
+
+Il menu risponde alle domande del giocatore su lore, comandi, obiettivi,
+struttura del castello e cosa fare. Prima era il personaggio `Tutorial`
+attraverso il modello: lento (tutto `STORY_CONTEXT` a ogni domanda), con i
+comandi sbagliati nel prompt ("sprint with Shift or LT", ma e' LB), con
+l'ostilita' di default a 70 (il menu non la passava), che nel prompt gli
+diceva di non rivelare quello che sa, e con il filtro delle battute fuori
+personaggio che avrebbe tolto proprio le frasi da guida ("come giocare",
+"nuova partita").
+
+Ora `oraculus_guide.gd` ha una trentina di **schede scritte a mano**, in tutte
+e cinque le lingue del menu, scelte dalle parole chiave della domanda (in
+qualunque lingua sia scritta): risposta in meno di un millisecondo, anche
+prima che il modello finisca di caricarsi. Se nessuna scheda corrisponde, il
+menu lo dice ed elenca cosa si puo' chiedere. Le schede non svelano i segreti
+del castello: quelli restano agli spiriti.
+
+**Il modello qui non c'e', di proposito.** Misurato sul 1B locale:
+
+| Ruolo del modello | Risultato |
+| --- | --- |
+| rispondere con le schede come unici fatti | inventa quasi sempre ("il gioco dura circa 6-8 ore", "yes, there is a final boss"); ~1,9 s |
+| solo scegliere la scheda giusta (id in italiano) | 3/24 giuste, ~0,3 s |
+| id in inglese | 2/24 |
+| id in inglese + esempi nel prompt | 4/24 |
+| parole chiave, nessun modello | 24/24 sulle stesse domande; 32/40 su 40 domande nuove prima di ritoccare le chiavi |
+
+Una risposta sbagliata detta con sicurezza e' peggio di un "non lo so" che
+elenca cosa chiedere. Con un modello piu' grande (il 3B, o l'8B remoto) la
+scelta della scheda potrebbe tornare utile: va rimisurata prima.
+
+Per aggiungere o correggere una risposta basta modificare `SCHEDE` e rilanciare
+`guide_check`: il test controlla le cinque lingue, i caratteri e che le
+domande note trovino ancora la scheda giusta.
+
+## Quale ramo: la gara
+
+All'avvio `OraculusEngine.setup()` fa partire insieme i due rami, ciascuno
+con una generazione vera e minima: il locale carica il modello e genera una
+parola, il remoto chiede 4 token al proxy (`verifica()`). **Il primo che
+risponde diventa il ramo della partita, e l'altro viene chiuso**: il modello
+locale liberato da RAM e VRAM (a caricamento finito, se era ancora a meta'),
+oppure il remoto che non riceve piu' richieste.
+
+Un errore non e' una risposta: 402 (credito HF finito), 404, 500, rete giu',
+10 s senza risposta (`REMOTE_RACE_TIMEOUT`) fanno vincere il locale. Per
+questo la prova e' una generazione e non `/health`, che risponde `"ok"`
+anche a credito finito.
+
+| Situazione | Vince | Pronto in |
+| --- | --- | --- |
+| proxy sveglio, credito ok | testa a testa: il primo token via HF e' arrivato in ~1 s nelle misure, il 1B e' pronto in ~0,9 s | ~1 s |
+| credito HF finito (402) | locale | ~0,9 s |
+| proxy irraggiungibile | locale | ~0,9 s |
+| Render in sleep | locale (il remoto ci mette 30-60 s a svegliarsi) | ~0,9 s |
+| Web | remoto, l'unico che c'e' | — |
+
+Misurato sul PC di sviluppo. Il caso "credito ok" non si e' potuto provare
+dal vivo (credito finito): con il proxy finto, che risponde in 22 ms, vince
+sempre il remoto; con quello vero i due tempi sono vicini, quindi il ramo
+puo' cambiare da un avvio all'altro.
+
+Se non risponde nessuno si tiene il remoto non verificato, come prima: le
+richieste falliscono una per una con le battute di `FALLBACK`.
+
+La scelta non si rifa' durante la partita: se il ramo vincente smette di
+rispondere dopo (Render che torna in sleep dopo 15 minuti senza richieste, il
+credito che finisce a meta'), gli NPC ripiegano su `FALLBACK` fino al
+prossimo avvio.
+
+`ORACULUS_BACKEND=locale` o `=remoto` salta la gara e usa quel ramo: serve ai
+collaudi che vogliono esercitarne uno preciso.
 
 ## Inferenza remota
 

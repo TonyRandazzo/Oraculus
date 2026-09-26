@@ -7,7 +7,11 @@
 # l'unico che dimostra che i nomi di proprieta', metodi e segnali
 # dell'addon sono quelli che oraculus_backend_local.gd si aspetta.
 #
-#   godot --headless --path . res://ai/tests/local_check.tscn
+#   ORACULUS_BACKEND=locale godot --headless --path . res://ai/tests/local_check.tscn
+#
+# ORACULUS_BACKEND=locale salta la gara di OraculusEngine.setup(): senza, se
+# il proxy remoto risponde prima il ramo locale viene chiuso e il test si
+# dichiara saltato.
 #
 # Serve l'addon in addons/nobodywho/ e il modello (vedi ai/README.md): senza,
 # il test si dichiara saltato invece di fallire.
@@ -58,6 +62,7 @@ func _ready() -> void:
 	await _test_chat(server)
 	await _test_persona(server)
 	await _test_riddle(server)
+	await _test_streaming(server)
 
 	print("")
 	if _ko.is_empty():
@@ -163,3 +168,32 @@ func _test_riddle(server: Node) -> void:
 	_check("l'indovinello ha un testo", not testo.is_empty())
 	_check("l'indovinello ha una risposta", not risposta.is_empty())
 	_check("la risposta e' una parola sola", not risposta.strip_edges().contains(" "), risposta)
+
+
+## Lo streaming in locale: i parziali arrivano mentre il worker genera, sul
+## thread principale (aggiornano una Label, e toccare l'interfaccia da un
+## altro thread non e' sicuro), e prima che la richiesta si chiuda.
+func _test_streaming(server: Node) -> void:
+	print("  [5] streaming")
+	var parziali: Array = []
+	var sul_main := {"si": true}
+	var t0 := Time.get_ticks_msec()
+	var on_partial := func(testo: String) -> void:
+		if OS.get_thread_caller_id() != OS.get_main_thread_id():
+			sul_main["si"] = false
+		parziali.append([Time.get_ticks_msec() - t0, testo])
+	var res: Dictionary = await server.make_request("chat", {
+		"player_input": "Who guards this place?",
+		"npc_name": "Levias",
+		"hostility": 70,
+	}, on_partial)
+	var t_fine := Time.get_ticks_msec() - t0
+	print("      %d aggiornamenti; primo testo a %s ms, risposta completa a %d ms" % [
+		parziali.size(), str(parziali[0][0]) if not parziali.is_empty() else "-", t_fine])
+	print("      finale: «%s»" % String(res.get("response", "")))
+	_check("in locale arrivano piu' aggiornamenti parziali", parziali.size() >= 2,
+		str(parziali.size()))
+	_check("i parziali arrivano sul thread principale", bool(sul_main["si"]))
+	if not parziali.is_empty():
+		_check("il primo testo arriva prima della risposta completa",
+			int(parziali[0][0]) < t_fine, "%d vs %d ms" % [parziali[0][0], t_fine])

@@ -67,13 +67,18 @@ func get_api_url() -> String:
 
 ## Stesso contratto del vecchio POST su ai_server.py: gli endpoint sono
 ## rimasti "chat", "riddle", "reset", "set_context", "health".
-func make_request(endpoint: String, data: Dictionary = {}) -> Variant:
+##
+## on_partial vale solo per "chat": riceve la battuta mentre il modello la
+## scrive (vedi OraculusEngine.generate_response). La risposta restituita
+## resta quella definitiva, da mostrare comunque alla fine.
+func make_request(endpoint: String, data: Dictionary = {},
+		on_partial: Callable = Callable()) -> Variant:
 	if _engine == null:
 		return {"error": "Motore non inizializzato"}
 
 	match endpoint:
 		"chat":
-			return await _engine.generate_response(data)
+			return await _engine.generate_response(data, on_partial)
 		"riddle":
 			return await _engine.generate_door_riddle(data)
 		"reset":

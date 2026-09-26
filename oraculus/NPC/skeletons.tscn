@@ -1,10 +1,6 @@
-[gd_scene load_steps=70 format=3 uid="uid://ys1qoe2vjc5g"]
+[gd_scene format=3 uid="uid://ys1qoe2vjc5g"]
 
-[ext_resource type="Texture2D" uid="uid://kkgx124d1uyh" path="res://oraculus/NPC/Sprite-Skeletons/Attack/0.png" id="1_cg47v"]
-[ext_resource type="Script" path="res://oraculus/NPC/skeletons.gd" id="1_hnf5g"]
-[ext_resource type="Texture2D" uid="uid://bo4gpn0vlb84x" path="res://oraculus/NPC/Sprite-Skeletons/Attack/1.png" id="2_j8jmo"]
-[ext_resource type="Texture2D" uid="uid://dcto6xd3bap2f" path="res://oraculus/NPC/Sprite-Skeletons/Attack/2.png" id="3_gpmqh"]
-[ext_resource type="Texture2D" uid="uid://bt4wl7jsb6ck6" path="res://oraculus/NPC/Sprite-Skeletons/Attack/3.png" id="4_fsydw"]
+[ext_resource type="Script" uid="uid://epnw3wvn2pu0" path="res://oraculus/NPC/skeletons.gd" id="1_hnf5g"]
 [ext_resource type="Texture2D" uid="uid://mf3vv6ic26hg" path="res://oraculus/NPC/Sprite-Skeletons/Attack/4.png" id="5_gubha"]
 [ext_resource type="Texture2D" uid="uid://cctvx77dvi6pg" path="res://oraculus/NPC/Sprite-Skeletons/Attack/5.png" id="6_jj1ml"]
 [ext_resource type="Texture2D" uid="uid://u8ouci5jauh" path="res://oraculus/NPC/Sprite-Skeletons/Attack/6.png" id="7_6wkvl"]
@@ -59,23 +55,11 @@
 [ext_resource type="Texture2D" uid="uid://hg4qk4757rns" path="res://oraculus/NPC/Sprite-Skeletons/Walk/11.png" id="56_p8acn"]
 [ext_resource type="Texture2D" uid="uid://de8vd6jcfqv6w" path="res://oraculus/NPC/Sprite-Skeletons/Walk/12.png" id="57_801x7"]
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="58_leovs"]
-[ext_resource type="Script" path="res://oraculus/NPC/DialogueBox.gd" id="59_gcsra"]
+[ext_resource type="Script" uid="uid://78iinw47nr04" path="res://oraculus/NPC/DialogueBox.gd" id="59_gcsra"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_ovafn"]
 animations = [{
 "frames": [{
-"duration": 1.0,
-"texture": ExtResource("1_cg47v")
-}, {
-"duration": 1.0,
-"texture": ExtResource("2_j8jmo")
-}, {
-"duration": 1.0,
-"texture": ExtResource("3_gpmqh")
-}, {
-"duration": 1.0,
-"texture": ExtResource("4_fsydw")
-}, {
 "duration": 1.0,
 "texture": ExtResource("5_gubha")
 }, {
@@ -118,7 +102,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("18_6ennf")
 }],
-"loop": true,
+"loop": 1,
 "name": &"attack",
 "speed": 15.0
 }, {
@@ -168,7 +152,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("33_64aah")
 }],
-"loop": true,
+"loop": 1,
 "name": &"death",
 "speed": 15.0
 }, {
@@ -206,7 +190,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("44_mpcso")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle",
 "speed": 10.0
 }, {
@@ -250,7 +234,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("57_801x7")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk",
 "speed": 15.0
 }]
@@ -311,34 +295,34 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_wiofy"]
 _data = {
-"RESET": SubResource("Animation_331hb"),
-"hit_flash": SubResource("Animation_dm5k4")
+&"RESET": SubResource("Animation_331hb"),
+&"hit_flash": SubResource("Animation_dm5k4")
 }
 
-[node name="skeletons" type="CharacterBody2D"]
+[node name="skeletons" type="CharacterBody2D" unique_id=1620271929]
 script = ExtResource("1_hnf5g")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(3, -13)
-scale = Vector2(0.8, 0.8)
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1101806161]
+position = Vector2(3.0000002, -12.000001)
+scale = Vector2(-0.8, 0.8)
 sprite_frames = SubResource("SpriteFrames_ovafn")
-animation = &"death"
-frame_progress = 0.580087
+animation = &"idle"
+frame_progress = 0.33657888
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1067890944]
 position = Vector2(0, -18.5)
 shape = SubResource("RectangleShape2D_8jfpg")
 
-[node name="Area2D" type="Area2D" parent="."]
+[node name="Area2D" type="Area2D" parent="." unique_id=1664506822]
 position = Vector2(0, -24)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=760714412]
 position = Vector2(-6, -5.25)
 shape = SubResource("RectangleShape2D_kpv57")
 
-[node name="Timer" type="Timer" parent="."]
+[node name="Timer" type="Timer" parent="." unique_id=80362141]
 
-[node name="Dialogue" type="Label" parent="."]
+[node name="Dialogue" type="Label" parent="." unique_id=25456598]
 z_index = 4095
 offset_left = 4.0
 offset_top = -60.0
@@ -351,30 +335,28 @@ text = "*La voce demoniaca echeggia...*"
 autowrap_mode = 3
 script = ExtResource("59_gcsra")
 
-[node name="HitBox" type="Area2D" parent="." groups=["hit_demon"]]
+[node name="HitBox" type="Area2D" parent="." unique_id=337630376 groups=["hit_demon"]]
 position = Vector2(0, -24)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox" unique_id=1783620097]
 position = Vector2(0.999999, 2)
 shape = SubResource("RectangleShape2D_v0f2p")
 
-[node name="AttackBox" type="Area2D" parent="." groups=["demon"]]
+[node name="AttackBox" type="Area2D" parent="." unique_id=1252170479 groups=["demon"]]
 position = Vector2(40, -24)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox" unique_id=1266902777]
 position = Vector2(-40.25, 2)
 shape = SubResource("RectangleShape2D_hfp2k")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-"": SubResource("AnimationLibrary_wiofy")
-}
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=520080158]
+libraries/ = SubResource("AnimationLibrary_wiofy")
 
-[node name="AttackSound" type="AudioStreamPlayer2D" parent="."]
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="." unique_id=1671686737]
 position = Vector2(0, -24)
 
-[node name="HurtSound" type="AudioStreamPlayer2D" parent="."]
+[node name="HurtSound" type="AudioStreamPlayer2D" parent="." unique_id=1270764609]
 position = Vector2(0, -24)
 
-[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="." unique_id=607998582]
 position = Vector2(0, -24)

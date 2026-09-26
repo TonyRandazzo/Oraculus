@@ -11,6 +11,12 @@ var fade_in_player: AudioStreamPlayer
 var music1_default_volume = -30.0
 var music2_default_volume = -10.0
 
+## Le musiche vanno sul bus "Music": lo regola il cursore Musica delle Opzioni.
+func _ready() -> void:
+	for figlio in get_children():
+		if figlio is AudioStreamPlayer:
+			figlio.bus = &"Music"
+
 func _physics_process(delta: float) -> void:
 	pass
 

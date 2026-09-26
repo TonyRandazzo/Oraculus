@@ -51,6 +51,30 @@ func language_code() -> String:
 	var i := language_index()
 	return String(LANGUAGES[i]["code"]) if i >= 0 else "EN"
 
+# ── Volumi ────────────────────────────────────────────────────────────────────
+# I cursori delle Opzioni regolano questi due bus (default_bus_layout.tres):
+# "Music" per le musiche, "SFX" per tutti gli altri suoni. Il valore va da 0 a
+# 1, si applica subito e si salva con le altre impostazioni.
+
+const VOLUME_BUS: Array[StringName] = [&"Music", &"SFX"]
+
+func volume(bus: StringName) -> float:
+	var i := AudioServer.get_bus_index(bus)
+	if i < 0 or AudioServer.is_bus_mute(i):
+		return 0.0
+	return db_to_linear(AudioServer.get_bus_volume_db(i))
+
+func set_volume(bus: StringName, valore: float, salva: bool = true) -> void:
+	var i := AudioServer.get_bus_index(bus)
+	if i < 0:
+		return
+	valore = clampf(valore, 0.0, 1.0)
+	# A zero si spegne: linear_to_db(0) e' -inf.
+	AudioServer.set_bus_mute(i, valore <= 0.0)
+	AudioServer.set_bus_volume_db(i, linear_to_db(maxf(valore, 0.0001)))
+	if salva:
+		_save_settings()
+
 func _load_settings() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS_PATH) != OK:
@@ -58,6 +82,9 @@ func _load_settings() -> void:
 	var salvata := String(cfg.get_value("ai", "language", ai_language))
 	if language_index(salvata) >= 0:
 		ai_language = salvata
+	for bus in VOLUME_BUS:
+		if cfg.has_section_key("audio", bus):
+			set_volume(bus, float(cfg.get_value("audio", bus)), false)
 
 func _save_settings() -> void:
 	var cfg := ConfigFile.new()
@@ -65,6 +92,8 @@ func _save_settings() -> void:
 	# e sovrascriverlo in blocco le cancellerebbe.
 	cfg.load(SETTINGS_PATH)
 	cfg.set_value("ai", "language", ai_language)
+	for bus in VOLUME_BUS:
+		cfg.set_value("audio", bus, volume(bus))
 	cfg.save(SETTINGS_PATH)
 
 func _new_session() -> void:

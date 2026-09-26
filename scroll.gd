@@ -1,7 +1,7 @@
 extends Node2D
 
 var item_name = "Scroll"
-var item_description = "it contains the password for a gate."
+var item_description = "Its magic forces open any gate, riddle or trial."
 
 
 func _on_area_2d_area_entered(area: Area2D) -> void:
@@ -17,5 +17,8 @@ func _on_area_2d_area_entered(area: Area2D) -> void:
 				child.item_name = item_name
 				child.item_description = item_description
 				child.add_to_group("door scroll")
+				var suoni := get_node_or_null("/root/UiSounds")
+				if suoni != null:
+					suoni.play_pickup()
 				queue_free()
 				return

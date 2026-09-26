@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://hii6shqpmp10"]
+[gd_scene format=3 uid="uid://hii6shqpmp10"]
 
-[ext_resource type="Script" path="res://options.gd" id="1_qevvq"]
+[ext_resource type="Script" uid="uid://bopbq8fod7ar0" path="res://options.gd" id="1_qevvq"]
 [ext_resource type="FontFile" uid="uid://d0odttbpbgbh4" path="res://oraculus/thirdparty/kenney/fonts/Fonts/Kenney Pixel.ttf" id="2_alc1y"]
 [ext_resource type="Texture2D" uid="uid://cthx7chspsytg" path="res://oraculus/HUD/Button_52x14.png" id="3_opqmg"]
+[ext_resource type="Texture2D" uid="uid://cdruh1yb1se6p" path="res://oraculus/HUD/SliderKnob_7x12.png" id="4_manopola"]
+[ext_resource type="Texture2D" uid="uid://ct02fk4qylbum" path="res://oraculus/HUD/SliderKnob_7x12_hover.png" id="5_manopola_su"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k2dk0"]
 bg_color = Color(0.823529, 0.788235, 0.647059, 1)
@@ -16,7 +18,23 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="Options" type="Control"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_binario"]
+texture = ExtResource("3_opqmg")
+texture_margin_left = 6.0
+texture_margin_top = 5.0
+texture_margin_right = 6.0
+texture_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pieno"]
+texture = ExtResource("3_opqmg")
+texture_margin_left = 6.0
+texture_margin_top = 5.0
+texture_margin_right = 6.0
+texture_margin_bottom = 5.0
+modulate_color = Color(0.86, 0.55, 0.36, 1)
+
+[node name="Options" type="Control" unique_id=11073332]
+process_mode = 3
 z_index = 4096
 layout_mode = 3
 anchors_preset = 15
@@ -26,29 +44,35 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_qevvq")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=153630704]
 layout_mode = 0
 offset_left = -2.0
 offset_right = 1073.0
-offset_bottom = 499.0
+offset_bottom = 648.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_k2dk0")
 
-[node name="ProgressBar" type="ProgressBar" parent="."]
+[node name="Musica" type="HSlider" parent="." unique_id=45979053]
 layout_mode = 0
 offset_left = 147.0
-offset_top = 170.0
-offset_right = 923.0
-offset_bottom = 197.0
-value = 50.0
-show_percentage = false
+offset_top = 99.5
+offset_right = 341.0
+offset_bottom = 111.5
+scale = Vector2(4, 4)
+theme_override_icons/grabber = ExtResource("4_manopola")
+theme_override_icons/grabber_highlight = ExtResource("5_manopola_su")
+theme_override_icons/grabber_disabled = ExtResource("4_manopola")
+theme_override_styles/slider = SubResource("StyleBoxTexture_binario")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_pieno")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_pieno")
+value = 100.0
 
-[node name="Dialogue" type="Label" parent="."]
+[node name="Dialogue" type="Label" parent="." unique_id=1808592189]
 z_index = 4096
 layout_mode = 0
 offset_left = 336.0
-offset_top = 118.0
+offset_top = 58.0
 offset_right = 727.0
-offset_bottom = 157.0
+offset_bottom = 97.0
 theme_override_fonts/font = ExtResource("2_alc1y")
 theme_override_font_sizes/font_size = 50
 text = "Music"
@@ -57,22 +81,28 @@ vertical_alignment = 1
 autowrap_mode = 2
 uppercase = true
 
-[node name="ProgressBar2" type="ProgressBar" parent="."]
+[node name="SFX" type="HSlider" parent="." unique_id=837438403]
 layout_mode = 0
 offset_left = 147.0
-offset_top = 274.0
-offset_right = 923.0
-offset_bottom = 301.0
-value = 50.0
-show_percentage = false
+offset_top = 203.5
+offset_right = 341.0
+offset_bottom = 215.5
+scale = Vector2(4, 4)
+theme_override_icons/grabber = ExtResource("4_manopola")
+theme_override_icons/grabber_highlight = ExtResource("5_manopola_su")
+theme_override_icons/grabber_disabled = ExtResource("4_manopola")
+theme_override_styles/slider = SubResource("StyleBoxTexture_binario")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_pieno")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_pieno")
+value = 100.0
 
-[node name="Dialogue2" type="Label" parent="."]
+[node name="Dialogue2" type="Label" parent="." unique_id=403880479]
 z_index = 4096
 layout_mode = 0
 offset_left = 336.0
-offset_top = 222.0
+offset_top = 162.0
 offset_right = 727.0
-offset_bottom = 261.0
+offset_bottom = 201.0
 theme_override_fonts/font = ExtResource("2_alc1y")
 theme_override_font_sizes/font_size = 50
 text = "SFX"
@@ -81,7 +111,13 @@ vertical_alignment = 1
 autowrap_mode = 2
 uppercase = true
 
-[node name="TextureButton" type="TextureButton" parent="."]
+[node name="Continue" type="Control" parent="." unique_id=33218389]
+anchors_preset = 0
+offset_top = -90.0
+offset_right = 40.0
+offset_bottom = -50.0
+
+[node name="TextureButton" type="TextureButton" parent="Continue" unique_id=1963997800]
 process_mode = 3
 layout_mode = 0
 offset_left = 426.0
@@ -95,7 +131,77 @@ texture_disabled = ExtResource("3_opqmg")
 texture_focused = ExtResource("3_opqmg")
 stretch_mode = 0
 
-[node name="Dialogue3" type="Label" parent="."]
+[node name="Dialogue3" type="Label" parent="Continue" unique_id=628907586]
+z_index = 4096
+layout_mode = 0
+offset_left = 337.0
+offset_top = 392.0
+offset_right = 728.0
+offset_bottom = 431.0
+theme_override_fonts/font = ExtResource("2_alc1y")
+theme_override_font_sizes/font_size = 50
+text = "Continue"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+uppercase = true
+
+[node name="Restart" type="Control" parent="." unique_id=1031315377]
+anchors_preset = 0
+offset_top = 34.0
+offset_right = 40.0
+offset_bottom = 74.0
+
+[node name="TextureButton" type="TextureButton" parent="Restart" unique_id=2016659292]
+process_mode = 3
+layout_mode = 0
+offset_left = 426.0
+offset_top = 387.0
+offset_right = 639.0
+offset_bottom = 442.0
+texture_normal = ExtResource("3_opqmg")
+texture_pressed = ExtResource("3_opqmg")
+texture_hover = ExtResource("3_opqmg")
+texture_disabled = ExtResource("3_opqmg")
+texture_focused = ExtResource("3_opqmg")
+stretch_mode = 0
+
+[node name="Dialogue3" type="Label" parent="Restart" unique_id=813888664]
+z_index = 4096
+layout_mode = 0
+offset_left = 337.0
+offset_top = 392.0
+offset_right = 728.0
+offset_bottom = 431.0
+theme_override_fonts/font = ExtResource("2_alc1y")
+theme_override_font_sizes/font_size = 50
+text = "Restart"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+uppercase = true
+
+[node name="Exit" type="Control" parent="." unique_id=379261799]
+anchors_preset = 0
+offset_top = 151.0
+offset_right = 40.0
+offset_bottom = 191.0
+
+[node name="TextureButton" type="TextureButton" parent="Exit" unique_id=1391647236]
+process_mode = 3
+layout_mode = 0
+offset_left = 426.0
+offset_top = 387.0
+offset_right = 639.0
+offset_bottom = 442.0
+texture_normal = ExtResource("3_opqmg")
+texture_pressed = ExtResource("3_opqmg")
+texture_hover = ExtResource("3_opqmg")
+texture_disabled = ExtResource("3_opqmg")
+texture_focused = ExtResource("3_opqmg")
+stretch_mode = 0
+
+[node name="Dialogue3" type="Label" parent="Exit" unique_id=1484583167]
 z_index = 4096
 layout_mode = 0
 offset_left = 337.0
@@ -110,4 +216,6 @@ vertical_alignment = 1
 autowrap_mode = 2
 uppercase = true
 
-[connection signal="pressed" from="TextureButton" to="." method="_on_texture_button_pressed"]
+[connection signal="pressed" from="Continue/TextureButton" to="." method="_on_texture_button_pressed"]
+[connection signal="pressed" from="Restart/TextureButton" to="." method="_on_restart_pressed"]
+[connection signal="pressed" from="Exit/TextureButton" to="." method="_on_exit_pressed"]

@@ -43,6 +43,10 @@ var _worker_ready := false
 var _model: Node = null
 var _chat: Node = null
 var _sampler_applied := {}
+## Chiuso da OraculusEngine quando il remoto ha vinto la gara di setup():
+## da li' in poi il ramo locale non genera piu' e il modello viene liberato.
+var _chiuso := false
+var _in_setup := false
 
 
 func is_available() -> bool:
@@ -56,7 +60,43 @@ func is_busy() -> bool:
 ## Carica il modello locale e aspetta che il worker sia davvero pronto.
 ## Restituisce false (con last_error popolato) se l'addon manca, il .gguf non
 ## si trova o llama.cpp rifiuta il modello: e' un esito normale, non fatale.
+## False anche se nel frattempo il ramo e' stato chiuso (vedi chiudi()).
 func setup() -> bool:
+	if _chiuso:
+		return false
+	_in_setup = true
+	var ok: bool = await _setup()
+	_in_setup = false
+	if _chiuso:
+		_libera()
+		return false
+	return ok
+
+
+## Chiude il ramo locale: il remoto ha risposto prima nella gara di
+## OraculusEngine.setup(), e il modello resterebbe in RAM e VRAM per niente.
+## Se sta ancora caricando o generando lo si libera appena finisce: togliere
+## i nodi dell'addon a meta' lavoro lascerebbe i suoi segnali senza
+## destinatario.
+func chiudi() -> void:
+	_chiuso = true
+	_available = false
+	last_error = "chiuso: il remoto ha risposto per primo (ORACULUS_BACKEND=locale per forzarlo)"
+	if not _in_setup and not _busy:
+		_libera()
+
+
+func _libera() -> void:
+	for n in [_chat, _model]:
+		if n != null and is_instance_valid(n):
+			n.queue_free()
+	_chat = null
+	_model = null
+	_worker_ready = false
+	_available = false
+
+
+func _setup() -> bool:
 	if OS.get_name() == "Web":
 		last_error = "le GDExtension native non girano in wasm"
 		return false
@@ -67,6 +107,10 @@ func setup() -> bool:
 	model_path = _resolve_model_path()
 	if model_path.is_empty():
 		last_error = "modello non trovato: " + OraculusData.MODEL_PATH
+		return false
+	# Il remoto puo' aver gia' vinto mentre si cercava (o si estraeva) il
+	# .gguf: inutile caricarlo in memoria per poi buttarlo.
+	if _chiuso:
 		return false
 
 	var model_obj: Object = ClassDB.instantiate(CLASS_MODEL)
@@ -110,7 +154,8 @@ func setup() -> bool:
 		push_warning("[Oraculus/locale] sampling ai valori di default dell'addon: " + last_error)
 
 	_available = true
-	print("[Oraculus/locale] NobodyWho attivo, modello: ", model_path)
+	if not _chiuso:
+		print("[Oraculus/locale] NobodyWho attivo, modello: ", model_path)
 	return true
 
 
@@ -213,9 +258,20 @@ func _apply_sampler(temperature: float, top_p: float, top_k: int, seed: int) -> 
 ## contesto azzerato: il motore e' senza stato per richiesta, esattamente
 ## come lo era inference.py, che ricostruiva il prompt da zero ogni volta.
 ## sampling accetta le chiavi temperature/top_p/top_k, per i parametri
-## diversi che il Python usava sugli indovinelli.
+## diversi che il Python usava sugli indovinelli. on_text, se valida, riceve
+## il testo accumulato a ogni token: e' lo streaming, gratis, perche' il
+## conteggio dei token per max_tokens ascolta gia' response_updated.
 func generate(system_prompt: String, user_msg: String, timeout: float = 60.0,
-		sampling: Dictionary = {}) -> String:
+		sampling: Dictionary = {}, on_text: Callable = Callable()) -> String:
+	var testo: String = await _genera(system_prompt, user_msg, timeout, sampling, on_text)
+	# Chiuso mentre generava: e' adesso che il modello si puo' liberare.
+	if _chiuso and not _busy:
+		_libera()
+	return testo
+
+
+func _genera(system_prompt: String, user_msg: String, timeout: float,
+		sampling: Dictionary, on_text: Callable) -> String:
 	if not _available:
 		return ""
 
@@ -257,6 +313,8 @@ func generate(system_prompt: String, user_msg: String, timeout: float = 60.0,
 	var on_updated := func(frammento: String) -> void:
 		box["token"] = int(box["token"]) + 1
 		box["text"] = String(box["text"]) + frammento
+		if on_text.is_valid():
+			on_text.call(String(box["text"]))
 		if budget > 0 and int(box["token"]) >= budget and not bool(box["troncata"]):
 			box["troncata"] = true
 			_call_first(_chat, ["stop_generation", "stop"])

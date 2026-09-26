@@ -154,6 +154,10 @@ func _physics_process(delta: float) -> void:
 		$CanvasLayer/Pause.visible = true
 
 	if hud_label.visible or hud_label.has_focus():
+		# Lo stesso tasto che apre il dialogo lo chiude. Il carattere che il
+		# tasto ha appena scritto nel campo sparisce con il resto del testo.
+		if Input.is_action_just_pressed("interact"):
+			close_chat()
 		velocity.x = 0
 		sprite.play("idle")
 		move_and_slide()
@@ -793,6 +797,14 @@ func open_chat() -> void:
 	hud_label.grab_focus()
 	_show_virtual_keyboard()
 
+## Per il pulsante "Interact" a schermo: apre il dialogo, o lo chiude se e'
+## gia' aperto.
+func toggle_chat() -> void:
+	if hud_label.visible:
+		close_chat()
+	else:
+		open_chat()
+
 func close_chat() -> void:
 	hud_label.text = ""
 	hud_label.release_focus()
@@ -809,6 +821,9 @@ func submit_chat() -> bool:
 	if answer == "" or current_demon == null:
 		return false
 	close_chat()
+	var suoni := get_node_or_null("/root/UiSounds")
+	if suoni != null:
+		suoni.play_send()
 	current_demon.receive_player_answer(answer)
 	return true
 

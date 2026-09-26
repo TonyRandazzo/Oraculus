@@ -35,23 +35,101 @@ class NPCHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         print(f"  [{self.address_string()}] {format % args}")
 
+    def send_cors_headers(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
     def send_json(self, code, data):
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_cors_headers()
         self.end_headers()
         self.wfile.write(body)
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_cors_headers()
         self.end_headers()
+
+    def send_chat_stream(self, messages, max_tokens, temperature, top_p):
+        """Risposta in Server-Sent Events nel formato di OpenAI: un chunk
+        chat.completion.chunk per frammento, con il testo in
+        choices[0].delta.content, e in fondo `data: [DONE]`.
+
+        Il primo frammento si chiede PRIMA di mandare gli header: e' li' che
+        il provider rifiuta la richiesta (modello ritirato, credito finito), e
+        cosi' l'errore torna come JSON con lo stesso codice del ramo senza
+        streaming, che il client sa gia' leggere. Un errore a meta' flusso,
+        quando il 200 e' gia' partito, arriva come evento {"error": ...}."""
+        frammenti = None
+        try:
+            frammenti = engine.llama.raw_chat_stream(
+                messages, max_tokens=max_tokens, temperature=temperature, top_p=top_p)
+            if frammenti is None:
+                self.send_json(503, {
+                    "error": "Backend di inferenza non disponibile",
+                    "detail": engine.llama.last_error,
+                })
+                return
+            primo = next(frammenti, None)
+        except Exception as e:
+            traceback.print_exc()
+            if frammenti is not None:
+                frammenti.close()
+            self.send_json(500, {"error": f"Errore inferenza: {e}"})
+            return
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        # Chiede ai proxy davanti (nginx e simili) di non accumulare il flusso.
+        self.send_header("X-Accel-Buffering", "no")
+        # Senza Content-Length la fine della risposta e' la chiusura della
+        # connessione, e va detto: HTTPClient di Godot, senza questo header,
+        # presume keep-alive e tratta la risposta come priva di corpo.
+        self.send_header("Connection", "close")
+        self.send_cors_headers()
+        self.end_headers()
+        self.close_connection = True
+
+        def evento(dati):
+            riga = "data: " + json.dumps(dati, ensure_ascii=False) + "\n\n"
+            self.wfile.write(riga.encode("utf-8"))
+
+        def chunk(delta, finish_reason=None):
+            return {
+                "id":      "oraculus-proxy",
+                "object":  "chat.completion.chunk",
+                "model":   engine.llama.active_model,
+                "choices": [{
+                    "index":         0,
+                    "delta":         delta,
+                    "finish_reason": finish_reason,
+                }],
+            }
+
+        try:
+            if primo is not None:
+                evento(chunk({"role": "assistant", "content": primo}))
+            for testo in frammenti:
+                evento(chunk({"content": testo}))
+            evento(chunk({}, "stop"))
+            self.wfile.write(b"data: [DONE]\n\n")
+        except (BrokenPipeError, ConnectionResetError):
+            # Il client se n'e' andato (NPC distrutto, cambio scena): niente
+            # da segnalare, basta smettere di chiedere token al provider.
+            print("  [stream] client disconnesso a meta' risposta")
+        except Exception as e:
+            traceback.print_exc()
+            try:
+                evento({"error": f"Errore inferenza: {e}"})
+            except OSError:
+                pass
+        finally:
+            frammenti.close()
 
     def read_body(self):
         length = int(self.headers.get("Content-Length", 0))
@@ -73,6 +151,9 @@ class NPCHandler(BaseHTTPRequestHandler):
                 "llama":      engine.llama.available,
                 "model":      engine.llama.active_model,
                 "last_error": engine.llama.last_error,
+                # Dice se il deploy e' abbastanza nuovo da accettare
+                # "stream": true su /v1/chat/completions.
+                "stream":     True,
             })
 
         elif path == "/npcs":
@@ -101,7 +182,7 @@ class NPCHandler(BaseHTTPRequestHandler):
                 "version": "5.0",
                 "endpoints": {
                     "POST /chat":         "Genera risposta NPC (logica lato server, legacy)",
-                    "POST /v1/chat/completions": "Inferenza nuda per il client GDScript",
+                    "POST /v1/chat/completions": "Inferenza nuda per il client GDScript (\"stream\": true -> SSE)",
                     "POST /reset":        "Resetta memoria NPC",
                     "POST /set_context":  "Aggiorna variabili contesto NPC",
                     "GET  /health":       "Stato server",
@@ -185,12 +266,20 @@ class NPCHandler(BaseHTTPRequestHandler):
             if not messages:
                 self.send_json(400, {"error": "messages è obbligatorio"})
                 return
+            max_tokens  = int(body.get("max_tokens", 80))
+            temperature = float(body.get("temperature", 0.6))
+            top_p       = float(body.get("top_p", 0.9))
+
+            if body.get("stream"):
+                self.send_chat_stream(messages, max_tokens, temperature, top_p)
+                return
+
             try:
                 content = engine.llama.raw_chat(
                     messages,
-                    max_tokens=int(body.get("max_tokens", 80)),
-                    temperature=float(body.get("temperature", 0.6)),
-                    top_p=float(body.get("top_p", 0.9)),
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    top_p=top_p,
                 )
             except Exception as e:
                 traceback.print_exc()

@@ -17,5 +17,8 @@ func _on_area_2d_area_entered(area: Area2D) -> void:
 				child.item_name = item_name
 				child.item_description = item_description
 				child.add_to_group("defense potion")
+				var suoni := get_node_or_null("/root/UiSounds")
+				if suoni != null:
+					suoni.play_pickup()
 				queue_free()
 				return

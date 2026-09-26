@@ -17,8 +17,14 @@ var _minigame_index: int = 0
 
 var current_riddle_text: String = ""
 var current_riddle_answer: String = ""
+## Il minigioco aperto da questa porta, per chiuderlo se la si apre con lo
+## scroll mentre e' ancora a schermo.
+var _active_minigame: Node = null
 
 func _ready() -> void:
+	# hud.gd cerca qui la porta su cui usare lo scroll: le porte a minigioco
+	# non diventano mai current_demon del giocatore (vedi sotto).
+	add_to_group("doors")
 	detection_area.connect("area_exited", _on_area_2d_area_exited)
 	instructions.hide_dialogue()
 
@@ -53,7 +59,7 @@ func _on_area_2d_area_exited(area: Area2D) -> void:
 	instructions.hide_dialogue()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _mode == "minigame" and player_in_range and event.is_action_pressed("interact"):
+	if _mode == "minigame" and player_in_range and not door_unlocked and event.is_action_pressed("interact"):
 		_activate_minigame()
 		get_viewport().set_input_as_handled()
 
@@ -119,9 +125,16 @@ func _fetch_ai_riddle(server: Node) -> void:
 	if player_in_range:
 		instructions.show_text(current_riddle_text)
 
+## Lo scroll apre qualunque porta, a indovinello o a minigioco.
 func unlock_with_scroll() -> bool:
-	if door_unlocked or _mode != "riddle":
+	if door_unlocked:
 		return false
+	if (_active_minigame != null and is_instance_valid(_active_minigame)
+			and _active_minigame.visible and _active_minigame.get("door_id") == door_id):
+		if _active_minigame.has_method("_close"):
+			_active_minigame._close()
+		else:
+			_active_minigame.visible = false
 	_unlock_door()
 	instructions.show_text("The scroll's magic forces the door open...")
 	return true
@@ -158,6 +171,7 @@ func _activate_minigame() -> void:
 	if target.has_method("activate"):
 		target.activate(door_id)
 	target.visible = true
+	_active_minigame = target
 
 func _on_minigame_completed() -> void:
 	_unlock_door()
@@ -165,10 +179,18 @@ func _on_minigame_completed() -> void:
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
 
+## Indovinello risolto, minigioco superato o scroll: e' qui che la porta si
+## apre, e si sente. Una sola volta: il "completed" di un minigioco puo'
+## arrivare anche a una porta gia' aperta.
 func _unlock_door() -> void:
+	if door_unlocked:
+		return
 	door_unlocked = true
 	$StaticBody2D/CollisionShape2D.disabled = true
 	modulate.a = 0.0
+	var suoni := get_node_or_null("/root/UiSounds")
+	if suoni != null:
+		suoni.play_door()
 
 func _is_player_area(area: Area2D) -> bool:
 	if area.is_in_group("player"):

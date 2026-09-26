@@ -95,7 +95,7 @@ func _ready() -> void:
 func _on_server_started() -> void:
 	_server_ready = true
 	_send_to_ai_server(
-		"Introduce yourself in ONE sardonic sentence (max 12 words). You are Larry, a Giant trapped underground who knows too much."
+		"", "Introduce yourself in ONE sardonic sentence (max 12 words). You are Larry, a Giant trapped underground who knows too much."
 	)
 
 func _on_body_entered(body: Node2D) -> void:
@@ -227,7 +227,10 @@ func _analyze_friendship(answer: String) -> void:
 		dialogue_box.show_text(friendly_responses[min(friendship_level - 1, friendly_responses.size() - 1)])
 
 # ── AI ────────────────────────────────────────────────────────────────────────
-func _send_to_ai_server(player_message: String) -> void:
+## direction: istruzione di regia dello script (presentarsi, reagire a un
+## colpo). Arriva al modello come nota di scena, non come frase del
+## cavaliere, e non entra nella memoria dell'NPC.
+func _send_to_ai_server(player_message: String, direction: String = "") -> void:
 	if not _server_ready:
 		dialogue_box.show_text(fallback_responses[randi() % fallback_responses.size()])
 		return
@@ -241,6 +244,7 @@ func _send_to_ai_server(player_message: String) -> void:
 	var payload := {
 		"npc_name":             npc_name,
 		"player_input":         player_message,
+		"direction":         direction,
 		"hostility":            hostility,
 		"friendship":           friendship_level * 20,
 		"language":             GameState.ai_language,
@@ -258,7 +262,7 @@ func _send_to_ai_server(player_message: String) -> void:
 	is_waiting_for_response = true
 	_start_thinking_dots()
 
-	var response = await server_manager.make_request("chat", payload)
+	var response = await server_manager.make_request("chat", payload, _show_partial)
 	if not is_instance_valid(self):
 		return
 	_stop_thinking_dots()
@@ -266,6 +270,16 @@ func _send_to_ai_server(player_message: String) -> void:
 		_use_fallback()
 		return
 	_handle_response(response)
+
+## La battuta mentre il modello la scrive, al posto dei puntini. Quella
+## definitiva, ripulita per intero, la scrive comunque _handle_response
+## quando la richiesta si chiude.
+func _show_partial(testo: String) -> void:
+	if not is_waiting_for_response:
+		return
+	_stop_thinking_dots()
+	if dialogue_box:
+		dialogue_box.show_text(testo)
 
 func _handle_response(response: Dictionary) -> void:
 	is_waiting_for_response = false

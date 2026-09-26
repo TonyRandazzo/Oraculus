@@ -42,7 +42,7 @@ func _ready() -> void:
 
 	_check("il proxy dichiara inferenza disponibile", engine.remote.is_available())
 
-	# Forziamo il ramo remoto: setup() preferirebbe il locale.
+	# Forziamo il ramo remoto, senza la gara di setup().
 	engine._using_remote = true
 	engine._available = true
 

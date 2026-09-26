@@ -808,14 +808,29 @@ def build_riddle_system(theme, language):
     )
 
 
-def decorate_user_msg(player_input, language):
-    """Il turno del giocatore con l'istruzione di lingua in coda.
+def knight_line(player_input):
+    """La frase del giocatore come battuta citata del cavaliere, non come
+    richiesta all'assistente. Nuda ("thanks", "grazie") il modello da 1B la
+    leggeva come un messaggio rivolto a lui e rispondeva da assistente: "I
+    cannot fulfill your request", "non posso continuare la storia"."""
+    return f'The knight says: "{player_input}"'
+
+
+def decorate_user_msg(player_input, npc_name, language):
+    """Il turno del giocatore: la battuta del cavaliere, chi deve rispondere, e
+    l'istruzione di lingua in coda.
+
+    La cornice e' la stessa delle note di regia, che sul 1B non uscivano mai
+    fuori personaggio. Misurato sul 1B locale, 42 generazioni (Levias e Rigon,
+    domande in inglese e italiano): battute da assistente 28 -> 3.
 
     Il modello segue la lingua della DOMANDA piu' di qualunque regola: con
     "Who guards this place?" risponde in inglese anche se il system prompt
-    chiede l'italiano. Questa riga e' l'ultima che legge, ed e' la posizione
-    in cui viene rispettata."""
-    return f"{player_input}\n\n{LANG_DIRECTIVE.get(language, LANG_DIRECTIVE['inglese'])}"
+    chiede l'italiano. Per questo la riga di lingua e' l'ultima che legge, la
+    posizione in cui viene rispettata."""
+    return (f"{knight_line(player_input)}\n"
+            f"Reply with {npc_name}'s spoken words only, in character.\n\n"
+            f"{LANG_DIRECTIVE.get(language, LANG_DIRECTIVE['inglese'])}")
 
 
 def build_riddle_user(language, theme, session_id):
@@ -935,7 +950,8 @@ class LlamaCppWrapper:
         self._hf_client = None
         self._available = False
         self._using_remote = False
-        self._last_error = None          
+        self._last_error = None
+        self._hf_token = None
         self._remote_model = HF_MODEL
         self._remote_provider = HF_PROVIDER
         self._last_attempt = 0.0
@@ -968,11 +984,8 @@ class LlamaCppWrapper:
             print("[llama.cpp] ERRORE: variabile HF_TOKEN non trovata.")
             return
 
-        try:
-            self._hf_client = InferenceClient(provider=HF_PROVIDER, token=hf_token)
-        except TypeError:
-            print("[llama.cpp] huggingface_hub senza supporto 'provider': uso client classico.")
-            self._hf_client = InferenceClient(token=hf_token)
+        self._hf_token = hf_token
+        self._hf_client = self._nuovo_client_hf()
 
         errori = []
         provati = set()
@@ -1027,6 +1040,13 @@ class LlamaCppWrapper:
         self._available = False
         print(f"[llama.cpp] ERRORE remoto: nessun modello utilizzabile "
               f"fra {HF_MODEL_CANDIDATES}")
+
+    def _nuovo_client_hf(self):
+        try:
+            return InferenceClient(provider=HF_PROVIDER, token=self._hf_token)
+        except TypeError:
+            print("[llama.cpp] huggingface_hub senza supporto 'provider': uso client classico.")
+            return InferenceClient(token=self._hf_token)
 
     def _ensure_available(self):
         """Il caricamento remoto avviene una volta sola all'import. Se fallisce
@@ -1094,10 +1114,10 @@ class LlamaCppWrapper:
 
             messages = [{"role": "system", "content": system_msg}]
             for h in history[-3:]:
-                messages.append({"role": "user",      "content": h["player"]})
+                messages.append({"role": "user",      "content": knight_line(h["player"])})
                 messages.append({"role": "assistant", "content": h["npc"]})
             messages.append({"role": "user",
-                             "content": decorate_user_msg(player_input, language)})
+                             "content": decorate_user_msg(player_input, npc_name, language)})
 
             result = self._hf_client.chat_completion(
                 model=self._remote_model,
@@ -1147,6 +1167,66 @@ class LlamaCppWrapper:
             echo=False,
         )
         return out["choices"][0]["text"].strip()
+
+    def raw_chat_stream(self, messages, max_tokens=MAX_TOKENS, temperature=TEMPERATURE, top_p=TOP_P):
+        """Come raw_chat(), ma restituisce un generatore di frammenti di testo
+        man mano che il modello li produce: ai_server.py li inoltra come
+        Server-Sent Events e il giocatore vede le prime parole al primo token
+        invece che all'ultimo. None se il backend non e' disponibile.
+
+        La richiesta parte al primo next(), non qui: e' li' che arrivano anche
+        gli errori HTTP del provider (modello ritirato, credito finito)."""
+        if not self._ensure_available():
+            return None
+
+        if self._using_remote:
+            return self._stream_remote(messages, max_tokens, temperature, top_p)
+        return self._stream_local(messages, max_tokens, temperature, top_p)
+
+    def _stream_remote(self, messages, max_tokens, temperature, top_p):
+        # Un client per richiesta, non self._hf_client: InferenceClient tiene
+        # ogni risposta aperta nel proprio ExitStack finche' non viene chiuso,
+        # e un flusso interrotto a meta' (il giocatore cambia scena) non
+        # restituirebbe mai la connessione al pool. La sessione HTTP sotto e'
+        # condivisa, quindi il keep-alive verso il router resta.
+        client = self._nuovo_client_hf()
+        try:
+            for chunk in client.chat_completion(
+                model=self._remote_model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                stream=True,
+            ):
+                # Alcuni provider chiudono con un chunk senza choices, solo
+                # con l'usage; il primo di solito porta il ruolo e niente testo.
+                if not chunk.choices:
+                    continue
+                testo = chunk.choices[0].delta.content
+                if testo:
+                    yield testo
+        finally:
+            chiudi = getattr(client, "close", None)
+            if chiudi is not None:
+                chiudi()
+
+    def _stream_local(self, messages, max_tokens, temperature, top_p):
+        stop = STOP_TOKENS_MAP.get(MODEL_FORMAT, STOP_TOKENS_MAP["chatml"])
+        for chunk in self._model(
+            messages_to_prompt(messages),
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_k=TOP_K,
+            top_p=top_p,
+            repeat_penalty=REPEAT_PENALTY,
+            stop=stop,
+            echo=False,
+            stream=True,
+        ):
+            testo = chunk["choices"][0]["text"]
+            if testo:
+                yield testo
 
     def generate_riddle(self, door_id: str, language: str = "inglese", theme: str = "", session_id: str = "") -> "dict | None":
         if not self._ensure_available():

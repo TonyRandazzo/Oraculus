@@ -160,8 +160,42 @@ static func enforce_army_name(text: String, language: String) -> String:
 # --- pulizia dell'output del modello ------------------------------------
 
 static func pulisci(testo_in: String, npc_name: String) -> String:
+	var risultato := _pulisci_corpo(testo_in, npc_name, false)
+
+	if risultato.length() > 240:
+		var last_period := risultato.substr(0, 240).rfind(".")
+		if last_period > 80:
+			risultato = risultato.substr(0, last_period + 1)
+
+	if not risultato.is_empty() and not [".", "!", "?"].has(risultato.right(1)):
+		var last_punct: int = maxi(maxi(risultato.rfind("."), risultato.rfind("!")), risultato.rfind("?"))
+		if last_punct > floori(risultato.length() / 2.0):
+			risultato = risultato.substr(0, last_punct + 1)
+		else:
+			risultato += "."
+
+	return risultato if not risultato.is_empty() else "..."
+
+
+## pulisci() per il testo che sta ancora arrivando in streaming. Toglie le
+## stesse cose (prefissi, token speciali, parentesi, righe sporche, tutto
+## oltre la seconda riga) ma non chiude la frase: pulisci() aggiunge un punto
+## o taglia all'ultima punteggiatura, e su un testo a meta' farebbe comparire
+## e sparire un punto a ogni token. Il testo definitivo lo decide pulisci()
+## sulla risposta intera, quindi la coda puo' cambiare di poco alla fine.
+## Non ha un corrispettivo Python: lo streaming esiste solo lato Godot.
+## "" vuol dire "niente da mostrare, per ora".
+static func pulisci_parziale(testo_in: String, npc_name: String) -> String:
+	return _pulisci_corpo(testo_in, npc_name, true).substr(0, 240)
+
+
+static func _pulisci_corpo(testo_in: String, npc_name: String, parziale: bool) -> String:
 	_init_regex()
 	var testo := testo_in
+	if parziale:
+		# Il testo definitivo arriva gia' ripulito dagli spazi in testa (lo fa
+		# il backend); quello parziale no, e i prefissi non combacerebbero.
+		testo = testo.strip_edges(true, false)
 
 	var prefixes: Array = [npc_name + ":", npc_name + " :"]
 	prefixes.append_array(OraculusData.CLEAN_PREFIXES_STATIC)
@@ -169,9 +203,15 @@ static func pulisci(testo_in: String, npc_name: String) -> String:
 		var p := String(prefix)
 		if testo.to_lower().begins_with(p.to_lower()):
 			testo = testo.substr(p.length()).strip_edges()
+		elif parziale and p.to_lower().begins_with(testo.to_lower()):
+			# "Lev" puo' ancora diventare "Levias:": meglio aspettare un token
+			# che far lampeggiare il prefisso prima che venga tolto.
+			return ""
 
 	testo = _re_tokens.sub(testo, "", true)
 	testo = _re_parens.sub(testo, "", true).strip_edges()
+	if parziale:
+		testo = _taglia_aperti(testo)
 
 	if _re_num_ml.search(testo) != null or _re_bullet_ml.search(testo) != null:
 		var clean_lines: Array[String] = []
@@ -209,21 +249,219 @@ static func pulisci(testo_in: String, npc_name: String) -> String:
 		if pulite.size() >= 2:
 			break
 
-	var risultato := " ".join(pulite).strip_edges()
+	return " ".join(pulite).strip_edges()
 
-	if risultato.length() > 240:
-		var last_period := risultato.substr(0, 240).rfind(".")
-		if last_period > 80:
-			risultato = risultato.substr(0, last_period + 1)
 
-	if not risultato.is_empty() and not [".", "!", "?"].has(risultato.right(1)):
-		var last_punct: int = maxi(maxi(risultato.rfind("."), risultato.rfind("!")), risultato.rfind("?"))
-		if last_punct > floori(risultato.length() / 2.0):
-			risultato = risultato.substr(0, last_punct + 1)
-		else:
-			risultato += "."
+# --- battute fuori personaggio -------------------------------------------
 
-	return risultato if not risultato.is_empty() else "..."
+## Frasi scritte dal modello, non dal personaggio: l'assistente che rifiuta,
+## si offre di "continuare la storia" o di "aiutarti con qualcos'altro", e
+## l'istruzione di regia ripetuta (il limite di parole, "una frase breve").
+## Il modello da 1B le produce spesso, e pulisci() non le vede: toglie
+## prefissi e righe sporche, non frasi. Le regole sono strette apposta: "Mi
+## dispiace, ma non posso aiutarti" detto da un NPC ostile e' una battuta,
+## "non posso continuare la storia" no. Solo GDScript: pulisci() resta
+## identica al Python.
+const FUORI_PERSONAGGIO: Array[String] = [
+	"(continuare|proseguire|riprendere) (la|questa) (storia|conversazione|narrazione)",
+	"(continue|proceed with) (the|this) (story|conversation|roleplay)",
+	"(prossima|nuova) parte (della|di questa) storia|next part of the story",
+	"(una|a) nuova storia|a new story|resto della storia|rest of the story",
+	"un'idea generale|un (nuovo )?inizio nuovo|un nuovo inizio|a new beginning|a general idea",
+	"\\bas an ai\\b|language model|modello (linguistico|di linguaggio)|intelligenza artificiale|come assistente",
+	"contenuti (espliciti|dannosi|illegali|inappropriati)|(explicit|harmful|inappropriate) content",
+	"i can'?t (continue|generate|write|create|provide) (this|that|the|a)",
+	"(aiutarti|esserti utile|help you)[^.!?]*(qualcos'altro|in altro modo|something else|anything else)",
+	"come posso aiutarti (di nuovo|ancora)|how can i assist",
+	"non (mi )?(e|è) stato fornit|non sono stato fornit|i (was|have) not been (given|provided)",
+	"(continuare|riprendere|iniziare) (a giocare|il gioco|una (nuova )?partita)|come giocare|obiettivi del gioco|how to play|(start|restart) the game",
+	"nuovo scenario|nuovo personaggio|new scenario|new character",
+	"non posso (fornire|dare) (una |un |delle )?(risposta|risposte)\\b|informazioni che (possano|potrebbero|possono) essere|i cannot provide|i can'?t provide",
+	"(risposta|rispondere) in (italiano|inglese|english|italian)|(answer|respond|reply) in (italian|english)",
+	"sono qui per aiutarti|i'?m here to help|tradott[oa] in|translated (into|to)|persona reale|real person",
+	"risposta precedente|previous (answer|response)|riproviamo|let'?s try again",
+	"(aiutarti|help you) (con|with) (la tua|your) (richiesta|request)|possibile risposta|possible (answer|response)",
+	"fumett|serie televisiv|tv series|\\bcomics?\\b|non rispondere con",
+	"let me know if you|fammi sapere se (vuoi|hai bisogno)",
+	"(grazie per|thank you for|thanks for) (il (tuo )?messaggio|the message|your message)",
+	"\\bmax\\.? ?\\d+|\\b\\d+ (parole|words)\\b|parole o meno|words or (less|fewer)",
+	"\\b(one|una sola) (short )?(sentence|frase)\\b|\\bshort (sentence|line)\\b|frase breve|breve frase",
+	"nota di regia|stage direction|\\bin character\\b|nel personaggio|gioco di ruolo|role-?play",
+	"^(ecco|here'?s|here is) (una|un|la tua|la mia|a|an|your|my) (frase|risposta|battuta|sentence|response|line|answer)",
+	# Il rifiuto di sicurezza dei Llama, nelle forme uscite dal 1B nelle
+	# misure: e' la regola del modello che parla, non un "no" del personaggio.
+	# "I cannot fulfill your request. I am just an AI model, it is not within
+	# my programming or ethical guidelines..." arrivava intero al giocatore.
+	"(fulfill|fulfil|comply with) (your|this|that|the) request|(soddisfare|esaudire) (la tua|questa) richiesta",
+	"\\ban ai\\b|\\bai (model|assistant)\\b|\\bun'(ia|ai)\\b|just an? (assistant|program)|responsible (and \\w+ )?assistant|sono (solo )?un assistente|in quanto assistente",
+	"linee guida|guidelines|programming|programmazione|not within my|non rientra nell",
+	"content that|contenuti che|promot\\w* or glorif|glorif\\w* or promot|describe or endorse|promuov\\w* o descriv|illegal or harmful|harmful activit|attivit\\w* (illegali|dannose)|information or guidance|informazioni o (indicazioni|consigli)",
+	"(involv\\w*|coinvolt\\w*) (children|minors|minori)|abus\\w* (of|on|su|di|dei|verso) (minors|minori|children|bambini)|adult and (a )?minor|minorenn|\\bsexual|sessual",
+	"(i can'?t|i cannot) (write|create|generate|produce|engage in)\\b|(i can'?t|i cannot) (help|assist) you with (that|this)|non posso (creare|scrivere|generare) |non posso aiutarti con (questo|quest|ci)",
+	"(anything|something) else (i can|to help)|is there (anything|something) else|\\b(can|may) i (help|assist)\\b|qualcos'altro (con cui|in cui|per cui)",
+	"more context|clarify what you mean|pi(ù|u'?) contesto|chiarire cosa intendi|this message|questo messaggio|copyright",
+	"\\bchapter\\b|capitolo|ultima parte (della|di questa) storia|last part of the story|personaggio (del|di un) (libro|romanzo|gioco|videogioco)|sono (solo )?un personaggio|i am (just |only )?a character|giochi di ruolo",
+]
+
+static var _re_fuori: Array[RegEx] = []
+static var _re_frasi: RegEx = null
+## Una riga che e' un titolo markdown ("**NOMENCLATURA DEL CASTELLO**",
+## "## Capitolo"): pulisci() la scambierebbe per una voce di elenco e la
+## fonderebbe con il resto ("a, b, and c").
+static var _re_titolo: RegEx = null
+
+
+## Toglie righe-titolo, frasi fuori personaggio (vedi FUORI_PERSONAGGIO) e
+## markdown, riga per riga: gli a capo restano, perche' pulisci() ci conta.
+## "" se non resta niente: per il motore vuol dire "battuta da rifare".
+static func filtra_fuori_personaggio(testo: String) -> String:
+	var righe := PackedStringArray()
+	for riga in testo.split("\n"):
+		if _e_titolo(riga):
+			continue
+		var tenute := PackedStringArray()
+		for frase in _frasi(riga):
+			if not _e_fuori_personaggio(frase):
+				tenute.append(frase)
+		var r := _ripulisci_segni(" ".join(tenute))
+		if not r.is_empty():
+			righe.append(r)
+	return "\n".join(righe)
+
+
+## La versione per lo streaming. Le righe e le frasi gia' complete si
+## filtrano come sopra; l'ultima frase, ancora a meta', si mostra solo se non
+## e' gia' fuori personaggio e non comincia come cominciano le frasi da
+## assistente ("Mi dispiace, ma", "Ecco una"): quelle si aspettano finite,
+## per non far comparire mezzo rifiuto e poi toglierlo. Idem per una riga
+## che comincia come un titolo.
+static func filtra_fuori_personaggio_parziale(testo: String) -> String:
+	var righe := testo.split("\n")
+	var ultima := righe[righe.size() - 1]
+	righe.remove_at(righe.size() - 1)
+	var complete := filtra_fuori_personaggio("\n".join(righe))
+	var l := ultima.strip_edges()
+	if l.begins_with("#") or l.begins_with("**") or _e_titolo(ultima):
+		return complete
+
+	var frasi := _frasi(ultima)
+	var coda := ""
+	if not frasi.is_empty() and not _chiude_frase(frasi[-1]):
+		coda = frasi[-1]
+		frasi.remove_at(frasi.size() - 1)
+	var tenute := PackedStringArray()
+	for frase in frasi:
+		if not _e_fuori_personaggio(frase):
+			tenute.append(frase)
+	if not coda.is_empty() and not _e_fuori_personaggio(coda) and not _apre_da_assistente(coda):
+		tenute.append(coda)
+	var r := _ripulisci_segni(" ".join(tenute))
+	if complete.is_empty():
+		return r
+	return complete if r.is_empty() else complete + "\n" + r
+
+
+static func _e_fuori_personaggio(frase: String) -> bool:
+	if _re_fuori.is_empty():
+		for p in FUORI_PERSONAGGIO:
+			_re_fuori.append(_compile("(?i)" + p))
+	# Il 1B scrive spesso l'apostrofo tipografico ("I can’t"): le regole sono
+	# scritte con quello dritto.
+	var f := frase.replace("’", "'")
+	for re in _re_fuori:
+		if re.search(f) != null:
+			return true
+	return false
+
+
+static func _e_titolo(riga: String) -> bool:
+	if _re_titolo == null:
+		_re_titolo = _compile("^\\s*(#{1,6}\\s|\\*\\*[^*]+\\*\\*\\s*:?\\s*$)")
+	return _re_titolo.search(riga) != null
+
+
+static func _apre_da_assistente(frase: String) -> bool:
+	var f := frase.to_lower().replace("’", "'").strip_edges().lstrip("\"'«“*")
+	for apertura in ["mi dispiace, ma", "i'm sorry, but", "i am sorry, but", "sorry, but",
+			"mi scuso, ma", "ecco una", "ecco un", "ecco la mia", "here's a", "here is a", "here is my",
+			"tuttavia, posso", "however, i can", "non posso fornire", "i cannot provide",
+			"i cannot ", "i can't ", "i am just an", "i'm just an", "as a responsible", "as an ai",
+			"non posso creare", "non posso scrivere", "non posso aiutarti con", "non posso soddisfare",
+			"is there anything", "is there something", "c'è qualcos'altro", "sono un personaggio"]:
+		if f.begins_with(apertura) or apertura.begins_with(f):
+			return true
+	return false
+
+
+static func _frasi(testo: String) -> PackedStringArray:
+	if _re_frasi == null:
+		_re_frasi = _compile("[^.!?…]+(?:[.!?…]+[\"'»”*)]*|$)")
+	var out := PackedStringArray()
+	for m in _re_frasi.search_all(testo):
+		var f := m.get_string().strip_edges()
+		if not f.is_empty():
+			out.append(f)
+	return out
+
+
+static func _chiude_frase(frase: String) -> bool:
+	var f := frase.rstrip("\"'»”*) ")
+	return not f.is_empty() and ".!?…".contains(f.right(1))
+
+
+## Il grassetto markdown, un asterisco spaiato (in coppia e' un'azione,
+## "*sospira*", e resta), la punteggiatura rimasta in testa quando si toglie
+## la frase prima, e le virgolette aperte in testa e mai chiuse: il 1B cita
+## spesso la propria battuta ("Non passerai. senza chiuderla). Tolte anche
+## quelle che racchiudono l'intera battuta: con il turno del giocatore scritto
+## come battuta citata (decorate_user_msg) il 1B risponde quasi sempre fra
+## virgolette, e nella casella di dialogo non servono. In streaming la
+## battuta a meta' perde la virgoletta d'apertura (regola sopra) e quella
+## finita le perde entrambe: il testo mostrato non salta.
+static func _ripulisci_segni(testo: String) -> String:
+	var t := testo.replace("**", "").replace("__", "").strip_edges()
+	if t.count("*") % 2 == 1:
+		t = t.replace("*", "")
+	t = t.lstrip(",;: ").strip_edges()
+	for coppia in [["\"", "\""], ["«", "»"], ["“", "”"]]:
+		var uguali: bool = coppia[0] == coppia[1]
+		if t.begins_with(coppia[0]) and t.count(coppia[1]) < (2 if uguali else 1):
+			t = t.substr(coppia[0].length()).strip_edges()
+		elif (t.length() > 2 and t.begins_with(coppia[0]) and t.ends_with(coppia[1])
+				and (t.count(coppia[0]) == 2 if uguali
+					else t.count(coppia[0]) == 1 and t.count(coppia[1]) == 1)):
+			t = t.substr(1, t.length() - 2).strip_edges()
+	return t
+
+
+# --- istruzioni di regia -------------------------------------------------
+
+## Il turno "utente" quando a guidare la battuta e' lo script, non il
+## cavaliere: l'NPC si presenta, e' stato colpito, deve ringhiare. Prima
+## queste istruzioni arrivavano come se le avesse dette il cavaliere, e il
+## modello ci rispondeva ("Grazie per il messaggio!") o le ripeteva ("devi
+## rispondere con 12 parole o meno"). Come nota fra parentesi quadre dentro
+## il turno non e' mai uscita fuori personaggio in 24 prove sul 1B; nel
+## system prompt faceva rifiutare il modello. Vedi ai/README.md.
+static func build_direction_msg(player_input: String, direction: String, npc_name: String,
+		language: String) -> String:
+	var nota := ("[Stage direction for " + npc_name + ", not spoken by the knight: "
+		+ direction + "]\nReply with " + npc_name + "'s spoken words only, in character.")
+	var testa := "" if player_input.is_empty() else knight_line(player_input) + "\n\n"
+	return testa + nota + "\n\n" + lang_directive(language)
+
+
+## Un token speciale "<|...|>" o una parentesi non ancora chiusi: appena si
+## chiudono le regex di pulisci() potrebbero toglierli, quindi finche' sono
+## aperti si mostra solo cio' che li precede.
+static func _taglia_aperti(testo: String) -> String:
+	var angolo := testo.rfind("<")
+	if angolo >= 0 and testo.find(">", angolo) < 0:
+		testo = testo.substr(0, angolo)
+	var tonda := testo.rfind("(")
+	if tonda >= 0 and testo.find(")", tonda) < 0:
+		testo = testo.substr(0, tonda)
+	return testo.strip_edges()
 
 
 # --- politiche di divulgazione ------------------------------------------
@@ -410,15 +648,30 @@ static func lang_directive(language: String) -> String:
 	return String(OraculusData.LANG_DIRECTIVE["inglese"])
 
 
-## Il turno del giocatore con l'istruzione di lingua in coda.
+## La frase del giocatore come battuta citata del cavaliere, non come
+## richiesta all'assistente. Nuda ("thanks", "grazie") il 1B la leggeva come
+## un messaggio rivolto a lui e rispondeva da assistente: "I cannot fulfill
+## your request", "non posso continuare la storia".
+static func knight_line(player_input: String) -> String:
+	return "The knight says: \"" + player_input + "\""
+
+
+## Il turno del giocatore: la battuta del cavaliere, chi deve rispondere, e
+## l'istruzione di lingua in coda.
 ##
-## Serve perche' il modello segue la lingua della DOMANDA piu' di qualunque
-## regola: con "Who guards this place?" risponde in inglese anche se il system
-## prompt chiede l'italiano — verificato sia sul 1B locale sia sull'8B remoto.
-## Questa riga e' l'ultima cosa che legge prima di rispondere, ed e' la
+## La cornice e' la stessa delle note di regia (build_direction_msg), che sul
+## 1B non uscivano mai fuori personaggio. Misurato sul 1B locale, 42
+## generazioni (Levias e Rigon, domande in inglese e italiano): battute da
+## assistente 28 -> 3. Vedi ai/README.md.
+##
+## La lingua in coda serve perche' il modello segue la lingua della DOMANDA
+## piu' di qualunque regola: con "Who guards this place?" risponde in inglese
+## anche se il system prompt chiede l'italiano — verificato sia sul 1B locale
+## sia sull'8B remoto. E' l'ultima cosa che legge prima di rispondere, la
 ## posizione in cui viene rispettata.
-static func decorate_user_msg(player_input: String, language: String) -> String:
-	return player_input + "\n\n" + lang_directive(language)
+static func decorate_user_msg(player_input: String, npc_name: String, language: String) -> String:
+	return (knight_line(player_input) + "\nReply with " + npc_name
+		+ "'s spoken words only, in character.\n\n" + lang_directive(language))
 
 
 # --- indovinelli --------------------------------------------------------

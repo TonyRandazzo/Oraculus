@@ -1,0 +1,9 @@
+# Generato da install.sh. Caddy ottiene da solo il certificato Let's Encrypt
+# per HOST_PUBBLICO e lo rinnova.
+HOST_PUBBLICO {
+	encode gzip
+	reverse_proxy 127.0.0.1:7860 {
+		# Lo streaming SSE delle battute deve arrivare token per token.
+		flush_interval -1
+	}
+}

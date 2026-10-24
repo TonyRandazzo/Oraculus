@@ -611,14 +611,21 @@ domande note trovino ancora la scheda giusta.
 All'avvio `OraculusEngine.setup()` fa partire insieme i due rami, ciascuno
 con una generazione vera e minima: il locale carica il modello e genera una
 parola, il remoto chiede 4 token al proxy (`verifica()`). **Il primo che
-risponde diventa il ramo della partita, e l'altro viene chiuso**: il modello
-locale liberato da RAM e VRAM (a caricamento finito, se era ancora a meta'),
-oppure il remoto che non riceve piu' richieste.
+risponde entro 3 s (`RACE_TIMEOUT`) diventa il ramo della partita, e l'altro
+viene chiuso**: il modello locale liberato da RAM e VRAM (a caricamento
+finito, se era ancora a meta'), oppure il remoto che non riceve piu' richieste.
+
+Il motore vive nell'autoload `AIServerManager`, quindi la scelta vale per
+tutta la partita, anche quando si cambia scena.
 
 Un errore non e' una risposta: 402 (credito HF finito), 404, 500, rete giu',
-10 s senza risposta (`REMOTE_RACE_TIMEOUT`) fanno vincere il locale. Per
-questo la prova e' una generazione e non `/health`, che risponde `"ok"`
-anche a credito finito.
+3 s senza risposta fanno perdere il remoto. Per questo la prova e' una
+generazione e non `/health`, che risponde `"ok"` anche a credito finito.
+
+Se allo scadere dei 3 s nessuno ha risposto ma il locale sta ancora
+caricando senza errori (primo avvio, `.gguf` da estrarre, disco lento), si
+tiene il locale: le richieste aspettano che finisca di caricare. Se sono
+falliti tutti e due si tiene il remoto non verificato.
 
 | Situazione | Vince | Pronto in |
 | --- | --- | --- |
@@ -628,23 +635,76 @@ anche a credito finito.
 | Render in sleep | locale (il remoto ci mette 30-60 s a svegliarsi) | ~0,9 s |
 | Web | remoto, l'unico che c'e' | — |
 
-Misurato sul PC di sviluppo. Il caso "credito ok" non si e' potuto provare
-dal vivo (credito finito): con il proxy finto, che risponde in 22 ms, vince
-sempre il remoto; con quello vero i due tempi sono vicini, quindi il ramo
-puo' cambiare da un avvio all'altro.
+### Passaggio automatico all'altro ramo
 
-Se non risponde nessuno si tiene il remoto non verificato, come prima: le
-richieste falliscono una per una con le battute di `FALLBACK`.
+Se il ramo scelto smette di rispondere durante la partita (Render che torna
+in sleep, credito che finisce, worker locale bloccato), la richiesta che lo
+scopre **viene rifatta sull'altro ramo** e la battuta arriva comunque: il
+giocatore non vede un `FALLBACK`, al massimo un'attesa un po' piu' lunga.
+Da li' in poi la partita resta sul ramo nuovo, finche' anche quello non tace
+e si torna indietro (`_passa_all_altro()`).
 
-La scelta non si rifa' durante la partita: se il ramo vincente smette di
-rispondere dopo (Render che torna in sleep dopo 15 minuti senza richieste, il
-credito che finisce a meta'), gli NPC ripiegano su `FALLBACK` fino al
-prossimo avvio.
+- remoto -> locale: il locale viene riaperto e, se era stato liberato,
+  ricaricato (~1 s). Su Web, o senza addon o `.gguf`, non c'e' dove andare e
+  si resta sul remoto.
+- locale -> remoto: il remoto viene riaperto senza verifica; la prova e' la
+  richiesta stessa, rifatta li'.
+- Un passaggio alla volta: con ~40 NPC in scena molti scoprono il guasto
+  insieme, il primo cambia ramo e gli altri riprovano sul ramo nuovo.
+- Una richiesta remota ha un tetto di 15 s (`REMOTE_REQUEST_TIMEOUT`, prima
+  90 s): oltre, il proxy si considera muto e si passa al locale.
+- Il failover avviene una volta per richiesta: se tacciono entrambi, quella
+  battuta ripiega su `FALLBACK`.
+
+`tests/failover_check.tscn` lo collauda con un proxy finto
+(`tests/fake_proxy.py`): vince la gara, viene ammutolito, la battuta arriva
+dal locale; poi il locale tace e si torna al remoto; poi di nuovo al locale,
+ricaricato da capo, per un indovinello. Servono python3, l'addon e il `.gguf`.
+
+```
+godot --headless --path . res://ai/tests/failover_check.tscn
+```
 
 `ORACULUS_BACKEND=locale` o `=remoto` salta la gara e usa quel ramo: serve ai
 collaudi che vogliono esercitarne uno preciso.
 
 ## Inferenza remota
+
+### Server su Oracle Cloud con llama-server (consigliato, gratuito)
+
+`server/` contiene tutto per una VM Oracle Cloud "Always Free" (Ampere A1,
+2 core ARM, 12 GB): `llama-server` (llama.cpp) con il `.gguf` degli NPC,
+dietro Caddy in HTTPS. **Niente API di inferenza di terzi, niente token,
+niente crediti.** Istruzioni passo passo in `server/README.md`. (Hugging
+Face non va piu' bene: dal 2026 gli account gratuiti non possono creare
+Space CPU, e lo SDK Docker e' a pagamento.)
+
+L'endpoint e' compatibile OpenAI, quindi `oraculus_backend_remote.gd` ci
+parla direttamente, senza il proxy su Render: basta che `DEFAULT_BASE_URL`
+(o `ORACULUS_API_URL`) sia l'URL stampato da `install.sh`.
+
+- Uno slot solo (`-np 1`): ogni system prompt comincia con `STORY_CONTEXT`
+  (~2000 token, ~15 s su 2 core) e llama-server tiene in cache il prefisso
+  dello slot. Appena il remoto vince la gara, `_scalda_remoto()` glielo
+  manda in background; da li' una battuta elabora solo la coda: misurato
+  su 2 core, ~2-9 s a battuta invece di ~17 s.
+- Per lo stesso motivo, sul remoto il prompt degli indovinelli comincia con
+  `STORY_CONTEXT` (`build_riddle_system(..., contesto_prima = true)`): con
+  la riga sul guardiano davanti erano 2068 token da rielaborare e la
+  richiesta scadeva; cosi' sono ~300. Il locale resta nell'ordine di
+  `inference.py`, quindi `parity_check` non cambia.
+- Durante il riscaldamento le presentazioni degli NPC ripiegano su
+  `FALLBACK`, come quando il modello e' occupato.
+
+Prova in locale, senza VM:
+
+```
+ORACULUS_DATA=/tmp/oraculus-llm python3 server/oraculus_llm.py
+ORACULUS_API_URL=http://127.0.0.1:7860 \
+  godot --headless --path . res://ai/tests/remote_check.tscn
+```
+
+### Il vecchio proxy su Render (usa l'API di inferenza HF, a credito)
 
 `oraculus_backend_remote.gd` fa un POST su
 `https://oraculus-ai-api.onrender.com/v1/chat/completions` (sovrascrivibile
@@ -748,12 +808,16 @@ template che NobodyWho applica e' quello, ma i token non sono garantiti
 identici byte per byte. `build_prompt()` resta portato e verificato, pronto se
 un giorno il backend esporra' il completamento grezzo.
 
-## Cosa e' rimasto indietro, di proposito
+## Pulizia del progetto
 
-- `python_venv/` (1007 file, 159 MB) e' stato tolto dall'indice git
-  (`git rm -r --cached`) e aggiunto al `.gitignore`: i file restano sul disco,
-  ma dal prossimo commit il repo non li porta piu'. Cancellarli e' sicuro.
-- `ai/tinyllama-v0.q2_k.gguf` (5 MB) non e' usato da nessuno.
-- `door2.gd`, `door3.gd`, `door4.gd` non compilano: fanno riferimento a un tipo
-  `Player2AINPC` che non esiste in nessun file. E' cosi' dal primo commit e non
-  ha niente a che vedere con questo cambiamento.
+Rimossi i file che il gioco non usa: `python_venv/`, `ai/tinyllama-v0.q2_k.gguf`,
+le cache Python, `door2-4.gd` (non compilavano: citavano un tipo
+`Player2AINPC` inesistente) e ~2270 risorse mai raggiunte (scene e script
+orfani, ~53 MB di WAV, PNG, PSD, GIF, font, file di esempio degli asset pack).
+
+Il criterio e' la raggiungibilita' da `project.godot` (scena principale,
+autoload, icona) seguendo `res://`, `uid://` e i `class_name`; verificato con
+`ResourceLoader.get_dependencies()` di Godot: le 714 dipendenze di menu, main,
+options, HUD e autoload sono identiche prima e dopo, e nessuna manca. Le
+licenze degli asset pack ancora in uso sono rimaste. Gli export escludono
+`ai/tests/*`.

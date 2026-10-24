@@ -43,8 +43,10 @@ var _worker_ready := false
 var _model: Node = null
 var _chat: Node = null
 var _sampler_applied := {}
-## Chiuso da OraculusEngine quando il remoto ha vinto la gara di setup():
-## da li' in poi il ramo locale non genera piu' e il modello viene liberato.
+## Chiuso da OraculusEngine quando il remoto ha vinto la gara di setup(), o
+## quando la partita passa al remoto perche' il locale ha smesso di
+## rispondere: il ramo non genera piu' e il modello viene liberato. riapri()
+## lo rimette in servizio per il passaggio inverso.
 var _chiuso := false
 var _in_setup := false
 
@@ -55,6 +57,11 @@ func is_available() -> bool:
 
 func is_busy() -> bool:
 	return _busy
+
+
+## True mentre setup() sta cercando o caricando il modello.
+func is_loading() -> bool:
+	return _in_setup
 
 
 ## Carica il modello locale e aspetta che il worker sia davvero pronto.
@@ -81,9 +88,20 @@ func setup() -> bool:
 func chiudi() -> void:
 	_chiuso = true
 	_available = false
-	last_error = "chiuso: il remoto ha risposto per primo (ORACULUS_BACKEND=locale per forzarlo)"
+	last_error = "chiuso: la partita usa il remoto (ORACULUS_BACKEND=locale per forzarlo)"
 	if not _in_setup and not _busy:
 		_libera()
+
+
+## Rimette in servizio il ramo dopo chiudi(): il remoto ha smesso di
+## rispondere e la partita torna al locale. Se il modello non e' ancora stato
+## liberato (chiudi() arrivato a meta' di una generazione) lo si riusa cosi'
+## com'e'; altrimenti tocca a setup() ricaricarlo.
+func riapri() -> void:
+	_chiuso = false
+	last_error = ""
+	if _worker_ready and _chat != null and is_instance_valid(_chat):
+		_available = true
 
 
 func _libera() -> void:

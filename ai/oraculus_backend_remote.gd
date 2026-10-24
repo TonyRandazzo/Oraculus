@@ -29,8 +29,10 @@ var last_error: String = ""
 
 var _available := false
 var _web_seq := 0
-## Chiuso da OraculusEngine quando il locale ha vinto la gara di setup(): da
-## li' in poi nessuna richiesta parte piu' verso il proxy.
+## Chiuso da OraculusEngine quando il locale ha vinto la gara di setup(), o
+## quando la partita passa al locale perche' il remoto ha smesso di
+## rispondere: nessuna richiesta parte piu' verso il proxy finche' riapri()
+## non lo rimette in servizio.
 var _chiuso := false
 
 
@@ -61,7 +63,9 @@ func probe() -> bool:
 		last_error = "healthcheck remoto fallito"
 		return false
 
-	if not bool(body.get("llama", false)):
+	# "llama" lo manda solo il vecchio proxy Python; llama-server (il server su Oracle)
+	# risponde a /health solo a modello caricato, e senza quel campo.
+	if not bool(body.get("llama", true)):
 		last_error = "il proxy risponde ma non ha inferenza: " + String(body.get("last_error", "motivo non riportato"))
 		push_warning("[Oraculus/remoto] " + last_error)
 		return false
@@ -106,11 +110,38 @@ func verifica(timeout: float) -> bool:
 	return true
 
 
+## Mette STORY_CONTEXT nella cache del server: llama-server (il server su Oracle)
+## conserva il prefisso dell'ultimo prompt, e ogni system prompt comincia con
+## quei ~2000 token, che sulla CPU gratuita costano ~15 s. Pagati qui, in
+## background, la prima battuta vera elabora solo la coda.
+func scalda() -> bool:
+	if _chiuso:
+		return false
+	var payload := {
+		"model": OraculusData.HF_MODEL,
+		"messages": [
+			{"role": "system", "content": OraculusData.STORY_CONTEXT + "\n\n"},
+			{"role": "user", "content": "Hi"},
+		],
+		"max_tokens": 1,
+	}
+	var res: Variant = await _post_json(base_url + CHAT_PATH, JSON.stringify(payload), 90.0)
+	return typeof(res) == TYPE_DICTIONARY and not (res as Dictionary).has("error")
+
+
 ## Chiude il ramo remoto: il locale ha risposto prima nella gara. Le
 ## richieste dopo questa tornano "" subito, senza toccare la rete.
 func chiudi() -> void:
 	_chiuso = true
 	_available = false
+
+
+## Rimette in servizio il ramo dopo chiudi(): il locale ha smesso di
+## rispondere e la partita passa al remoto. Non verifica nulla: la prova e'
+## la richiesta che ha fatto scattare il passaggio, rifatta qui.
+func riapri() -> void:
+	_chiuso = false
+	_available = true
 
 
 ## Ritorna il contenuto testuale della risposta, o "" in caso di errore.

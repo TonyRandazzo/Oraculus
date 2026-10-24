@@ -32,6 +32,15 @@ func _ready() -> void:
 
 	print("  url: ", engine.remote.base_url)
 
+	# Il motore dell'autoload, se ha scelto il remoto, gli manda in background
+	# STORY_CONTEXT da mettere in cache (OraculusEngine._scalda_remoto()): su
+	# llama-server, con uno slot solo, le nostre richieste finirebbero in coda
+	# dietro a quella e scadrebbero.
+	var server := get_node_or_null("/root/AIServerManager")
+	if server != null:
+		while not server.is_server_ready() or server._engine._in_volo > 0:
+			await get_tree().process_frame
+
 	if not await engine.remote.probe():
 		print("")
 		print("  SALTATO: il proxy non ha inferenza.")

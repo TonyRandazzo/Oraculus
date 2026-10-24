@@ -16,7 +16,9 @@
 #    chat: i token esatti del prompt non sono piu' quelli costruiti a mano da
 #    build_prompt(), che resta portato e verificato per parita'.
 #  - la scelta del backend: il Python preferiva sempre il locale; qui i due
-#    rami fanno una gara all'avvio e vince il primo che risponde (setup()).
+#    rami fanno una gara all'avvio e vince il primo che risponde (setup()),
+#    e se il vincitore smette di rispondere la partita passa all'altro
+#    (_passa_all_altro()).
 # ============================================================================
 class_name OraculusEngine
 extends Node
@@ -31,10 +33,13 @@ const CHAT_ATTEMPTS := 2
 ## Per forzare un ramo invece della gara: "locale" o "remoto". Serve
 ## soprattutto ai collaudi, che vogliono esercitare un ramo preciso.
 const ENV_BACKEND := "ORACULUS_BACKEND"
-## Quanto aspettare il remoto nella gara. Se il locale non c'e' (Web) e il
-## remoto non risponde entro questo tempo lo si usa comunque: Render potrebbe
-## solo star uscendo dallo sleep.
-const REMOTE_RACE_TIMEOUT := 10.0
+## Quanto dura la gara di setup(). Chi non ha risposto entro questo tempo
+## l'ha persa; se non ha risposto nessuno vedi setup().
+const RACE_TIMEOUT := 3.0
+## Tetto di una richiesta remota durante la partita. Una battuta da 80 token
+## arriva in ~3 s: oltre questo il proxy si considera muto e si passa al
+## locale, invece di lasciare il giocatore davanti ai puntini per 90 s.
+const REMOTE_REQUEST_TIMEOUT := 15.0
 
 var memory: Dictionary = {}
 var local: OraculusLocalBackend = null
@@ -42,6 +47,13 @@ var remote: OraculusRemoteBackend = null
 
 var _using_remote := true
 var _available := false
+## Il ramo imposto da ORACULUS_BACKEND, "" se decide la gara. Un ramo imposto
+## non cede mai il posto all'altro.
+var _forzato := ""
+## Vero mentre _passa_all_altro() sta cambiando ramo: gli altri NPC che nel
+## frattempo trovano il ramo muto aspettano quel passaggio invece di
+## avviarne un secondo.
+var _cambio_in_corso := false
 ## Generazioni in corso o in coda, dialoghi e indovinelli. Una battuta
 ## ambientale (senza frase del cavaliere) non parte se non e' zero: vedi
 ## generate_response().
@@ -54,48 +66,73 @@ func _ready() -> void:
 	add_child(local)
 	remote = OraculusRemoteBackend.new()
 	remote.name = "RemoteBackend"
+	remote.request_timeout = REMOTE_REQUEST_TIMEOUT
 	add_child(remote)
+	# Anche qui, non solo in setup(): i collaudi che saltano la gara e
+	# impongono un ramo non devono vederlo cedere il posto all'altro.
+	_forzato = _ramo_forzato()
+
+
+static func _ramo_forzato() -> String:
+	var ramo := OS.get_environment(ENV_BACKEND).strip_edges().to_lower()
+	return ramo if ramo in ["locale", "remoto"] else ""
 
 
 ## Una gara: locale e remoto partono insieme, ciascuno con una generazione
-## vera e minima, e il primo che risponde diventa il ramo della partita.
-## L'altro viene chiuso: il modello locale liberato dalla memoria, oppure il
-## remoto non riceve piu' richieste. Un errore (402, 404, 500, rete, timeout)
-## non e' una risposta: con il credito HF finito vince il locale anche se il
-## proxy e' sveglio.
+## vera e minima, e il primo che risponde entro RACE_TIMEOUT diventa il ramo
+## della partita. L'altro viene chiuso: il modello locale liberato dalla
+## memoria, oppure il remoto non riceve piu' richieste. Un errore (402, 404,
+## 500, rete, timeout) non e' una risposta: con il credito HF finito vince il
+## locale anche se il proxy e' sveglio.
+##
+## La scelta vale per tutta la partita, attraverso i cambi di scena (il
+## motore vive nell'autoload AIServerManager), finche' il ramo scelto non
+## smette di rispondere: allora _passa_all_altro().
 func setup() -> void:
-	var forzato := OS.get_environment(ENV_BACKEND).strip_edges().to_lower()
+	_forzato = _ramo_forzato()
 	var t0 := Time.get_ticks_msec()
+	var scadenza := t0 + int(RACE_TIMEOUT * 1000.0)
 	var gara := {"vincitore": "", "locale": null, "remoto": null}
-	if forzato == "remoto":
+	if _forzato == "remoto":
 		gara["locale"] = false
 	else:
 		_corri_locale(gara)
-	if forzato == "locale":
+	if _forzato == "locale":
 		gara["remoto"] = false
 	else:
 		_corri_remoto(gara)
 
-	while String(gara["vincitore"]).is_empty() and (gara["locale"] == null or gara["remoto"] == null):
+	while String(gara["vincitore"]).is_empty() \
+			and (gara["locale"] == null or gara["remoto"] == null) \
+			and Time.get_ticks_msec() < scadenza:
 		await get_tree().process_frame
 
 	var ms := Time.get_ticks_msec() - t0
-	match String(gara["vincitore"]):
+	var vincitore := String(gara["vincitore"])
+	if vincitore.is_empty() and gara["locale"] == null:
+		# Nessuno ha risposto in tempo, ma il locale sta ancora caricando
+		# senza aver fallito (primo avvio, .gguf da estrarre dal .pck): e' il
+		# ramo piu' prevedibile, le richieste aspetteranno che finisca.
+		vincitore = "locale"
+		print("[Motore] nessuna risposta in %d ms: tengo il locale, ancora in caricamento." % ms)
+
+	match vincitore:
 		"locale":
 			remote.chiudi()
 			_using_remote = false
 			_available = true
-			print("[Motore] LLM attivo: locale, ha risposto per primo (%d ms). Remoto chiuso." % ms)
+			print("[Motore] LLM attivo: locale (%d ms). Remoto chiuso." % ms)
 		"remoto":
 			local.chiudi()
 			_using_remote = true
 			_available = true
 			print("[Motore] LLM attivo: remoto (%s), ha risposto per primo (%d ms). Locale chiuso." % [
 				remote.base_url, ms])
+			_scalda_remoto()
 		_:
 			local.chiudi()
 			_using_remote = true
-			if forzato == "locale":
+			if _forzato == "locale":
 				_available = false
 				print("[Motore] ramo locale forzato ma non disponibile: ", local.last_error)
 				return
@@ -103,10 +140,22 @@ func setup() -> void:
 			# sleep): lo consideriamo comunque utilizzabile e sara' la singola
 			# richiesta a fallire, con fallback testuale, invece di spegnere
 			# l'AI per la partita.
-			remote.assume_available()
+			remote.riapri()
 			_available = true
 			print("[Motore] nessuno ha risposto; remoto non verificato. Remoto: %s | locale: %s" % [
 				remote.last_error, local.last_error])
+
+
+## In background, dopo la vittoria del remoto: vedi remote.scalda(). Conta
+## come una generazione in corso, cosi' le presentazioni degli NPC che
+## arrivano nel frattempo ripiegano subito su FALLBACK invece di mettersi in
+## fila dietro ai ~15 s del primo prompt.
+func _scalda_remoto() -> void:
+	_in_volo += 1
+	var t0 := Time.get_ticks_msec()
+	var ok: bool = await remote.scalda()
+	_in_volo -= 1
+	print("[Motore] contesto in cache sul remoto: %s (%d ms)" % ["ok" if ok else "fallito", Time.get_ticks_msec() - t0])
 
 
 ## Il modello caricato non basta: deve generare, come si chiede al remoto.
@@ -121,10 +170,58 @@ func _corri_locale(gara: Dictionary) -> void:
 
 
 func _corri_remoto(gara: Dictionary) -> void:
-	var ok: bool = await remote.verifica(REMOTE_RACE_TIMEOUT)
+	var ok: bool = await remote.verifica(RACE_TIMEOUT)
 	gara["remoto"] = ok
 	if ok and String(gara["vincitore"]).is_empty():
 		gara["vincitore"] = "remoto"
+
+
+## Il ramo in uso (da_remoto dice quale era) non ha risposto a una richiesta:
+## la partita passa all'altro, senza che il giocatore se ne accorga — la
+## richiesta viene rifatta li' e la battuta arriva comunque. Restituisce true
+## se c'e' un ramo nuovo su cui riprovare.
+##
+## Un solo passaggio per volta: con ~40 NPC in scena, molti trovano il ramo
+## muto insieme, e solo il primo cambia ramo; gli altri aspettano e
+## riprovano sul ramo nuovo.
+func _passa_all_altro(da_remoto: bool) -> bool:
+	while _cambio_in_corso:
+		await get_tree().process_frame
+	if _using_remote != da_remoto:
+		return true
+	if not _forzato.is_empty():
+		return false
+
+	_cambio_in_corso = true
+	var ok := true
+	if da_remoto:
+		local.riapri()
+		ok = await _locale_pronto()
+		if ok:
+			remote.chiudi()
+			_using_remote = false
+			print("[Motore] il remoto non risponde (%s): passo al locale." % remote.last_error)
+		else:
+			local.chiudi()
+			print("[Motore] il remoto non risponde e il locale non c'e' (%s): resto sul remoto." % local.last_error)
+	else:
+		remote.riapri()
+		local.chiudi()
+		_using_remote = true
+		print("[Motore] il locale non risponde (%s): passo al remoto." % local.last_error)
+	_cambio_in_corso = false
+	return ok
+
+
+## Aspetta il caricamento in corso del modello locale, o lo ricarica se
+## era stato liberato. False se il locale non c'e' (Web, addon o .gguf
+## mancanti).
+func _locale_pronto() -> bool:
+	while local.is_loading():
+		await get_tree().process_frame
+	if local.is_available():
+		return true
+	return await local.setup()
 
 
 func is_available() -> bool:
@@ -273,32 +370,18 @@ func _generate(player_input: String, direction: String, npc_name: String, hostil
 				on_partial.call(parziale)
 
 	for tentativo in CHAT_ATTEMPTS:
-		var raw := ""
-		if _using_remote:
-			var system_msg := OraculusLogic.build_system_msg(npc_name, hostility, friendship,
-				language, npc_data, context_vars)
-			var messages: Array = [{"role": "system", "content": system_msg}]
-			for h in history.slice(maxi(0, history.size() - 3)):
-				messages.append({"role": "user", "content": OraculusLogic.knight_line(String(h["player"]))})
-				messages.append({"role": "assistant", "content": String(h["npc"])})
-			messages.append({"role": "user", "content": user_msg})
-			if on_raw.is_valid():
-				raw = await remote.chat_completion_stream(messages, OraculusData.MAX_TOKENS,
-					OraculusData.TEMPERATURE, OraculusData.TOP_P, on_raw)
-			else:
-				raw = await remote.chat_completion(messages, OraculusData.MAX_TOKENS,
-					OraculusData.TEMPERATURE, OraculusData.TOP_P)
-		else:
-			# NobodyWho applica da se' il template del modello, quindi lo
-			# storico entra nel system prompt con la stessa formattazione di
-			# build_prompt.
-			var system_msg := OraculusLogic.build_system_msg(npc_name, hostility, friendship,
-				language, npc_data, context_vars) + OraculusLogic.build_history_block(history)
-			raw = await local.generate(system_msg, user_msg, LOCAL_TIMEOUT,
-				{"max_tokens": OraculusData.MAX_TOKENS}, on_raw)
+		var su_remoto := _using_remote
+		var raw := await _chiedi_battuta(su_remoto, user_msg, npc_name, hostility, friendship,
+			language, npc_data, history, context_vars, on_raw)
+		# Il ramo e' muto: si rifa' la stessa richiesta sull'altro.
+		if raw.is_empty() and await _passa_all_altro(su_remoto):
+			ultimo["testo"] = ""
+			raw = await _chiedi_battuta(_using_remote, user_msg, npc_name, hostility, friendship,
+				language, npc_data, history, context_vars, on_raw)
 
-		# Niente testo e' un guasto (rete, credito finito, timeout): rifare la
-		# richiesta costerebbe un'altra attesa per lo stesso esito.
+		# Niente testo neanche dall'altro ramo e' un guasto (rete, credito
+		# finito, timeout): rifare la richiesta costerebbe un'altra attesa per
+		# lo stesso esito.
 		if raw.is_empty():
 			return ""
 		# Il filtro prima di pulisci() lavora sulle righe vere del modello
@@ -314,6 +397,33 @@ func _generate(player_input: String, direction: String, npc_name: String, hostil
 			npc_name, tentativo + 1, raw.substr(0, 160).replace("\n", " ")])
 		ultimo["testo"] = ""
 	return ""
+
+
+## Una sola richiesta di battuta sul ramo indicato, testo grezzo o "".
+func _chiedi_battuta(su_remoto: bool, user_msg: String, npc_name: String, hostility: int,
+		friendship: int, language: String, npc_data: Dictionary, history: Array,
+		context_vars: Variant, on_raw: Callable) -> String:
+	var system_msg := OraculusLogic.build_system_msg(npc_name, hostility, friendship,
+		language, npc_data, context_vars)
+	if su_remoto:
+		var messages: Array = [{"role": "system", "content": system_msg}]
+		for h in history.slice(maxi(0, history.size() - 3)):
+			messages.append({"role": "user", "content": OraculusLogic.knight_line(String(h["player"]))})
+			messages.append({"role": "assistant", "content": String(h["npc"])})
+		messages.append({"role": "user", "content": user_msg})
+		if on_raw.is_valid():
+			return await remote.chat_completion_stream(messages, OraculusData.MAX_TOKENS,
+				OraculusData.TEMPERATURE, OraculusData.TOP_P, on_raw)
+		return await remote.chat_completion(messages, OraculusData.MAX_TOKENS,
+			OraculusData.TEMPERATURE, OraculusData.TOP_P)
+
+	# Il locale puo' aver vinto la gara mentre caricava ancora il modello.
+	while local.is_loading():
+		await get_tree().process_frame
+	# NobodyWho applica da se' il template del modello, quindi lo storico
+	# entra nel system prompt con la stessa formattazione di build_prompt.
+	return await local.generate(system_msg + OraculusLogic.build_history_block(history),
+		user_msg, LOCAL_TIMEOUT, {"max_tokens": OraculusData.MAX_TOKENS}, on_raw)
 
 
 # --- indovinelli ----------------------------------------------------------
@@ -362,29 +472,37 @@ func _generate_riddle(door_id: String, language: String, theme: String, session_
 		var idx: int = _seed_for(door_id + session_id) % OraculusData.DEFAULT_RIDDLE_THEMES.size()
 		chosen_theme = OraculusData.DEFAULT_RIDDLE_THEMES[idx]
 
-	var system := OraculusLogic.build_riddle_system(chosen_theme, language)
 	var user_msg := OraculusLogic.build_riddle_user(language, chosen_theme, session_id)
 
-	var raw := ""
-	if _using_remote:
-		var messages: Array = [
-			{"role": "system", "content": system},
-			{"role": "user", "content": user_msg},
-		]
-		raw = await remote.chat_completion(messages, OraculusData.RIDDLE_MAX_TOKENS,
-			OraculusData.RIDDLE_TEMPERATURE, OraculusData.RIDDLE_TOP_P)
-	else:
-		# Gli indovinelli in Python giravano con parametri di sampling propri.
-		raw = await local.generate(system, user_msg, LOCAL_TIMEOUT, {
-			"temperature": OraculusData.RIDDLE_TEMPERATURE,
-			"top_p": OraculusData.RIDDLE_TOP_P,
-			"top_k": OraculusData.RIDDLE_TOP_K,
-			"max_tokens": OraculusData.RIDDLE_MAX_TOKENS,
-		})
+	var su_remoto := _using_remote
+	var raw := await _chiedi_indovinello(su_remoto, chosen_theme, language, user_msg)
+	if raw.is_empty() and await _passa_all_altro(su_remoto):
+		raw = await _chiedi_indovinello(_using_remote, chosen_theme, language, user_msg)
 
 	if raw.is_empty():
 		return null
 	return OraculusLogic.parse_riddle_response(raw)
+
+
+func _chiedi_indovinello(su_remoto: bool, theme: String, language: String, user_msg: String) -> String:
+	# Sul remoto STORY_CONTEXT va in testa: vedi build_riddle_system().
+	var system := OraculusLogic.build_riddle_system(theme, language, su_remoto)
+	if su_remoto:
+		var messages: Array = [
+			{"role": "system", "content": system},
+			{"role": "user", "content": user_msg},
+		]
+		return await remote.chat_completion(messages, OraculusData.RIDDLE_MAX_TOKENS,
+			OraculusData.RIDDLE_TEMPERATURE, OraculusData.RIDDLE_TOP_P)
+	while local.is_loading():
+		await get_tree().process_frame
+	# Gli indovinelli in Python giravano con parametri di sampling propri.
+	return await local.generate(system, user_msg, LOCAL_TIMEOUT, {
+		"temperature": OraculusData.RIDDLE_TEMPERATURE,
+		"top_p": OraculusData.RIDDLE_TOP_P,
+		"top_k": OraculusData.RIDDLE_TOP_K,
+		"max_tokens": OraculusData.RIDDLE_MAX_TOKENS,
+	})
 
 
 static func _seed_for(key: String) -> int:

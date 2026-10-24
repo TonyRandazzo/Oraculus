@@ -676,9 +676,16 @@ static func decorate_user_msg(player_input: String, npc_name: String, language: 
 
 # --- indovinelli --------------------------------------------------------
 
-static func build_riddle_system(theme: String, language: String) -> String:
-	return ("You are an ancient spirit guardian of Oraculus Castle, year 1300.\n"
-		+ OraculusData.STORY_CONTEXT + "\n\n"
+## contesto_prima mette STORY_CONTEXT in testa, prima della riga sul guardiano:
+## lo usa il ramo remoto, perche' llama-server (il server su Oracle) riusa la cache del
+## prompt solo se l'inizio coincide con quello dei dialoghi, che cominciano
+## tutti con STORY_CONTEXT. Senza, ogni indovinello rielabora ~2000 token
+## (~17 s sulla CPU gratuita). Il ramo locale resta nell'ordine di inference.py.
+static func build_riddle_system(theme: String, language: String, contesto_prima := false) -> String:
+	var guardiano := "You are an ancient spirit guardian of Oraculus Castle, year 1300.\n"
+	var apertura := (OraculusData.STORY_CONTEXT + "\n\n" + guardiano + "\n") if contesto_prima \
+		else (guardiano + OraculusData.STORY_CONTEXT + "\n\n")
+	return (apertura
 		+ "You guard a door with a riddle. Create ONE riddle following these rules:\n"
 		+ "- Theme: " + theme + "\n"
 		+ "- Tone: dark, mysterious, medieval fantasy — but the riddle itself must be SIMPLE and EASY to understand\n"

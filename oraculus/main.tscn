@@ -9952,7 +9952,6 @@ grow_vertical = 0
 scale = Vector2(1.5, 1.5)
 
 [node name="Options" parent="Player/CanvasLayer" unique_id=1425149330 instance=ExtResource("58_d854c")]
-process_mode = 3
 visible = false
 anchors_preset = 8
 anchor_left = 0.5

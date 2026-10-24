@@ -1,0 +1,24 @@
+[Unit]
+Description=Oraculus LLM (llama-server per il ramo remoto dei dialoghi)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=oraculus
+Group=oraculus
+Environment=ORACULUS_DATA=/var/lib/oraculus-llm
+# Facoltativo: MODEL_URL, LLAMA_VERSION, THREADS, PORT.
+EnvironmentFile=-/etc/oraculus-llm.env
+ExecStart=/usr/bin/python3 /opt/oraculus-llm/oraculus_llm.py
+Restart=always
+RestartSec=5
+# Il primo avvio scarica ~1 GB.
+TimeoutStartSec=900
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/oraculus-llm
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

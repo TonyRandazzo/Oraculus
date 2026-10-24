@@ -131,10 +131,14 @@ func _test_proxy() -> void:
 	if typeof(salute) != TYPE_DICTIONARY or String(salute.get("status", "")) != "ok":
 		print("      SALTATO: il proxy non risponde (%s)" % str(salute))
 		return
-	if not bool(salute.get("llama", false)):
+	# "llama" c'e' solo nel vecchio proxy Python: llama-server (il server su Oracle) non
+	# lo manda, e il suo /health risponde solo a modello caricato.
+	if not bool(salute.get("llama", true)):
 		print("      SALTATO: il proxy non ha inferenza: ", salute.get("last_error"))
 		return
-	var in_streaming := bool(salute.get("stream", false))
+	# Il vecchio proxy dichiara "stream" quando lo sa fare; llama-server non
+	# dichiara niente (niente "llama") e lo streaming ce l'ha sempre.
+	var in_streaming := bool(salute.get("stream", not salute.has("llama")))
 
 	engine._using_remote = true
 	engine._available = true

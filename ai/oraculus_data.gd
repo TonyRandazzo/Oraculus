@@ -738,6 +738,35 @@ const FALLBACK: Dictionary = {
 	],
 }
 
+# Dialoghi offline revisionabili per i cinque idiomi offerti dal menu Steam.
+const STEAM_FALLBACK: Dictionary = {
+	"inglese": {
+		"high": ["Leave.", "You are not welcome.", "Do not come closer."],
+		"mid": ["Speak.", "I am watching.", "What do you want?"],
+		"low": ["I'm listening.", "Tell me more.", "Go on."],
+	},
+	"italiano": {
+		"high": ["Vattene.", "Non sei il benvenuto.", "Non avvicinarti."],
+		"mid": ["Parla.", "Ti osservo.", "Cosa vuoi?"],
+		"low": ["Ti ascolto.", "Dimmi di più.", "Continua."],
+	},
+	"francese": {
+		"high": ["Va-t'en.", "Tu n'es pas le bienvenu.", "N'approche pas."],
+		"mid": ["Parle.", "Je t'observe.", "Que veux-tu ?"],
+		"low": ["Je t'écoute.", "Dis-m'en plus.", "Continue."],
+	},
+	"spagnolo": {
+		"high": ["Vete.", "No eres bienvenido.", "No te acerques."],
+		"mid": ["Habla.", "Te estoy observando.", "¿Qué quieres?"],
+		"low": ["Te escucho.", "Cuéntame más.", "Continúa."],
+	},
+	"tedesco": {
+		"high": ["Geh fort.", "Du bist nicht willkommen.", "Komm nicht näher."],
+		"mid": ["Sprich.", "Ich beobachte dich.", "Was willst du?"],
+		"low": ["Ich höre zu.", "Erzähl mir mehr.", "Sprich weiter."],
+	},
+}
+
 const RIDDLE_FALLBACKS: Dictionary = {
 	"inglese": [
 		{
@@ -802,6 +831,21 @@ Nessuno ha mai trovato un modo per sfuggirmi.
 Cosa sono?""",
 			"answer": "morte",
 		},
+	],
+	"francese": [
+		{"riddle": "Je répète les mots criés dans une salle vide. Que suis-je ?", "answer": "écho"},
+		{"riddle": "Je te suis quand la lumière brille, mais tu ne peux pas me toucher. Que suis-je ?", "answer": "ombre"},
+		{"riddle": "Je passe sans m'arrêter et personne ne peut me retenir. Que suis-je ?", "answer": "temps"},
+	],
+	"spagnolo": [
+		{"riddle": "Repito las palabras gritadas en una sala vacía. ¿Qué soy?", "answer": "eco"},
+		{"riddle": "Te sigo cuando brilla la luz, pero no puedes tocarme. ¿Qué soy?", "answer": "sombra"},
+		{"riddle": "Paso sin detenerme y nadie puede retenerme. ¿Qué soy?", "answer": "tiempo"},
+	],
+	"tedesco": [
+		{"riddle": "Ich wiederhole die Worte, die du in einem leeren Raum rufst. Was bin ich?", "answer": "Echo"},
+		{"riddle": "Ich folge dir im Licht, aber du kannst mich nicht berühren. Was bin ich?", "answer": "Schatten"},
+		{"riddle": "Ich vergehe unaufhaltsam und niemand kann mich festhalten. Was bin ich?", "answer": "Zeit"},
 	],
 }
 

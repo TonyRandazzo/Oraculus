@@ -1,5 +1,8 @@
 extends Control
 
+const CONTROLLER_KEYBOARD := preload("res://oraculus/controller_keyboard.gd")
+var _controller_keyboard: CanvasLayer
+
 ## Il menu risponde alle domande del giocatore su lore, comandi, obiettivi,
 ## struttura del castello e cosa fare, con le schede di OraculusGuide:
 ## risposte scritte a mano in tutte le lingue del menu, pronte all'istante e
@@ -36,6 +39,7 @@ func _ready() -> void:
 	else:
 		question_text_edit.gui_input.connect(_on_question_gui_input)
 		question_text_edit.focus_exited.connect(_on_focus_exited)
+	question_text_edit.focus_entered.connect(_on_question_focus_entered)
 	_mostra(OraculusGuide.benvenuto(GameState.ai_language))
 	_setup_language_select()
 	# La musica sul bus "Music": la regola il cursore Musica delle Opzioni.
@@ -46,6 +50,19 @@ func _ready() -> void:
 	var esci := get_node_or_null("Esci")
 	if esci != null and OS.has_feature("web"):
 		esci.visible = false
+	$Title/Start.grab_focus()
+
+
+func _on_question_focus_entered() -> void:
+	if Input.get_connected_joypads().is_empty():
+		return
+	if is_instance_valid(_controller_keyboard):
+		return
+	_controller_keyboard = CONTROLLER_KEYBOARD.new()
+	add_child(_controller_keyboard)
+	_controller_keyboard.show_for(question_text_edit)
+	_controller_keyboard.submitted.connect(func() -> void:
+		_process_player_input(question_text_edit.text))
 
 ## La tendina mostra le sigle (EN, IT, ...) ma quello che viaggia fino al
 ## prompt e' il nome esteso: e' la stringa che finisce in "Always speak in
@@ -121,3 +138,4 @@ func _on_esci_pressed() -> void:
 func _on_options_pressed() -> void:
 	$Title/Options2.visible = true
 	get_tree().paused = true
+	$Title/Options2/Continue/TextureButton.grab_focus()

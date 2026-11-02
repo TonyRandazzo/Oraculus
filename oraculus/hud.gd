@@ -11,7 +11,7 @@ func _on_interact_pressed() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if Input.is_action_just_pressed("item"):
+	if Input.is_action_just_pressed("item") and not $"../..".is_gameplay_input_blocked(true):
 		$Inventory.visible = !$Inventory.visible
 		$Inventory/Buttons/SelectedItem.texture_normal = $Inventory/Buttons/Item1.texture_normal
 		item_name = $Inventory/Buttons/Item1.item_name

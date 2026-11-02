@@ -259,15 +259,7 @@ func _release_all() -> void:
 func _input_blocked() -> bool:
 	if player == null or not is_instance_valid(player) or not player.is_physics_processing():
 		return true
-	if player.hud_label != null and (player.hud_label.visible or player.hud_label.has_focus()):
-		return true
-	var canvas := player.get_node_or_null("CanvasLayer")
-	if canvas != null:
-		for panel_name in ["Options", "Win", "Loose"]:
-			var panel := canvas.get_node_or_null(panel_name) as CanvasItem
-			if panel != null and panel.visible:
-				return true
-	return false
+	return player.is_gameplay_input_blocked()
 
 
 func _is_over_ui(pos: Vector2) -> bool:

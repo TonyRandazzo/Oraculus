@@ -190,7 +190,7 @@ func _physics_process(delta: float) -> void:
 	
 	attack_timer -= delta
 	
-	if is_attacking and sprite.animation == "attack":
+	if is_attacking and state == "attacking" and sprite.animation == "attack" and sprite.is_playing():
 		var attack_time = Time.get_ticks_msec() / 1000.0 - attack_start_time
 		if attack_time >= attack_hit_time and attack_box.disabled:
 			attack_sound.play()
@@ -199,6 +199,11 @@ func _physics_process(delta: float) -> void:
 				dialogue_box.show_text(attack_phrases[randi() % attack_phrases.size()])
 		elif attack_time < attack_hit_time:
 			attack_box.disabled = true
+	else:
+		# Il dialogo o un colpo possono interrompere l'animazione a metà.
+		# In quel caso l'area d'attacco deve smettere subito di colpire.
+		attack_box.disabled = true
+		is_attacking = false
 	
 	if is_invincible:
 		invincibility_timer -= delta
@@ -294,6 +299,11 @@ func start_attack():
 		return
 	attack_box.disabled = true
 
+func _cancel_attack() -> void:
+	is_attacking = false
+	attack_box.disabled = true
+	can_attack = true
+
 func _disable_attack_box():
 	attack_box.disabled = true
 
@@ -304,8 +314,7 @@ func _on_animation_finished():
 		state = "attacking" if friendship_level < 3 else "ally"
 
 func end_attack():
-	is_attacking = false
-	attack_box.disabled = true
+	_cancel_attack()
 	if player and global_position.distance_to(player.global_position) < attack_range * 1.5:
 		state = "conversing"
 	elif friendship_level >= max_friendship:
@@ -325,7 +334,8 @@ func _on_hit_box_area_entered(area: Area2D):
 		take_damage(damage)
 
 func _on_attack_box_area_entered(area: Area2D):
-	if area.is_in_group("hit_player"):
+	if is_attacking and state == "attacking" and sprite.animation == "attack" and sprite.is_playing() \
+		and not attack_box.disabled and area.is_in_group("hit_player"):
 		var p = area.get_parent()
 		if p.has_method("take_damage"):
 			p.take_damage(attack_damage * (1.0 + current_aggression * 0.5))
@@ -333,6 +343,7 @@ func _on_attack_box_area_entered(area: Area2D):
 func take_damage(amount: int):
 	if is_invincible or state == "ally": 
 		return
+	_cancel_attack()
 	current_aggression = min(current_aggression + aggression_increase_on_hit, 1.0)
 	personality_traits["aggressiveness"] = current_aggression
 	personality_state["aggressiveness"] = current_aggression
@@ -486,7 +497,8 @@ func initiate_random_dialogue():
 	_send_to_ai_server("", prompts[randi() % prompts.size()])
 
 func receive_player_answer(answer: String):
-	if state == "attacking": 
+	if state == "attacking":
+		_cancel_attack()
 		state = "conversing"
 	# "idle" incluso: prima lo stato passava a "ready" solo quando tornava
 	# una battuta generata, quindi un NPC che non aveva ancora parlato

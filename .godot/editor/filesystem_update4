@@ -1,1 +1,11 @@
+res://oraculus/Minigames/draw_light.gd
+res://oraculus/NPC/gorgon.gd
+res://oraculus/intro.gd
+res://oraculus/door.gd
+res://oraculus/FeedbackPopup.gd
+res://oraculus/hud.gd
+res://oraculus/menu.gd
+res://oraculus/Minigames/puzzle.gd
+res://oraculus/PlayerCharacter/player.gd
+res://oraculus/PlayerCharacter/touch_controls.gd
 res://export_presets.cfg

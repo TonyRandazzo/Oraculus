@@ -1,11 +1,13 @@
 # Godot editor data
 .godot/editor/
+.godot/imported/
 
 # Models (AI/LLM files - too large for git)
 models/
 
 # Godot build exports
 export/
+__pycache__/
 
 # OS files
 .DS_Store

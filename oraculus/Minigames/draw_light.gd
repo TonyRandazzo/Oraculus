@@ -15,6 +15,8 @@ const PLAY_Y_MIN := 90.0
 const PLAY_Y_MAX := 480.0
 const MAX_BOUNCE_STEPS := 8
 const BEAM_OVERSHOOT := 1200.0
+const MAX_LAYOUT_ATTEMPTS := 2000
+const AIM_TOLERANCE := 0.015
 
 # Barriera fissa che blocca sempre la linea diretta sorgente → bersaglio:
 # la luce può raggiungere il bersaglio solo rimbalzando sugli specchi.
@@ -44,6 +46,8 @@ var _t: float = 0.0
 var _light_glow_base_scale: Vector2
 var _target_glow_base_scale: Vector2
 var _target_ring_line: Line2D
+var _controller_aim := false
+var _aim_angle := 0.0
 
 func _ready() -> void:
 	close_btn.pressed.connect(_close)
@@ -71,7 +75,9 @@ func activate(id: String) -> void:
 	solved = false
 	success_overlay.visible = false
 	success_overlay.modulate = Color(1, 1, 1, 0)
-	feedback_label.text = "Move the mouse to aim the source. Bounce the light off the mirrors to hit the target."
+	_controller_aim = not Input.get_connected_joypads().is_empty()
+	_aim_angle = 0.0
+	feedback_label.text = "Move the stick or mouse to aim. Bounce the light off the mirrors to hit the target."
 	light_source.position = SOURCE_POS
 	target_node.position = TARGET_POS
 	_generate_layout()
@@ -90,11 +96,17 @@ func _process(delta: float) -> void:
 	if solved:
 		return
 
-	var mouse_local := get_viewport().get_mouse_position() - draw_panel.global_position
-	var aim_dir := mouse_local - SOURCE_POS
-	if aim_dir.length() < 1.0:
-		aim_dir = Vector2.RIGHT
-	aim_dir = aim_dir.normalized()
+	var aim_dir: Vector2
+	if _controller_aim:
+		_aim_angle += Input.get_axis("move_left", "move_right") * 0.6 * delta
+		aim_dir = Vector2.from_angle(_aim_angle)
+	else:
+		var mouse_local := get_viewport().get_mouse_position() - draw_panel.global_position
+		aim_dir = mouse_local - SOURCE_POS
+		if aim_dir.length() < 1.0:
+			aim_dir = Vector2.RIGHT
+		aim_dir = aim_dir.normalized()
+		_aim_angle = aim_dir.angle()
 	light_source.rotation = aim_dir.angle()
 
 	var result := _compute_beam_path(SOURCE_POS, aim_dir)
@@ -107,8 +119,14 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if not visible or solved:
 		return
-	if event is InputEventMouseMotion or event is InputEventMouseButton:
+	if event.is_action_pressed("ui_cancel"):
+		_close()
 		get_viewport().set_input_as_handled()
+		return
+	if event is InputEventMouseMotion or event is InputEventMouseButton:
+		_controller_aim = false
+	elif event is InputEventJoypadMotion or event is InputEventJoypadButton:
+		_controller_aim = true
 
 # ── Generazione procedurale (sempre risolvibile) ──────────────────────────────
 func _generate_layout() -> void:
@@ -116,39 +134,49 @@ func _generate_layout() -> void:
 		c.queue_free()
 	mirror_data.clear()
 
+	# Un percorso geometrico plausibile non basta: uno specchio precedente può
+	# intercettare il raggio prima del punto previsto. Accettiamo solo layout
+	# che la stessa simulazione usata durante il gioco riesce a completare.
 	var bounces := randi_range(min_bounces, max_bounces)
-	var x_start := SOURCE_POS.x + 120.0
-	var x_end := TARGET_POS.x - 120.0
-	var step := (x_end - x_start) / float(max(bounces, 1))
+	for _attempt in range(MAX_LAYOUT_ATTEMPTS):
+		var full_path: Array[Vector2] = [SOURCE_POS]
+		var x_start := SOURCE_POS.x + 120.0
+		var x_end := TARGET_POS.x - 120.0
+		var step := (x_end - x_start) / float(max(bounces, 1))
+		for i in range(bounces):
+			var x := x_start + step * i + randf_range(-step * 0.25, step * 0.25)
+			full_path.append(Vector2(x, randf_range(PLAY_Y_MIN, PLAY_Y_MAX)))
+		full_path.append(TARGET_POS)
+		if not _build_mirror_data(full_path):
+			continue
+		var aim := (full_path[1] - SOURCE_POS).angle()
+		if _compute_beam_path(SOURCE_POS, Vector2.from_angle(aim))['hit_target'] \
+			and _compute_beam_path(SOURCE_POS, Vector2.from_angle(aim - AIM_TOLERANCE))['hit_target'] \
+			and _compute_beam_path(SOURCE_POS, Vector2.from_angle(aim + AIM_TOLERANCE))['hit_target']:
+			for m in mirror_data:
+				_add_mirror_visual(m['a'], m['b'])
+			return
 
-	var full_path: Array[Vector2] = [SOURCE_POS]
-	for i in range(bounces):
-		var x := x_start + step * i + randf_range(-step * 0.25, step * 0.25)
-		var y := randf_range(PLAY_Y_MIN, PLAY_Y_MAX)
-		full_path.append(Vector2(x, y))
-	full_path.append(TARGET_POS)
+	# Un percorso fisso verificato evita un puzzle impossibile anche nel caso
+	# improbabile in cui tutti i tentativi casuali siano stati scartati.
+	var fallback: Array[Vector2] = [SOURCE_POS, Vector2(280, 120), Vector2(500, 120), Vector2(660, 380), TARGET_POS]
+	_build_mirror_data(fallback)
+	for m in mirror_data:
+		_add_mirror_visual(m['a'], m['b'])
 
+func _build_mirror_data(full_path: Array[Vector2]) -> bool:
+	mirror_data.clear()
 	for i in range(1, full_path.size() - 1):
 		var prev: Vector2 = full_path[i - 1]
 		var cur: Vector2 = full_path[i]
 		var nxt: Vector2 = full_path[i + 1]
 		var d_in := (cur - prev).normalized()
 		var d_out := (nxt - cur).normalized()
-
-		# Garantisce una piegatura sempre "obliqua" (mai troppo dritta né un
-		# rimbalzo quasi perpendicolare all'indietro) e che nessun tratto del
-		# percorso tagli la barriera centrale, altrimenti riprova con un altro y
-		var attempts := 0
 		var bend: float = abs(d_in.angle_to(d_out))
-		var blocked := _segments_intersect(prev, cur, WALL_A, WALL_B) or _segments_intersect(cur, nxt, WALL_A, WALL_B)
-		while (bend < deg_to_rad(min_bend_degrees) or bend > deg_to_rad(max_bend_degrees) or blocked) and attempts < 30:
-			cur.y = randf_range(PLAY_Y_MIN, PLAY_Y_MAX)
-			full_path[i] = cur
-			d_in = (cur - prev).normalized()
-			d_out = (nxt - cur).normalized()
-			bend = abs(d_in.angle_to(d_out))
-			blocked = _segments_intersect(prev, cur, WALL_A, WALL_B) or _segments_intersect(cur, nxt, WALL_A, WALL_B)
-			attempts += 1
+		if bend < deg_to_rad(min_bend_degrees) or bend > deg_to_rad(max_bend_degrees) \
+			or _segments_intersect(prev, cur, WALL_A, WALL_B) \
+			or _segments_intersect(cur, nxt, WALL_A, WALL_B):
+			return false
 
 		var normal := (d_out - d_in).normalized()
 		var tangent := Vector2(-normal.y, normal.x)
@@ -156,7 +184,7 @@ func _generate_layout() -> void:
 		var b := cur + tangent * mirror_half_length
 
 		mirror_data.append({"a": a, "b": b, "normal": normal})
-		_add_mirror_visual(a, b)
+	return true
 
 func _add_mirror_visual(a: Vector2, b: Vector2) -> void:
 	var outline := Line2D.new()

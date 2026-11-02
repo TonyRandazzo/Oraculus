@@ -38,6 +38,9 @@ var timer_running: bool = false
 var solved: bool = false
 var door_id: String = ""
 var _timer_fill_style: StyleBoxFlat
+var _controller_cursor: ColorRect
+var _cursor_pos := Vector2.ZERO
+var _controller_active := false
 
 func _ready() -> void:
 	close_btn.pressed.connect(_close)
@@ -46,6 +49,12 @@ func _ready() -> void:
 	timer_bar.max_value = placement_timeout
 	timer_bar.value = placement_timeout
 	_timer_fill_style = timer_bar.get_theme_stylebox("fill")
+	_controller_cursor = ColorRect.new()
+	_controller_cursor.size = Vector2(18, 18)
+	_controller_cursor.color = Color(1.0, 0.9, 0.25, 0.9)
+	_controller_cursor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	board.add_child(_controller_cursor)
+	_controller_cursor.visible = false
 	visible = false
 
 func activate(id: String) -> void:
@@ -58,6 +67,12 @@ func activate(id: String) -> void:
 	success_overlay.visible = false
 	success_overlay.modulate = Color(1, 1, 1, 0)
 	_rebuild_puzzle()
+	_controller_active = not Input.get_connected_joypads().is_empty()
+	_cursor_pos = pieces[0].position + PIECE_SIZE / 2.0 if not pieces.is_empty() else Vector2.ZERO
+	_controller_cursor.position = _cursor_pos - _controller_cursor.size / 2.0
+	_controller_cursor.visible = _controller_active
+	if _controller_active:
+		instructions.text = "Stick: move cursor   A: pick up / place   B: close"
 	_update_key_status()
 
 	if not GameState.is_connected("puzzle_key_collected", _update_key_status):
@@ -187,6 +202,11 @@ func _random_scatter_pos(cols: int, rows: int) -> Vector2:
 func _process(delta: float) -> void:
 	if not visible or solved:
 		return
+	if _controller_active:
+		var motion := Input.get_vector("move_left", "move_right", "climb_up", "climb_down")
+		_cursor_pos += motion * 450.0 * delta
+		_cursor_pos = _cursor_pos.clamp(Vector2.ZERO, get_viewport().get_visible_rect().size)
+		_controller_cursor.position = _cursor_pos - _controller_cursor.size / 2.0
 	if timer_running:
 		timer_bar.value = timer_node.time_left
 		var frac: float = clamp(timer_node.time_left / placement_timeout, 0.0, 1.0)
@@ -197,13 +217,29 @@ func _process(delta: float) -> void:
 		else:
 			timer_bar.modulate = Color(1, 1, 1, 1)
 	if dragging_piece:
-		dragging_piece.position = get_viewport().get_mouse_position() - board.global_position - drag_offset
+		var pointer := _cursor_pos + board.global_position if _controller_active else get_viewport().get_mouse_position()
+		dragging_piece.position = pointer - board.global_position - drag_offset
 
 func _input(event: InputEvent) -> void:
 	if not visible or solved:
 		return
+	if event is InputEventJoypadButton and event.pressed:
+		_controller_active = true
+		_controller_cursor.visible = true
+		if event.is_action_pressed("jump"):
+			if dragging_piece:
+				_try_drop()
+			else:
+				_try_grab(_cursor_pos + board.global_position)
+			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_cancel"):
+			_close()
+			get_viewport().set_input_as_handled()
+		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		_controller_active = false
+		_controller_cursor.visible = false
 		if event.pressed:
 			_try_grab(event.position)
 			if dragging_piece:

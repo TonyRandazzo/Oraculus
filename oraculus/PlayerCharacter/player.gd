@@ -1,5 +1,8 @@
 extends CharacterBody2D
 
+const CONTROLLER_KEYBOARD := preload("res://oraculus/controller_keyboard.gd")
+var _controller_keyboard: CanvasLayer
+
 @export var speed: float = 120.0
 var normal_speed: float
 @export var run_speed_multiplier: float = 1.8
@@ -55,6 +58,7 @@ var wall_jump_lock_timer: Timer
 var swinging: bool = false
 var current_liana: Node2D = null
 var _swing_blocked_frames: int = 0
+var _was_modal_open: bool = false
 ## Per quanto tempo, dopo essersi staccati dalla liana, la spinta orizzontale
 ## resta intatta: senza questa finestra il movimento normale la cancellerebbe
 ## già al frame dopo.
@@ -152,6 +156,19 @@ func _physics_process(delta: float) -> void:
 		$CanvasLayer/Pause.visible = false
 	else:
 		$CanvasLayer/Pause.visible = true
+
+	# I minigiochi restano attivi mentre la scena continua a processare la
+	# fisica. Consumare l'evento nell'UI non ferma Input.is_action_pressed().
+	# Blocca anche il primo frame dopo la chiusura: il tasto usato per uscire
+	# non deve diventare un salto, attacco o interazione.
+	if _modal_ui_open():
+		_was_modal_open = true
+		_freeze_for_modal()
+		return
+	if _was_modal_open:
+		_was_modal_open = false
+		_freeze_for_modal()
+		return
 
 	if hud_label.visible or hud_label.has_focus():
 		# Lo stesso tasto che apre il dialogo lo chiude. Il carattere che il
@@ -408,6 +425,37 @@ func _physics_process(delta: float) -> void:
 		sprite.flip_h = direction < 0
 
 	health_bar.value += 2 * delta
+
+func _modal_ui_open(ignore_inventory: bool = false) -> bool:
+	if get_tree().paused:
+		return true
+	for path in ["CanvasLayer/Options", "CanvasLayer/Win", "CanvasLayer/Loose"]:
+		var panel := get_node_or_null(path) as CanvasItem
+		if panel != null and panel.visible:
+			return true
+	if not ignore_inventory and $CanvasLayer/HUD/Inventory.visible:
+		return true
+	var scene := get_tree().current_scene
+	if scene != null:
+		var minigames := scene.get_node_or_null("Minigame")
+		if minigames != null:
+			for minigame in minigames.get_children():
+				if minigame is CanvasLayer and minigame.visible:
+					return true
+	return false
+
+func is_gameplay_input_blocked(ignore_inventory: bool = false) -> bool:
+	return (_was_modal_open and not _modal_ui_open()) \
+		or _modal_ui_open(ignore_inventory) or hud_label.visible or hud_label.has_focus()
+
+func _freeze_for_modal() -> void:
+	velocity = Vector2.ZERO
+	attack_box.disabled = true
+	if attacking:
+		attacking = false
+	if walk_sound.playing:
+		walk_sound.stop()
+	sprite.play("idle")
 
 func _on_wall_jump_lock_timeout() -> void:
 	wall_jumping = false
@@ -782,6 +830,8 @@ func win():
 	set_process_input(false)
 	$CanvasLayer/Win.visible = true
 func _input(event):
+	if _modal_ui_open():
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 			if hud_label.visible:
@@ -790,22 +840,31 @@ func _input(event):
 
 ## Apre il form di dialogo e, su mobile, tira su la tastiera virtuale.
 func open_chat() -> void:
-	if not can_interact or current_demon == null:
+	if is_gameplay_input_blocked() or not can_interact or current_demon == null:
 		return
 	hud_label.editable = true
 	hud.show()
 	hud_label.grab_focus()
 	_show_virtual_keyboard()
+	if not Input.get_connected_joypads().is_empty() and not is_instance_valid(_controller_keyboard):
+		_controller_keyboard = CONTROLLER_KEYBOARD.new()
+		get_tree().current_scene.add_child(_controller_keyboard)
+		_controller_keyboard.show_for(hud_label)
+		_controller_keyboard.submitted.connect(submit_chat)
 
 ## Per il pulsante "Interact" a schermo: apre il dialogo, o lo chiude se e'
 ## gia' aperto.
 func toggle_chat() -> void:
+	if _modal_ui_open() or (_was_modal_open and not hud_label.visible):
+		return
 	if hud_label.visible:
 		close_chat()
 	else:
 		open_chat()
 
 func close_chat() -> void:
+	if is_instance_valid(_controller_keyboard):
+		_controller_keyboard.queue_free()
 	hud_label.text = ""
 	hud_label.release_focus()
 	hud_label.editable = false

@@ -89,6 +89,12 @@ static func _ramo_forzato() -> String:
 ## motore vive nell'autoload AIServerManager), finche' il ramo scelto non
 ## smette di rispondere: allora _passa_all_altro().
 func setup() -> void:
+	# La build Steam usa soltanto dialoghi e indovinelli gia' presenti nel gioco.
+	# Evita generazione live e chiamate al proxy durante la partita.
+	if OS.has_feature("steam_release"):
+		_available = false
+		_using_remote = false
+		return
 	_forzato = _ramo_forzato()
 	var t0 := Time.get_ticks_msec()
 	var scadenza := t0 + int(RACE_TIMEOUT * 1000.0)
@@ -306,7 +312,12 @@ func generate_response(params: Dictionary, on_partial: Callable = Callable()) ->
 
 	if response.is_empty():
 		var tier := OraculusLogic.hostility_tier(effective_hostility, friendship)
-		var pool: Array = OraculusData.FALLBACK.get(tier, OraculusData.FALLBACK["mid"])
+		var pool: Array
+		if OS.has_feature("steam_release"):
+			var language_pool: Dictionary = OraculusData.STEAM_FALLBACK.get(detected_lang, OraculusData.STEAM_FALLBACK["inglese"])
+			pool = language_pool.get(tier, language_pool["mid"])
+		else:
+			pool = OraculusData.FALLBACK.get(tier, OraculusData.FALLBACK["mid"])
 		response = String(pool.pick_random())
 		source = "occupato" if occupato else "fallback"
 	else:
@@ -443,7 +454,7 @@ func generate_door_riddle(params: Dictionary) -> Dictionary:
 	# si apre) torna null e il giocatore riceve un indovinello di riserva
 	# anche con il modello acceso e funzionante. Ritentare costa ~1 s in
 	# locale ed e' l'unica cosa che serve, perche' il fallimento e' casuale.
-	for tentativo in RIDDLE_ATTEMPTS:
+	for tentativo in (0 if OS.has_feature("steam_release") else RIDDLE_ATTEMPTS):
 		_in_volo += 1
 		var result: Variant = await _generate_riddle(door_id, language, theme, session_id)
 		_in_volo -= 1

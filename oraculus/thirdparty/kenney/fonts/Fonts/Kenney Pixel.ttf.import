@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/Kenney Pixel.ttf-3a755c70dc1c283c43c43e116b40
 [params]
 
 Rendering=null
-antialiasing=0
+antialiasing=1
 generate_mipmaps=true
 disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
@@ -21,8 +21,10 @@ msdf_pixel_range=8
 msdf_size=48
 allow_system_fallback=true
 force_autohinter=false
+modulate_color_glyphs=false
 hinting=0
 subpixel_positioning=4
+keep_rounding_remainders=true
 oversampling=0.0
 Fallbacks=null
 fallbacks=[]

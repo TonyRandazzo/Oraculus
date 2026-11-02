@@ -53,6 +53,7 @@ func _on_texture_button_pressed() -> void:
 func _on_pause_pressed() -> void:
 	get_tree().paused = true
 	visible = true
+	$Continue/TextureButton.grab_focus()
 	var pausa := get_node_or_null("../Pause")
 	if pausa != null:
 		pausa.visible = false
